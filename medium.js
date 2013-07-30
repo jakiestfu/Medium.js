@@ -113,12 +113,12 @@
                     if (range) {
                         if (w.getSelection) {
                             var sel = w.getSelection();
-                              sel.removeAllRanges();
-                              sel.addRange(range);
+                            sel.removeAllRanges();
+                            sel.addRange(range);
                         } else if (d.selection && range.select) { // IE
-                              range.select();
+                            range.select();
                         }
-                      }
+                    }
                 }
             },
             cursor: {
@@ -129,32 +129,9 @@
                         length =  lastChild.innerText.length-1,
                         toModify = el ? el : lastChild,
                         theLength = typeof pos !== 'undefined' ? pos : length;
-                    _log(['Element: ',toModify]);
-                    _log(['Len: ',theLength]);
                     range.setStart(toModify, theLength);
                     selection.removeAllRanges();
                     selection.addRange(range);
-                },
-                get: function() {
-                    var element = settings.element,
-                        caretOffset = 0,
-                        doc = element.ownerDocument || element.document,
-                        win = doc.defaultView || doc.parentWindow,
-                        sel;
-                    if (typeof win.getSelection != "undefined") {
-                        var range = win.getSelection().getRangeAt(0),
-                            preCaretRange = range.cloneRange();
-                        preCaretRange.selectNodeContents(element);
-                        preCaretRange.setEnd(range.endContainer, range.endOffset);
-                        caretOffset = preCaretRange.toString().length;
-                    } else if ( (sel = doc.selection) && sel.type != "Control") {
-                        var textRange = sel.createRange(),
-                            preCaretTextRange = doc.body.createTextRange();
-                        preCaretTextRange.moveToElementText(element);
-                        preCaretTextRange.setEndPoint("EndToEnd", textRange);
-                        caretOffset = preCaretTextRange.text.length;
-                    }
-                    return caretOffset;
                 }
             },
             html: {
