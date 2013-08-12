@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Medium.js</title>
+        <meta charset='utf-8'> 
+        
+        <link rel="stylesheet" type="text/css" href="../medium.css">
+        <link rel="stylesheet" type="text/css" href="docs.css">
+        <link rel="stylesheet" type="text/css" href="prism.css">
+        <!--
+            
+            Firefox 17.0+ (No Placeholders)
+            Safari 5.0+
+            Opera 11.0+ (Wonky Placeholders, no hotkeys)
+            
+        -->
+    </head>
+
+    <body>
+        <a class="fork" href="http://github.com/jakiestfu/Medium.js/"><img src="http://i.imgur.com/saRwNCY.jpg"></a>
+        
+        <div class="wrap">
+            <a class="brand" href="http://jakiestfu.github.io/Medium.js/">Medium.js</a>
+            <h1 class="catch">Taking control of content editable</h1>
+            <p>This is Medium.js. It keeps HTML code within <code>contenteditable</code> semantic, simple, and clean. It also allows for placeholders, automatic HR creation, events, hotkeys, and more.</p>
+            <p>This script is inspired by <a href="http://medium.com" target="_blank">Medium's</a> beautiful content editor, something I have aspired to emulate since it's inception.</p>
+            <p>Medium.js has been tested in Firefox 17+ (No Placeholders), Safari 5+, IE 10+, and Opera 11+ (No placeholders and no hotkeys). Hopefully, browser support (through abstraction), can be improved upon in the near future.</p>
+            <hr />
+            
+            <h3>Usage</h3>
+            <pre data-src="usage.html"></pre>
+            <p>Simply include the Medium JS library and CSS, and you are ready to rock. <b>No dependencies</b></p>
+            
+            <hr />
+            
+            <h3>Semantic</h3>
+            <pre data-src="semantic.html"></pre>
+            <p>The code within Medium.js editors are very semantic and organized, giving you peace of mind with using <code>contenteditable</code>.</p>
+            
+            <hr />
+            
+            <h3>Options</h3>
+            <pre data-src="options.js"></pre>
+            <p>All options (excluding <code>modifiers</code>, <code>tags</code>, and <code>cssClasses</code>) may be overridden with <code>data-medium-*</code> attributes on the element.</p>
+            
+            <ul class="def">
+                <li>
+                    <div> <code class="ref">debug</code>: Log properties to the console </div>
+                </li>
+                <li>
+                    <div> <code class="ref">element</code>: The element in which you want to apply the Medium editor to.</div>
+                </li>
+                <li>
+                    <div> <code class="ref">modifier</code>: The modifier you want for making things bold/italic etc. May be set to <code>'auto'</code>, <code>'cmd'</code>, or <code>'ctrl'</code>. </div>
+                </li>
+                <li>
+                    <div> <code class="ref">placeholder</code>: An optional string that displays when the editor is empty </div>
+                </li>
+                <li>
+                    <div> <code class="ref">autofocus</code>: Set the focus to the specified element automatically </div>
+                </li>
+                <li>
+                    <div> <code class="ref">autoHR</code>: An HR tag will automatically be inserted if there are two empty paragraphs in succession </div>
+                </li>
+                <li>
+                    <div> <code class="ref">mode</code>: Dictate the mode in which you want to allow editing. Currently there are three: <code>"inline"</code> allows for no rich text editing, and no newlines. Similar to an <code>input</code> element. <code>"partial"</code> is like a <code>textarea</code>, but allows support for paragraphs. <code>"rich"</code> allows styling of the text, paragraphs, and hr tags. </div>
+                </li>
+                <li>
+                    <div> <code class="ref">maxLength</code>: The max size you want to allow for the editor </div>
+                </li>
+                <li>
+                    <div> <code class="ref">modifiers</code>: Key modifiers from <code>e.which</code> that will be used to apply the respective styling changes or hook into events. </div>
+                </li>
+                <li>
+                    <div> <code class="ref">tags</code>: Dictates the base tags allows. <code>tags.paragraph</code> is the element that will be created for paragraphs. <code>tags.outerLevel</code> are the only elements allows to replace a top-level <code>p</code> tag. <code>tags.innerLevel</code> are the only tags allowed within the parent tags. No additional tags are allowed unless included here.</div>
+                </li>
+                <li>
+                    <div> <code class="ref">cssClasses</code>: Various classes used within Medium, customizable to your liking. </div>
+                </li>
+            </ul>
+            
+            <div class="faq">
+                <h3>Common Questions</h3>
+            
+                <h4>What is the purpose of Medium.js?</h4>
+                <p>Medium.js overrides many default keyboard events and substitutes a more cross-browser compliant way to interact with <code>contenteditable</code> elements. This means that you can use <code>contenteditable</code> without fearing your user is going to enter poor or invalid HTML. It keeps things tight, organized, and semantic.</p>
+                
+                <h4>Does this give me the cool highlighting toolbar like Medium's editor</h4>
+                <p><b>No</b>, it does not. If you're looking for a script that adds support for Medium's toolbar, take a look at <a href="http://zenpen.io/" target="_blank">ZenPen.io</a></p>
+                
+                <h4>There are weird style issues when inserting empty tags. What gives?</h4>
+                <p>Empty tags do not have what is called <code>layout</code>, a sort of property of an element. You need to set a <code>min-height</code> on the paragraph element you specify. </p>
+                
+                <h4>Medium.js does not work in all browsers!</h4>
+                <p>Please fork Medium.js and contribute, wide support is so close!</p>
+                
+            </div>
+
+            <hr />
+            
+            <h3>Demos</h3>
+            
+            <h4>Inline</h4>
+            <pre data-src="inline.js"></pre>
+            <div id="title" class="title demo"></div>
+            
+            <h4>Partial</h4>
+            <pre data-src="partial.js"></pre>
+            <div id="comment" class="comment demo"></div>
+            
+            <h4>Rich</h4>
+            <pre data-src="rich.js"></pre>
+            <div id="article" class="article demo"></div>
+            
+            <h4>Licensing</h4>
+            <div class="license">
+               <p><b>MIT Licensing</b></p>
+               <p>Copyright (c) 2013 Jacob Kelley</p>
+               <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+               <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+               <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+            </div>
+        </div>
+        
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="../medium.js"></script>
+        <script src="prism.js"></script>
+        <script src="docs.js"></script>
+    </body>
+</html>
