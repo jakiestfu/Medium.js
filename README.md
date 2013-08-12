@@ -1,4 +1,1 @@
-Medium.js
-=========
-
-A tiny JavaScript library for making contenteditable beautiful (Like Medium's editor)
+<a href="http://jakiestfu.github.io/Medium.js/"><img src="http://i.imgur.com/U6t8Eq2.png"></a>

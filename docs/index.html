@@ -7,13 +7,15 @@
         <link rel="stylesheet" type="text/css" href="../medium.css">
         <link rel="stylesheet" type="text/css" href="docs.css">
         <link rel="stylesheet" type="text/css" href="prism.css">
-        <!--
-            
-            Firefox 17.0+ (No Placeholders)
-            Safari 5.0+
-            Opera 11.0+ (Wonky Placeholders, no hotkeys)
-            
-        -->
+        
+        <meta property="og:title" content="Medium.js"/>
+        <meta property="og:type" content="website"/>
+        <meta property="og:url" content="http://jakiestfu.github.io/Medium.js/"/>
+        <meta property="og:site_name" content="Medium.js"/>
+        <meta property="og:description" content="Medium.js is a tiny JavaScript library for making HTML5's contenteditable beautiful (Like Medium's editor)" />
+
+        <meta name="description" content="Medium.js is a tiny JavaScript library for making HTML5's contenteditable beautiful (Like Medium's editor)" />
+
     </head>
 
     <body>
@@ -22,9 +24,23 @@
         <div class="wrap">
             <a class="brand" href="http://jakiestfu.github.io/Medium.js/">Medium.js</a>
             <h1 class="catch">Taking control of content editable</h1>
+            
+            <div class="share">
+				<iframe src="http://ghbtns.com/github-btn.html?user=jakiestfu&repo=Medium.js&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="120" height="20"></iframe>
+				<iframe src="http://ghbtns.com/github-btn.html?user=jakiestfu&repo=Medium.js&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="120" height="20"></iframe>
+								
+				<a href="https://twitter.com/share" class="twitter-share-button" data-via="jakiestfu" data-text="Medium.js is a tiny JavaScript library for making HTML5's contenteditable beautiful (Like Medium's editor)">Tweet</a>
+				<a href="https://twitter.com/jakiestfu" class="twitter-follow-button" data-show-count="false">Follow @jakiestfu</a>
+				
+				<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+			</div>
+
+            <hr />
+            
             <p>This is Medium.js. It keeps HTML code within <code>contenteditable</code> semantic, simple, and clean. It also allows for placeholders, automatic HR creation, events, hotkeys, and more.</p>
             <p>This script is inspired by <a href="http://medium.com" target="_blank">Medium's</a> beautiful content editor, something I have aspired to emulate since it's inception.</p>
             <p>Medium.js has been tested in Firefox 17+ (No Placeholders), Safari 5+, IE 10+, and Opera 11+ (No placeholders and no hotkeys). Hopefully, browser support (through abstraction), can be improved upon in the near future.</p>
+            <p>This code is brought to you by <a href="http://jakiestfu.com/" target="_blank">jakiestfu</a>, author of <a href="http://github.com/jakiestfu/Snap.js/" target="_blank">Snap.js</a> and <a href="http://jakiestfu.github.io/Behave.js/" target="_blank">Behave.js</a>. Please share!</p>
             <hr />
             
             <h3>Usage</h3>
