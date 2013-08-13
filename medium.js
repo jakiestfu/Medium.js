@@ -18,9 +18,9 @@
      * Fix IE shit
      */
     if( typeof String.prototype.trim !== 'function' ){
-    	String.prototype.trim = function() {
-		    return this.replace(/^\s+|\s+$/g, '');
-		}
+        String.prototype.trim = function() {
+            return this.replace(/^\s+|\s+$/g, '');
+        }
     }
 
     var Medium = Medium || function (userOpts) {
@@ -133,18 +133,18 @@
              * Utilities
              */
             getElementsByClassName: function(classname, el) {
-        	    el = el ? el : document.body;
-    		    var a = [],
-    		    	re = new RegExp('(^| )'+classname+'( |$)'),
-    		    	els = el.getElementsByTagName("*");
-    		    for(var i=0,j=els.length; i<j; i++){
-    		        if(re.test(els[i].className)){
-    		        	a.push(els[i]);
-    		        }
-    		    }
-    		    return a;
-    		},
-    		
+                el = el ? el : document.body;
+                var a = [],
+                    re = new RegExp('(^| )'+classname+'( |$)'),
+                    els = el.getElementsByTagName("*");
+                for(var i=0,j=els.length; i<j; i++){
+                    if(re.test(els[i].className)){
+                        a.push(els[i]);
+                    }
+                }
+                return a;
+            },
+            
             deepExtend: function (destination, source) {
                 for (var property in source) {
                     if (source[property] && source[property].constructor && source[property].constructor === Object) {
@@ -156,10 +156,10 @@
                 }
                 return destination;
             },
-    		
-    		/*
-    		 * Handle Selection Logic
-    		 */
+            
+            /*
+             * Handle Selection Logic
+             */
             selection: {
                 saveSelection: function() {
                     if (w.getSelection) {
@@ -191,23 +191,23 @@
              */
             cursor: {
                 set: function (pos, el) {
-                	if( d.createRange ){
-                		var range = d.createRange(),
-                			selection = w.getSelection(),
-	                        lastChild = utils.html.lastChild(),
-	                        length =  utils.html.text(lastChild).length-1,
-	                        toModify = el ? el : lastChild,
-	                        theLength = typeof pos !== 'undefined' ? pos : length;
-	                    range.setStart(toModify, theLength);
-	                    range.collapse(true);
-	                    selection.removeAllRanges();
-	                    selection.addRange(range);
-                	} else {
-                		var range = d.body.createTextRange();
-				        range.moveToElementText(el);
-				        range.collapse(false);
-				        range.select();
-                	}
+                    if( d.createRange ){
+                        var range = d.createRange(),
+                            selection = w.getSelection(),
+                            lastChild = utils.html.lastChild(),
+                            length =  utils.html.text(lastChild).length-1,
+                            toModify = el ? el : lastChild,
+                            theLength = typeof pos !== 'undefined' ? pos : length;
+                        range.setStart(toModify, theLength);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    } else {
+                        var range = d.body.createTextRange();
+                        range.moveToElementText(el);
+                        range.collapse(false);
+                        range.select();
+                    }
                 }
             },
             
@@ -325,24 +325,24 @@
                 },
                 addTag: function (tag, shouldFocus, isEditable, afterElement) {
                     var newEl = d.createElement(tag),
-                    	toFocus;
+                        toFocus;
 
                     if( typeof isEditable !== "undefined" && isEditable === false ){
                         newEl.contentEditable = false;
                     }
                     newEl.innerHTML = ' ';
                     if( afterElement && afterElement.nextSibling ){
-                    	afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
-                    	toFocus = afterElement.nextSibling;
-                    	
+                        afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
+                        toFocus = afterElement.nextSibling;
+                        
                     } else {
-                    	settings.element.appendChild(newEl);
-                    	toFocus = utils.html.lastChild();
+                        settings.element.appendChild(newEl);
+                        toFocus = utils.html.lastChild();
                     }
                     
                     if( shouldFocus ){
-                    	cache.focusedElement = toFocus;
-                    	utils.cursor.set( 0, toFocus );
+                        cache.focusedElement = toFocus;
+                        utils.cursor.set( 0, toFocus );
                     }
                     
                 }
@@ -371,8 +371,8 @@
                 //_log('FOCUSED');
             },
             down: function(e){
-            	
-            	utils.isCommand(e, function(){
+                
+                utils.isCommand(e, function(){
                     cache.cmd = true;
                 }, function(){
                     cache.cmd = false;
@@ -449,36 +449,36 @@
                     return utils.preventDefaultEvent(e);
                 }
 
-            	if( !cache.shift ){
-            		
-            		utils.preventDefaultEvent(e);
-            		
-            		var focusedElement = cache.focusedElement;
-            		
-            		if( settings.autoHR && settings.mode !== 'partial' ){
-	                    var children = settings.element.children,
-	                        lastChild = children[ children.length-1 ],
-	                        makeHR = ( utils.html.text(lastChild) === "" ) && (lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
-	                    
-	                    if( makeHR && children.length >=2 ){
-	                        var secondToLast = children[ children.length-2 ];
-	                        
-	                        if( secondToLast.nodeName.toLowerCase() === "hr" ){
-	                            makeHR = false;
-	                        }
-	                    }
-	    
-	                    if( makeHR ){
-	                        utils.preventDefaultEvent(e);
-	                        utils.html.deleteNode( lastChild );
-	                        utils.html.addTag('hr', false, false, focusedElement);
-	                        focusedElement = focusedElement.nextSibling;
-	                    }
-	                    utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
-	                } else {
-	                    utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
-	                }
-            	}
+                if( !cache.shift ){
+                    
+                    utils.preventDefaultEvent(e);
+                    
+                    var focusedElement = cache.focusedElement;
+                    
+                    if( settings.autoHR && settings.mode !== 'partial' ){
+                        var children = settings.element.children,
+                            lastChild = children[ children.length-1 ],
+                            makeHR = ( utils.html.text(lastChild) === "" ) && (lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
+                        
+                        if( makeHR && children.length >=2 ){
+                            var secondToLast = children[ children.length-2 ];
+                            
+                            if( secondToLast.nodeName.toLowerCase() === "hr" ){
+                                makeHR = false;
+                            }
+                        }
+        
+                        if( makeHR ){
+                            utils.preventDefaultEvent(e);
+                            utils.html.deleteNode( lastChild );
+                            utils.html.addTag('hr', false, false, focusedElement);
+                            focusedElement = focusedElement.nextSibling;
+                        }
+                        utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
+                    } else {
+                        utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
+                    }
+                }
             }
         },
         action = {
@@ -488,8 +488,8 @@
                 utils.addEvent(settings.element, 'focus', intercept.focus);
             },
             preserveElementFocus: function(){
-            	
-            	// Fetch node that has focus
+                
+                // Fetch node that has focus
                 var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
                 if(anchorNode){
                     var cur = anchorNode.parentNode,
@@ -500,7 +500,7 @@
                     
                     // anchorNode is our target if element is empty
                     if (cur===settings.element){
-                    	cur = anchorNode;
+                        cur = anchorNode;
                     }
                     
                     // Find our child index
@@ -534,10 +534,10 @@
                 }
             }
         
-        	// Extend Settings
+            // Extend Settings
             utils.deepExtend(settings, opts);
     
-    		// Editable
+            // Editable
             settings.element.contentEditable = true;
             settings.element.className += (" ")+settings.cssClasses.editor;
             settings.element.className += (" ")+settings.cssClasses.editor+"-"+settings.mode;
@@ -563,8 +563,8 @@
         init(userOpts);
     
     };
-	
-	// Exports and modularity
+    
+    // Exports and modularity
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = Medium;
     }
