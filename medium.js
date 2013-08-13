@@ -409,6 +409,8 @@
                 if( e.which === 13 ){
                     intercept.enterKey.call(null, e);
                 }
+                utils.html.clean();
+                utils.html.placeholders();
             },
             up: function(e){
                 utils.isCommand(e, function(){
@@ -416,8 +418,7 @@
                 }, function(){
                     cache.cmd = true;
                 });
-                utils.html.clean();
-                utils.html.placeholders();
+                
                 action.preserveElementFocus();
             },
             command: {
