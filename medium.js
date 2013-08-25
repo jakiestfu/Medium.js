@@ -224,7 +224,7 @@
                             node.innerText = val;
                         }
                     }
-                    return (node.textContent || node.innerText).trim();
+                    return (node.textContent || node.innerText || "").trim();
                 },
                 changeTag: function(oldNode, newTag) {
                     var newNode = d.createElement(newTag),
