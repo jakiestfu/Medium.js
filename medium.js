@@ -78,6 +78,11 @@
                     return fnFalse.call();
                 }
             },
+            isTab: function(e, fn){
+                if(e.which == 9){
+                    return fn.call();
+                }
+            },
             isShift: function(e, fnTrue, fnFalse){
                 if(e.shiftKey){
                     return fnTrue.call();
@@ -382,6 +387,9 @@
                 }, function(){
                     cache.shift = false;
                 });
+                utils.isTab(e, function(){
+                    intercept.command['tab'].call(null, e);
+                });
                 utils.isModifier(e, function(cmd){
                     if( cache.cmd ){
                         
@@ -421,6 +429,29 @@
                 action.preserveElementFocus();
             },
             command: {
+                tab: function(e){
+                    var sel = utils.selection.saveSelection();
+                    
+                    var original = utils.html.text(sel.startContainer);
+                    var position = sel.startOffset;
+                    if( !cache.shift ){
+                        var output = [original.slice(0, position), "\t", original.slice(position)].join('');
+
+                        utils.html.text(sel.startContainer, output);
+                        utils.cursor.set( position + 1, sel.startContainer );
+                        utils.preventDefaultEvent(e);
+                    } else {
+                        // if the previous character is a tab, untab
+                        if (original.slice(position-1, position) == '\t') {
+                            var output = [original.slice(0, position-1), original.slice(position)].join('');
+
+                            utils.html.text(sel.startContainer, output);
+                            utils.cursor.set( position - 1, sel.startContainer );
+                            // place the call here so if the previous char is not a tab the event bubbles up
+                            utils.preventDefaultEvent(e);
+                        }
+                    }
+                },
                 bold: function(e){
                     utils.preventDefaultEvent(e);
                     // IE uses strong instead of b

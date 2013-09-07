@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Medium.js Example</title>
+    <meta charset='utf-8'> 
+    <link rel="stylesheet" type="text/css" href="../medium.css">
+    <link rel="stylesheet" type="text/css" href="prism.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="../medium.js"></script>
+    <script src="prism.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function() {
+
+        new Medium({
+            element: document.getElementById('article'),
+            mode: 'rich',
+            placeholder: 'Your Article'
+        });
+
+      });
+    </script>
+  </head>
+  <body>
+    <pre>
+      <div id="article" class="article demo" style='font-family:Verdana;'>foo</div>
+    </pre>
+  </body>
+</html>
