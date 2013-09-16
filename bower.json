@@ -1,0 +1,21 @@
+{
+  "name": "Medium.js",
+  "version": "0.0.1",
+  "homepage": "http://jakiestfu.github.io/Medium.js/docs/",
+  "authors": [
+    "Jacob Kelley <jakie8@gmail.com>"
+  ],
+  "description": "A tiny JavaScript library for making contenteditable beautiful (Like Medium's editor)",
+  "main": "medium.js",
+  "keywords": [
+    "medium"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
