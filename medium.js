@@ -51,6 +51,9 @@
                 editor: 'Medium',
                 pasteHook: 'Medium-paste-hook',
                 placeholder: 'Medium-placeholder'
+            },
+            attributes: {
+                remove: ['style','class']
             }
         },
         cache = {
@@ -280,7 +283,7 @@
                      * Deletes invalid nodes
                      * Removes Attributes
                      */
-                    var attsToRemove = ['style','class'],
+                    var attsToRemove = settings.attributes.remove,
                         only = (settings.tags.outerLevel).concat([settings.tags.paragraph]),
                         children = settings.element.children,
                         i, j, k;
