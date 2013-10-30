@@ -562,6 +562,33 @@
             utils.removeEvent(settings.element, 'keydown', intercept.down);
             utils.removeEvent(settings.element, 'focus', intercept.focus);
         };
+
+        // Sets or returns the content of element
+        this.val = function(content){
+            // Set content if content is provided
+            if( typeof (content) != "undefined") {
+                settings.element.innerHTML = content;
+                utils.html.placeholders();
+                return content;
+            }
+            else {
+                var placeholders = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element),
+                    innerText = utils.html.text(settings.element);
+
+                if( innerText !== settings.placeholder ){
+                    return settings.element.innerHTML
+                }
+                else {
+                    return ''
+                }
+            }
+        };
+
+        // Clears the element and restores the placeholder
+        this.clear = function(){
+            settings.element.innerHTML = '';
+            utils.html.placeholders();
+        };
         
         init(userOpts);
     
