@@ -211,6 +211,10 @@
                         range.collapse(false);
                         range.select();
                     }
+                },
+                get: function () {
+                    var selection = w.getSelection();
+                    return {start: selection.anchorOffset, end: selection.focusOffset}
                 }
             },
             
@@ -328,12 +332,37 @@
                 },
                 addTag: function (tag, shouldFocus, isEditable, afterElement) {
                     var newEl = d.createElement(tag),
-                        toFocus;
+                        toFocus,
+                        cursorPosition,
+                        start,
+                        end,
+                        extractedText = ' ',
+                        elText;
+                    
+                    // Extract the any text that may need to be included in the newEl
+                    if( afterElement ) {
+                        elText = afterElement.innerText;
+                        cursorPosition = utils.cursor.get();
+                        start = cursorPosition.start;
+                        end = cursorPosition.end;
+                        
+                        // No selected text - move everything after the cursor into the newEl
+                        if( start === end ) {
+                            extractedText = elText.substr(start);
+                            afterElement.innerText = elText.replace(extractedText, '');
+                        }
+                        // Selected text - remove the selection, but don't copy it to the newEl
+                        else {
+                            extractedText = elText.substr(start, end - start);
+                            afterElement.innerText = elText.replace(extractedText, '');
+                            extractedText = ' '
+                        }
+                    }
 
                     if( typeof isEditable !== "undefined" && isEditable === false ){
                         newEl.contentEditable = false;
                     }
-                    newEl.innerHTML = ' ';
+                    newEl.innerHTML = extractedText;
                     if( afterElement && afterElement.nextSibling ){
                         afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
                         toFocus = afterElement.nextSibling;
