@@ -341,7 +341,7 @@
                     
                     // Extract the any text that may need to be included in the newEl
                     if( afterElement ) {
-                        elText = afterElement.innerText;
+                        elText = afterElement.textContent || afterElement.text;
                         cursorPosition = utils.cursor.get();
                         start = cursorPosition.start;
                         end = cursorPosition.end;
@@ -476,7 +476,7 @@
                 }
             },
             enterKey: function (e) {
-            
+                console.log('enter key')
                 if( settings.mode === "inline" ){
                     return utils.preventDefaultEvent(e);
                 }
