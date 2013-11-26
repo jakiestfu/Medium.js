@@ -15,7 +15,7 @@
     'use strict';
     
     /*
-     * Fix IE shit
+     * Fix IE
      */
     if( typeof String.prototype.trim !== 'function' ){
         String.prototype.trim = function() {
@@ -94,6 +94,7 @@
                 if(cmd){
                     return fn.call(null, cmd);
                 }
+                return false;
             },
             isNotSpecial: function(e){
                 var special = {
@@ -194,19 +195,21 @@
              */
             cursor: {
                 set: function (pos, el) {
+                    var range;
                     if( d.createRange ){
-                        var range = d.createRange(),
-                            selection = w.getSelection(),
+                        var selection = w.getSelection(),
                             lastChild = utils.html.lastChild(),
                             length =  utils.html.text(lastChild).length-1,
                             toModify = el ? el : lastChild,
                             theLength = typeof pos !== 'undefined' ? pos : length;
+
+                        range = d.createRange();
                         range.setStart(toModify, theLength);
                         range.collapse(true);
                         selection.removeAllRanges();
                         selection.addRange(range);
                     } else {
-                        var range = d.body.createTextRange();
+                        range = d.body.createTextRange();
                         range.moveToElementText(el);
                         range.collapse(false);
                         range.select();
@@ -227,7 +230,11 @@
                             node.innerText = val;
                         }
                     }
-                    return (node.textContent || node.innerText).trim();
+                    if (node.textContent !== null) {
+                        return node.textContent.trim();
+                    } else {
+                        return node.innerText.trim();
+                    }
                 },
                 changeTag: function(oldNode, newTag) {
                     var newNode = d.createElement(newTag),
@@ -252,7 +259,8 @@
                     
                     
                     var placeholders = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element),
-                        innerText = utils.html.text(settings.element);
+                        innerText = utils.html.text(settings.element),
+                        c = null;
                     
                     // Empty Editer
                     if( innerText === ""  ){
@@ -261,13 +269,16 @@
                         // We need to add placeholders
                         if(settings.placeholder.length > 0){ 
                             utils.html.addTag(settings.tags.paragraph, false, false);
-                            var c = utils.html.lastChild();
+                            c = utils.html.lastChild();
                             c.className = settings.cssClasses.placeholder;
                             utils.html.text(c, settings.placeholder);
                         }
                         
-                        // Add base P tag and do autofocus
-                        utils.html.addTag(settings.tags.paragraph, cache.initialized ? true : settings.autofocus);
+                        // Add base P tag and do autofocus, give it a min height if c has one
+                        var p = utils.html.addTag(settings.tags.paragraph, cache.initialized ? true : settings.autofocus);
+                        if (c) {
+                            p.style.minHeight = c.clientHeight + 'px';
+                        }
                     } else {
                         if(innerText !== settings.placeholder){
                             var i;
@@ -347,7 +358,7 @@
                         cache.focusedElement = toFocus;
                         utils.cursor.set( 0, toFocus );
                     }
-                    
+                    return newEl;
                 }
             },
             
@@ -412,6 +423,8 @@
                 if( e.which === 13 ){
                     intercept.enterKey.call(null, e);
                 }
+
+                return true;
             },
             up: function(e){
                 utils.isCommand(e, function(){
@@ -482,6 +495,8 @@
                         utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
                     }
                 }
+
+                return true;
             }
         },
         action = {
