@@ -338,27 +338,33 @@
                     return settings.element.lastChild;
                 },
                 addTag: function (tag, shouldFocus, isEditable, afterElement) {
-                    var newEl = d.createElement(tag),
-                        toFocus;
+                    var newEl = d.createElement(tag);
+
+                    return this.addCustomTag(newEl, shouldFocus, isEditable, afterElement);
+                },
+                addCustomTag: function(el, shouldFocus, isEditable, afterElement) {
+                    var toFocus;
 
                     if( typeof isEditable !== "undefined" && isEditable === false ){
-                        newEl.contentEditable = false;
+                        el.contentEditable = false;
                     }
-                    newEl.innerHTML = ' ';
+                    if (el.innerHTML.length == 0) {
+                        el.innerHTML = ' ';
+                    }
                     if( afterElement && afterElement.nextSibling ){
-                        afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
+                        afterElement.parentNode.insertBefore( el, afterElement.nextSibling );
                         toFocus = afterElement.nextSibling;
-                        
+
                     } else {
-                        settings.element.appendChild(newEl);
+                        settings.element.appendChild(el);
                         toFocus = utils.html.lastChild();
                     }
-                    
+
                     if( shouldFocus ){
                         cache.focusedElement = toFocus;
                         utils.cursor.set( 0, toFocus );
                     }
-                    return newEl;
+                    return el;
                 }
             },
             
@@ -579,7 +585,11 @@
         };
         
         init(userOpts);
-    
+
+        this.settings = settings;
+        this.utils = utils;
+        this.cache = cache;
+        this.intercept = intercept;
     };
     
     // Exports and modularity
