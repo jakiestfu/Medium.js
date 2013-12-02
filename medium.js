@@ -354,7 +354,7 @@
             /*
              * This is a Paste Hook. When the user pastes
              * content, this ultimately converts it into
-             * plain text nefore inserting the data.
+             * plain text before inserting the data.
              */
             pasteHook: function(fn){
                 var input = d.createElement('textarea');
