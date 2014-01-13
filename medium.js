@@ -10,7 +10,7 @@
  */
 
 
-(function(w, d){
+(function(w, d, rangy, undo){
 
     'use strict';
     
@@ -54,6 +54,13 @@
             },
             attributes: {
                 remove: ['style','class']
+            },
+            execCommand: function (type, input) {
+                if (input) {
+                    d.execCommand(type, false, input);
+                } else {
+                    d.execCommand(type, false);
+                }
             }
         },
         cache = {
@@ -446,22 +453,22 @@
                 bold: function(e){
                     utils.preventDefaultEvent(e);
                     // IE uses strong instead of b
-                    d.execCommand( 'bold', false ); _log('Bold');
+                    settings.execCommand('bold'); _log('Bold');
                 },
                 underline: function(e){
                     utils.preventDefaultEvent(e);
-                    d.execCommand( 'underline', false ); _log('Underline');                
+                    settings.execCommand('underline'); _log('Underline');
                 },
                 italicize: function(e){
                     utils.preventDefaultEvent(e);
-                    d.execCommand( 'italic', false ); _log('Italic');
+                    settings.execCommand( 'italic'); _log('Italic');
                 },
                 quote: function(e){},
                 paste: function(e){
                     var sel = utils.selection.saveSelection();
                     utils.pasteHook(function(text){
                         utils.selection.restoreSelection( sel );
-                        d.execCommand('insertHTML', false, text.replace(/\n/g, '<br>') );
+                        settings.execCommand('insertHTML', text.replace(/\n/g, '<br>'));
                     });
                 }
             },
@@ -607,4 +614,4 @@
         });
     }
 
-}).call(this, window, document);
+}).call(this, window, document, window.rangy, window.undo);
