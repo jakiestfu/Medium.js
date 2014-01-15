@@ -613,6 +613,29 @@
 		this.html = html;
 	};
 
+    Medium.Wedge = function(html) {
+        d.execCommand('insertHtml', false, this.toString());
+        var wedge = d.getElementById('wedge'),
+            htmlConverter = d.createElement('div');
+        wedge.removeAttribute('id');
+
+        if (typeof html === 'string') {
+            htmlConverter.innerHTML = html;
+            this.html = htmlConverter.children;
+        } else {
+            this.html = html;
+        }
+
+        wedge.parentNode.insertBefore(this.html, wedge.nextSibling);
+        wedge.parentNode.removeChild(wedge);
+    };
+
+    Medium.Wedge.prototype = {
+        toString: function() {
+            return '<span id="wedge"></span>';
+        }
+    };
+
 	if (rangy && undo) {
 		rangy.rangePrototype.insertNodeAtEnd = function(node) {
 			var range = this.cloneRange();
@@ -643,7 +666,7 @@
 					fn.apply(this);
 				}
 
-				d.execCommand('insertHtml', false, this.html);
+                return (new Medium.Wedge(this.html)).html;
 			}
 		};
 
@@ -663,6 +686,7 @@
 					fn.apply(this);
 				}
 				d.execCommand('insertHtml', false, this.html);
+                return null;
 			}
 		};
 	}
