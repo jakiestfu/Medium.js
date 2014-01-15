@@ -55,13 +55,8 @@
             attributes: {
                 remove: ['style','class']
             },
-            execCommand: function (type, input) {
-                if (input) {
-                    d.execCommand(type, false, input);
-                } else {
-                    d.execCommand(type, false);
-                }
-            }
+	        beforeInsertElement: function() {},
+	        beforeInsertHtml: function() {}
         },
         cache = {
             initialized: false,
@@ -453,22 +448,31 @@
                 bold: function(e){
                     utils.preventDefaultEvent(e);
                     // IE uses strong instead of b
-                    settings.execCommand('bold'); _log('Bold');
+	                (new Medium.Element('bold'))
+		                .insert(settings.beforeInsertElement);
+	                _log('Bold');
                 },
                 underline: function(e){
                     utils.preventDefaultEvent(e);
-                    settings.execCommand('underline'); _log('Underline');
+	                (new Medium.Element('underline'))
+		                .insert(settings.beforeInsertElement);
+	                _log('Underline');
                 },
                 italicize: function(e){
                     utils.preventDefaultEvent(e);
-                    settings.execCommand( 'italic'); _log('Italic');
+	                (new Medium.Element('italic'))
+		                .insert(settings.beforeInsertElement);
+	                _log('Italic');
                 },
                 quote: function(e){},
                 paste: function(e){
                     var sel = utils.selection.saveSelection();
                     utils.pasteHook(function(text){
                         utils.selection.restoreSelection( sel );
-                        settings.execCommand('insertHTML', text.replace(/\n/g, '<br>'));
+	                    (new Medium.Html(text.replace(/\n/g, '<br>')))
+		                    .insert(settings.beforeInsertHtml);
+
+	                    _log('Html');
                     });
                 }
             },
@@ -598,7 +602,71 @@
         this.cache = cache;
         this.intercept = intercept;
     };
-    
+
+	Medium.Element = function(tagName, className, attributes) {
+		this.tagName = tagName;
+		this.className = className;
+		this.attributes = attributes;
+	};
+
+	Medium.Html = function(html) {
+		this.html = html;
+	};
+
+	if (rangy && undo) {
+		rangy.rangePrototype.insertNodeAtEnd = function(node) {
+			var range = this.cloneRange();
+			range.collapse(false);
+			range.insertNode(node);
+			range.detach();
+			this.setEndAfter(node);
+		};
+
+		Medium.Element.prototype = {
+			insert: function(fn) {
+				if (fn) {
+					fn.apply(this);
+				}
+
+				var applier = (rangy.createCssClassApplier(this.className, {
+					elementTagName: this.tagName.toLowerCase(),
+					elementAttributes: this.attributes
+				}));
+
+				applier.toggleSelection();
+			}
+		};
+
+		Medium.Html.prototype = {
+			insert: function(fn) {
+				if (fn) {
+					fn.apply(this);
+				}
+
+				d.execCommand('insertHtml', false, this.html);
+			}
+		};
+
+	} else {
+		Medium.Element.prototype = {
+			insert: function(fn) {
+				if (fn) {
+					fn.apply(this);
+				}
+				d.execCommand(this.tagName, false);
+			}
+		};
+
+		Medium.Html.prototype = {
+			insert: function(fn) {
+				if (fn) {
+					fn.apply(this);
+				}
+				d.execCommand('insertHtml', false, this.html);
+			}
+		};
+	}
+
     // Exports and modularity
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = Medium;
