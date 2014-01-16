@@ -23,6 +23,11 @@
         }
     }
 
+    /**
+     * Medium.js - make the browser obey
+     * @type {Function}
+     * @param {Object} [userOpts] user options
+     */
     var Medium = Medium || function (userOpts) {
 
         var 
@@ -613,29 +618,9 @@
 		this.html = html;
 	};
 
-    Medium.Wedge = function(html) {
-        d.execCommand('insertHtml', false, this.toString());
-        var wedge = d.getElementById('wedge'),
-            htmlConverter = d.createElement('div');
-        wedge.removeAttribute('id');
+    Medium.Injector = function() {};
 
-        if (typeof html === 'string') {
-            htmlConverter.innerHTML = html;
-            this.html = htmlConverter.children;
-        } else {
-            this.html = html;
-        }
-
-        wedge.parentNode.insertBefore(this.html, wedge.nextSibling);
-        wedge.parentNode.removeChild(wedge);
-    };
-
-    Medium.Wedge.prototype = {
-        toString: function() {
-            return '<span id="wedge"></span>';
-        }
-    };
-
+    //if rangy and undo.js are defined, then we use them and their methods to interact with html
 	if (rangy && undo) {
 		rangy.rangePrototype.insertNodeAtEnd = function(node) {
 			var range = this.cloneRange();
@@ -660,16 +645,33 @@
 			}
 		};
 
-		Medium.Html.prototype = {
-			insert: function(fn) {
-				if (fn) {
-					fn.apply(this);
-				}
+        Medium.Injector.prototype = {
+            toString: '<span id="wedge"></span>',
+            inject: function(htmlRaw) {
+                var html;
+                if (typeof htmlRaw === 'string') {
+                    var htmlConverter = d.createElement('div');
+                    htmlConverter.innerHTML = htmlRaw;
+                    html = htmlConverter.children;
+                } else {
+                    html = htmlRaw;
+                }
 
-                return (new Medium.Wedge(this.html)).html;
-			}
-		};
+                d.execCommand('insertHtml', false, this.toString);
+                var wedge = d.getElementById('wedge'),
+                    parent = wedge.parentNode;
+                wedge.removeAttribute('id');
+                parent.insertBefore(html, wedge.nextSibling);
+                parent.removeChild(wedge);
+                wedge = null;
 
+                return html;
+            }
+        };
+
+
+
+    //If rangy and undo.js are not available, we let the browser handle the commands via d.execCommand
 	} else {
 		Medium.Element.prototype = {
 			insert: function(fn) {
@@ -680,16 +682,24 @@
 			}
 		};
 
-		Medium.Html.prototype = {
-			insert: function(fn) {
-				if (fn) {
-					fn.apply(this);
-				}
-				d.execCommand('insertHtml', false, this.html);
+        Medium.Injector.prototype = {
+            inject: function(htmlRaw) {
+                d.execCommand('insertHtml', false, htmlRaw);
                 return null;
-			}
-		};
+            }
+        };
 	}
+
+    Medium.Html.prototype = {
+        insert: function(fn) {
+            if (fn) {
+                fn.apply(this);
+            }
+
+            return this.injector.inject(this.html);
+        },
+        injector: new Medium.Injector()
+    };
 
     // Exports and modularity
     if (typeof module !== 'undefined' && module.exports) {
