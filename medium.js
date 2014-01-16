@@ -31,7 +31,7 @@
     var Medium = Medium || function (userOpts) {
 
         var 
-        
+        me = this,
         settings = {
             debug: true,
             element: null,
@@ -453,19 +453,22 @@
                 bold: function(e){
                     utils.preventDefaultEvent(e);
                     // IE uses strong instead of b
-	                (new Medium.Element('bold'))
+	                (new Medium.Element(me, 'bold'))
+                        .setClean(false)
 		                .insert(settings.beforeInsertElement);
 	                _log('Bold');
                 },
                 underline: function(e){
                     utils.preventDefaultEvent(e);
-	                (new Medium.Element('underline'))
+	                (new Medium.Element(me, 'underline'))
+                        .setClean(false)
 		                .insert(settings.beforeInsertElement);
 	                _log('Underline');
                 },
                 italicize: function(e){
                     utils.preventDefaultEvent(e);
-	                (new Medium.Element('italic'))
+	                (new Medium.Element(me, 'italic'))
+                        .setClean(false)
 		                .insert(settings.beforeInsertElement);
 	                _log('Italic');
                 },
@@ -474,7 +477,8 @@
                     var sel = utils.selection.saveSelection();
                     utils.pasteHook(function(text){
                         utils.selection.restoreSelection( sel );
-	                    (new Medium.Html(text.replace(/\n/g, '<br>')))
+	                    (new Medium.Html(me, text.replace(/\n/g, '<br>')))
+                            .setClean(false)
 		                    .insert(settings.beforeInsertHtml);
 
 	                    _log('Html');
@@ -608,17 +612,21 @@
         this.intercept = intercept;
     };
 
-	Medium.Element = function(tagName, className, attributes) {
+	Medium.Element = Medium.Element || function(medium, tagName, className, attributes) {
+        this.medium = medium;
 		this.tagName = tagName;
 		this.className = className;
 		this.attributes = attributes;
+        this.clean = true;
 	};
 
-	Medium.Html = function(html) {
+	Medium.Html = Medium.Html || function(medium, html) {
+        this.medium = medium;
 		this.html = html;
+        this.clean = true;
 	};
 
-    Medium.Injector = function() {};
+    Medium.Injector = Medium.Injector || function() {};
 
     //if rangy and undo.js are defined, then we use them and their methods to interact with html
 	if (rangy && undo) {
@@ -632,17 +640,29 @@
 
 		Medium.Element.prototype = {
 			insert: function(fn) {
-				if (fn) {
-					fn.apply(this);
-				}
+                if (d.activeElement === this.medium.element) {
+                    if (fn) {
+                        fn.apply(this);
+                    }
 
-				var applier = (rangy.createCssClassApplier(this.className, {
-					elementTagName: this.tagName.toLowerCase(),
-					elementAttributes: this.attributes
-				}));
+                    var applier = (rangy.createCssClassApplier(this.className, {
+                        elementTagName: this.tagName.toLowerCase(),
+                        elementAttributes: this.attributes
+                    }));
 
-				applier.toggleSelection();
-			}
+                    if (this.clean) {
+                        //cleanup
+                        this.medium.utils.html.clean();
+                        this.medium.utils.html.placeholders();
+                    }
+
+                    applier.toggleSelection();
+                }
+			},
+            setClean: function(clean) {
+                this.clean = clean;
+                return this;
+            }
 		};
 
         Medium.Injector.prototype = {
@@ -675,10 +695,12 @@
 	} else {
 		Medium.Element.prototype = {
 			insert: function(fn) {
-				if (fn) {
-					fn.apply(this);
-				}
-				d.execCommand(this.tagName, false);
+                if (d.activeElement === this.medium.element) {
+                    if (fn) {
+                        fn.apply(this);
+                    }
+                    d.execCommand(this.tagName, false);
+                }
 			}
 		};
 
@@ -696,9 +718,21 @@
                 fn.apply(this);
             }
 
-            return this.injector.inject(this.html);
+            var inserted = this.injector.inject(this.html);
+
+            if (this.clean) {
+                //cleanup
+                this.medium.utils.html.clean();
+                this.medium.utils.html.placeholders();
+            }
+
+            return inserted;
         },
-        injector: new Medium.Injector()
+        injector: new Medium.Injector(),
+        setClean: function(clean) {
+            this.clean = clean;
+            return this;
+        }
     };
 
     // Exports and modularity
