@@ -51,8 +51,7 @@ applyMedium = function(){
         });
 
     article2Button.onmousedown = function() {
-        (new Medium.Html(article2Medium, '<p style="background-color: rgba(255, 255, 0, 0.3);">Happy day!  I can work with buttons too!</p>'))
-            .insert();
+        article2Medium.insertHtml('<p style="background-color: rgba(255, 255, 0, 0.3);">Happy day!  I can work with buttons too!</p>');
     };
 
 

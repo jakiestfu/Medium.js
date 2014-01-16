@@ -74,7 +74,6 @@
             }
         },
         utils = {
-        
             /*
              * Keyboard Interface events
              */
@@ -628,6 +627,11 @@
 
     Medium.Injector = Medium.Injector || function() {};
 
+    Medium.prototype = {
+        insertHtml: function(html) {
+            return (new Medium.Html(this, html)).insert();
+        }
+    };
     //if rangy and undo.js are defined, then we use them and their methods to interact with html
 	if (rangy && undo) {
 		rangy.rangePrototype.insertNodeAtEnd = function(node) {
@@ -695,7 +699,7 @@
 	} else {
 		Medium.Element.prototype = {
 			insert: function(fn) {
-                if (d.activeElement === this.medium.element) {
+                if (d.activeElement === this.medium.settings.element) {
                     if (fn) {
                         fn.apply(this);
                     }
@@ -714,19 +718,23 @@
 
     Medium.Html.prototype = {
         insert: function(fn) {
-            if (fn) {
-                fn.apply(this);
+            if (d.activeElement === this.medium.settings.element) {
+                if (fn) {
+                    fn.apply(this);
+                }
+
+                var inserted = this.injector.inject(this.html);
+
+                if (this.clean) {
+                    //cleanup
+                    this.medium.utils.html.clean();
+                    this.medium.utils.html.placeholders();
+                }
+
+                return inserted;
+            } else {
+                return null;
             }
-
-            var inserted = this.injector.inject(this.html);
-
-            if (this.clean) {
-                //cleanup
-                this.medium.utils.html.clean();
-                this.medium.utils.html.placeholders();
-            }
-
-            return inserted;
         },
         injector: new Medium.Injector(),
         setClean: function(clean) {
