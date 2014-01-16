@@ -24,8 +24,8 @@
     }
 
     /**
-     * Medium.js - make the browser obey
-     * @type {Function}
+     * Medium.js - Taking control of content editable
+     * @constructor
      * @param {Object} [userOpts] user options
      */
     var Medium = Medium || function (userOpts) {
@@ -78,8 +78,8 @@
              * Keyboard Interface events
              */
             isCommand: function(e, fnTrue, fnFalse){
-                if((settings.modifier==='ctrl' && e.ctrlKey ) || 
-                   (settings.modifier==='cmd' && e.metaKey ) || 
+                if((settings.modifier==='ctrl' && e.ctrlKey ) ||
+                   (settings.modifier==='cmd' && e.metaKey ) ||
                    (settings.modifier==='auto' && (e.ctrlKey || e.metaKey) )
                 ){
                     return fnTrue.call();
@@ -113,7 +113,7 @@
                 if(cache.cmd){ return false; }
                 return !(e.which in special);
             },
-            
+
             /*
              * Handle Events
              */
@@ -138,7 +138,7 @@
                     e.returnValue = false;
                 }
             },
-            
+
             /*
              * Utilities
              */
@@ -154,7 +154,7 @@
                 }
                 return a;
             },
-            
+
             deepExtend: function (destination, source) {
                 for (var property in source) {
                     if (source[property] && source[property].constructor && source[property].constructor === Object) {
@@ -166,7 +166,7 @@
                 }
                 return destination;
             },
-            
+
             /*
              * Handle Selection Logic
              */
@@ -182,7 +182,7 @@
                     }
                     return null;
                 },
-                
+
                 restoreSelection: function(range) {
                     if (range) {
                         if (w.getSelection) {
@@ -195,7 +195,7 @@
                     }
                 }
             },
-            
+
             /*
              * Handle Cursor Logic
              */
@@ -222,7 +222,7 @@
                     }
                 }
             },
-            
+
             /*
              * HTML Abstractions
              */
@@ -261,25 +261,25 @@
                     el.parentNode.removeChild(el);
                 },
                 placeholders: function(){
-                
-                    
-                    
+
+
+
                     var placeholders = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element),
                         innerText = utils.html.text(settings.element),
                         c = null;
-                    
+
                     // Empty Editer
                     if( innerText === ""  ){
                         settings.element.innerHTML = '';
-                        
+
                         // We need to add placeholders
-                        if(settings.placeholder.length > 0){ 
+                        if(settings.placeholder.length > 0){
                             utils.html.addTag(settings.tags.paragraph, false, false);
                             c = utils.html.lastChild();
                             c.className = settings.cssClasses.placeholder;
                             utils.html.text(c, settings.placeholder);
                         }
-                        
+
                         // Add base P tag and do autofocus, give it a min height if c has one
                         var p = utils.html.addTag(settings.tags.paragraph, cache.initialized ? true : settings.autofocus);
                         if (c) {
@@ -304,14 +304,14 @@
                         only = (settings.tags.outerLevel).concat([settings.tags.paragraph]),
                         children = settings.element.children,
                         i, j, k;
-                    
+
                     // Go through top level children
                     for(i=0; i<children.length; i++){
                         var child = children[i],
                             nodeName = child.nodeName,
                             shouldDelete = true;
 
-                        // Remove attributes                   
+                        // Remove attributes
                         for(k=0; k<attsToRemove.length; k++){
                             if( child.hasAttribute( attsToRemove[k] ) ){
                                 if( child.getAttribute( attsToRemove[k] ) !== settings.cssClasses.placeholder ){
@@ -326,7 +326,7 @@
                                 shouldDelete = false;
                             }
                         }
-                        
+
                         // Convert tags or delete
                         if(shouldDelete){
                             switch( nodeName.toLowerCase() ){
@@ -373,7 +373,7 @@
                     return el;
                 }
             },
-            
+
             /*
              * This is a Paste Hook. When the user pastes
              * content, this ultimately converts it into
@@ -397,7 +397,7 @@
                 //_log('FOCUSED');
             },
             down: function(e){
-                
+
                 utils.isCommand(e, function(){
                     cache.cmd = true;
                 }, function(){
@@ -410,19 +410,19 @@
                 });
                 utils.isModifier(e, function(cmd){
                     if( cache.cmd ){
-                        
+
                         if( ( (settings.mode === "inline") || (settings.mode === "partial") ) && cmd !== "paste" ){
                             return;
                         }
-                        
+
                         intercept.command[cmd].call(null, e);
                     }
                 });
-                
+
                 if( settings.maxLength !== -1 ){
                     var ph = settings.element.getElementsByClassName(settings.cssClasses.placeholder)[0],
                         len = utils.html.text().length;
-                        
+
                     if(settings.placeholder && ph){
                         len -= settings.placeholder.length;
                     }
@@ -431,7 +431,7 @@
                     }
                     _log(len+'/'+settings.maxLength);
                 }
-                
+
                 if( e.which === 13 ){
                     intercept.enterKey.call(null, e);
                 }
@@ -452,63 +452,63 @@
                 bold: function(e){
                     utils.preventDefaultEvent(e);
                     // IE uses strong instead of b
-	                (new Medium.Element(me, 'bold'))
+                    (new Medium.Element(me, 'bold'))
                         .setClean(false)
-		                .insert(settings.beforeInsertElement);
-	                _log('Bold');
+                        .insert(settings.beforeInsertElement);
+                    _log('Bold');
                 },
                 underline: function(e){
                     utils.preventDefaultEvent(e);
-	                (new Medium.Element(me, 'underline'))
+                    (new Medium.Element(me, 'underline'))
                         .setClean(false)
-		                .insert(settings.beforeInsertElement);
-	                _log('Underline');
+                        .insert(settings.beforeInsertElement);
+                    _log('Underline');
                 },
                 italicize: function(e){
                     utils.preventDefaultEvent(e);
-	                (new Medium.Element(me, 'italic'))
+                    (new Medium.Element(me, 'italic'))
                         .setClean(false)
-		                .insert(settings.beforeInsertElement);
-	                _log('Italic');
+                        .insert(settings.beforeInsertElement);
+                    _log('Italic');
                 },
                 quote: function(e){},
                 paste: function(e){
                     var sel = utils.selection.saveSelection();
                     utils.pasteHook(function(text){
                         utils.selection.restoreSelection( sel );
-	                    (new Medium.Html(me, text.replace(/\n/g, '<br>')))
+                        (new Medium.Html(me, text.replace(/\n/g, '<br>')))
                             .setClean(false)
-		                    .insert(settings.beforeInsertHtml);
+                            .insert(settings.beforeInsertHtml);
 
-	                    _log('Html');
+                        _log('Html');
                     });
                 }
             },
             enterKey: function (e) {
-            
+
                 if( settings.mode === "inline" ){
                     return utils.preventDefaultEvent(e);
                 }
 
                 if( !cache.shift ){
-                    
+
                     utils.preventDefaultEvent(e);
-                    
+
                     var focusedElement = cache.focusedElement;
-                    
+
                     if( settings.autoHR && settings.mode !== 'partial' ){
                         var children = settings.element.children,
                             lastChild = children[ children.length-1 ],
                             makeHR = ( utils.html.text(lastChild) === "" ) && (lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
-                        
+
                         if( makeHR && children.length >=2 ){
                             var secondToLast = children[ children.length-2 ];
-                            
+
                             if( secondToLast.nodeName.toLowerCase() === "hr" ){
                                 makeHR = false;
                             }
                         }
-        
+
                         if( makeHR ){
                             utils.preventDefaultEvent(e);
                             utils.html.deleteNode( lastChild );
@@ -531,7 +531,7 @@
                 utils.addEvent(settings.element, 'focus', intercept.focus);
             },
             preserveElementFocus: function(){
-                
+
                 // Fetch node that has focus
                 var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
                 if(anchorNode){
@@ -540,12 +540,12 @@
                         diff = cur !== cache.focusedElement,
                         elementIndex = 0,
                         i;
-                    
+
                     // anchorNode is our target if element is empty
                     if (cur===settings.element){
                         cur = anchorNode;
                     }
-                    
+
                     // Find our child index
                     for(i=0;i<children.length;i++){
                         if(cur === children[i]){
@@ -553,7 +553,7 @@
                             break;
                         }
                     }
-                    
+
                     // Focused element is different
                     if( diff ){
                         cache.focusedElement = cur;
@@ -563,46 +563,46 @@
             }
         },
         init = function (opts) {
-        
+
             for(var key in settings){
-                
+
                 // Override defaults with data-attributes
                 if( typeof settings[key] !== 'object' && settings.hasOwnProperty(key) && opts.element.getAttribute('data-medium-'+key) ){
                     var newVal = opts.element.getAttribute('data-medium-'+key);
-                    
+
                     if( newVal.toLowerCase()==="false" || newVal.toLowerCase()==="true" ){
                         newVal = newVal.toLowerCase()==="true";
                     }
                     settings[key] = newVal;
                 }
             }
-        
+
             // Extend Settings
             utils.deepExtend(settings, opts);
-    
+
             // Editable
             settings.element.contentEditable = true;
             settings.element.className += (" ")+settings.cssClasses.editor;
             settings.element.className += (" ")+settings.cssClasses.editor+"-"+settings.mode;
-            
+
             // Initialize editor
             utils.html.clean();
             utils.html.placeholders();
             action.preserveElementFocus();
-            
+
             // Capture Events
             action.listen();
-            
+
             // Set as initialized
             cache.initialized = true;
         };
-        
+
         this.destroy = function(){
             utils.removeEvent(settings.element, 'keyup', intercept.up);
             utils.removeEvent(settings.element, 'keydown', intercept.down);
             utils.removeEvent(settings.element, 'focus', intercept.focus);
         };
-        
+
         init(userOpts);
 
         this.settings = settings;
@@ -611,7 +611,26 @@
         this.intercept = intercept;
     };
 
-	Medium.Element = Medium.Element || function(medium, tagName, className, attributes) {
+
+    Medium.prototype = {
+        insertHtml: function(htmlRaw) {
+            return (new Medium.Html(this, htmlRaw))
+                .insert(this.settings.beforeInsertHtml);
+        },
+        insertElement: function(tagName, className, attributes) {
+            (new Medium.Element(this, tagName, className, attributes))
+                .insert(this.settings.beforeInsertElement);
+        }
+    };
+
+    /**
+     * @param {Medium} medium
+     * @param {String} tagName
+     * @param {String} className
+     * @param {Object} attributes
+     * @constructor
+     */
+	Medium.Element = function(medium, tagName, className, attributes) {
         this.medium = medium;
 		this.tagName = tagName;
 		this.className = className;
@@ -619,19 +638,25 @@
         this.clean = true;
 	};
 
-	Medium.Html = Medium.Html || function(medium, html) {
+
+    /**
+     * @constructor
+     * @param {Medium} medium
+     * @param {String|HtmlElement} html
+     */
+	Medium.Html = function(medium, html) {
         this.medium = medium;
 		this.html = html;
         this.clean = true;
 	};
 
-    Medium.Injector = Medium.Injector || function() {};
+    /**
+     *
+     * @constructor
+     */
+    Medium.Injector = function() {};
 
-    Medium.prototype = {
-        insertHtml: function(html) {
-            return (new Medium.Html(this, html)).insert();
-        }
-    };
+
     //if rangy and undo.js are defined, then we use them and their methods to interact with html
 	if (rangy && undo) {
 		rangy.rangePrototype.insertNodeAtEnd = function(node) {
@@ -643,6 +668,10 @@
 		};
 
 		Medium.Element.prototype = {
+            /**
+             * @methodOf Medium.Element
+             * @param {Function} [fn]
+             */
 			insert: function(fn) {
                 if (d.activeElement === this.medium.element) {
                     if (fn) {
@@ -663,6 +692,12 @@
                     applier.toggleSelection();
                 }
 			},
+
+            /**
+             *
+             * @param {Boolean} clean
+             * @returns {Medium.Element}
+             */
             setClean: function(clean) {
                 this.clean = clean;
                 return this;
@@ -670,7 +705,15 @@
 		};
 
         Medium.Injector.prototype = {
+            /**
+             * @attributeOf Medium.Injector
+             */
             toString: '<span id="wedge"></span>',
+            /**
+             * @methodOf Medium.Injector
+             * @param {String|HtmlElement} htmlRaw
+             * @returns {HtmlElement}
+             */
             inject: function(htmlRaw) {
                 var html;
                 if (typeof htmlRaw === 'string') {
@@ -698,6 +741,10 @@
     //If rangy and undo.js are not available, we let the browser handle the commands via d.execCommand
 	} else {
 		Medium.Element.prototype = {
+            /**
+             * @methodOf Medium.Element
+             * @param {Function} [fn]
+             */
 			insert: function(fn) {
                 if (d.activeElement === this.medium.settings.element) {
                     if (fn) {
@@ -709,6 +756,11 @@
 		};
 
         Medium.Injector.prototype = {
+            /**
+             * @methodOf Medium.Injector
+             * @param {String|HtmlElement} htmlRaw
+             * @returns {null}
+             */
             inject: function(htmlRaw) {
                 d.execCommand('insertHtml', false, htmlRaw);
                 return null;
@@ -717,6 +769,11 @@
 	}
 
     Medium.Html.prototype = {
+        /**
+         * @methodOf Medium.Html
+         * @param {Function} [fn]
+         * @returns {HtmlElement}
+         */
         insert: function(fn) {
             if (d.activeElement === this.medium.settings.element) {
                 if (fn) {
@@ -736,7 +793,17 @@
                 return null;
             }
         },
+
+        /**
+         * @attributeOf {Medium.Injector} Medium.Html
+         */
         injector: new Medium.Injector(),
+
+        /**
+         * @methodOf Medium.Html
+         * @param clean
+         * @returns {Medium.Html}
+         */
         setClean: function(clean) {
             this.clean = clean;
             return this;
