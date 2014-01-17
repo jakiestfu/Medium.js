@@ -720,15 +720,24 @@
                     var htmlConverter = d.createElement('div');
                     htmlConverter.innerHTML = htmlRaw;
                     html = htmlConverter.children;
+                    html.isConverted = true;
                 } else {
                     html = htmlRaw;
                 }
 
                 d.execCommand('insertHtml', false, this.toString);
                 var wedge = d.getElementById('wedge'),
-                    parent = wedge.parentNode;
+                    parent = wedge.parentNode,
+                    i = 0;
                 wedge.removeAttribute('id');
-                parent.insertBefore(html, wedge.nextSibling);
+
+                if (html.isConverted) {
+                    while (i < html.length) {
+                        parent.insertBefore(html[i], wedge);
+                    }
+                } else {
+                    parent.insertBefore(html, wedge);
+                }
                 parent.removeChild(wedge);
                 wedge = null;
 
@@ -825,4 +834,4 @@
         });
     }
 
-}).call(this, window, document, window.rangy, window.undo);
+}).call(this, window, document, window['rangy'], window['Undo']);
