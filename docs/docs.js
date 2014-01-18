@@ -23,48 +23,8 @@ var applyPrism = function(){
 	$('.span4 pre').each(function(){
 		Prism.highlightElement($(this).find('code')[0]);
 	});
-},
-
-applyMedium = function(){
-    new Medium({
-        element: document.getElementById('title'),
-        mode: 'inline',
-        maxLength: 25,
-        placeholder: 'Your Title'
-    });
-    
-    new Medium({
-        element: document.getElementById('article'),
-        mode: 'rich',
-        placeholder: 'Your Article'
-    });
-
-    var article2 = document.getElementById('article2'),
-        article2Button = document.getElementById('article2Button'),
-        article2Medium = new Medium({
-            element: article2,
-            mode: 'rich',
-            placeholder: 'Your Article 2',
-            attributes: {
-                remove: []
-            }
-        });
-
-    article2Button.onmousedown = function() {
-        article2Medium.insertHtml('<p style="background-color: rgba(255, 255, 0, 0.3);">Happy day!  I can work with buttons too!</p>');
-    };
-
-
-    new Medium({
-        element: document.getElementById('comment'),
-        mode: 'partial',
-        placeholder: 'Your Comment'
-    });
 };
 
-
-$(document).ready(function(){
-    
-    applyMedium();
+$(function(){
     applyPrism();
 });

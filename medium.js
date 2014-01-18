@@ -28,9 +28,12 @@
      * @constructor
      * @param {Object} [userOpts] user options
      */
-    var Medium = Medium || function (userOpts) {
+    var
+        //two modes, wild (native) or domesticated (rangy + undo.js)
+	    wild = (!rangy || !undo),
+	    Medium = Medium || function (userOpts) {
 
-        var 
+        var
         me = this,
         settings = {
             debug: true,
@@ -60,7 +63,7 @@
             attributes: {
                 remove: ['style','class']
             },
-	        beforeInsertElement: function() {},
+	        beforeInvokeElement: function() {},
 	        beforeInsertHtml: function() {}
         },
         cache = {
@@ -263,7 +266,6 @@
                 placeholders: function(){
 
 
-
                     var placeholders = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element),
                         innerText = utils.html.text(settings.element),
                         c = null;
@@ -454,21 +456,21 @@
                     // IE uses strong instead of b
                     (new Medium.Element(me, 'bold'))
                         .setClean(false)
-                        .insert(settings.beforeInsertElement);
+                        .insert(settings.beforeInvokeElement);
                     _log('Bold');
                 },
                 underline: function(e){
                     utils.preventDefaultEvent(e);
                     (new Medium.Element(me, 'underline'))
                         .setClean(false)
-                        .insert(settings.beforeInsertElement);
+                        .insert(settings.beforeInvokeElement);
                     _log('Underline');
                 },
                 italicize: function(e){
                     utils.preventDefaultEvent(e);
                     (new Medium.Element(me, 'italic'))
                         .setClean(false)
-                        .insert(settings.beforeInsertElement);
+                        .insert(settings.beforeInvokeElement);
                     _log('Italic');
                 },
                 quote: function(e){},
@@ -609,32 +611,46 @@
         this.utils = utils;
         this.cache = cache;
         this.intercept = intercept;
+
+		if (wild) {
+			this.makeUndoable = function() {};
+		} else {
+			this.dirty = false;
+			this.undoable = new Medium.Undoable(this);
+			this.undo = this.undoable.undo;
+			this.redo = this.undoable.redo;
+			this.makeUndoable = this.undoable.makeUndoable;
+		}
     };
 
 
     Medium.prototype = {
+	    /**
+	     *
+	     * @param {String|Object} htmlRaw
+	     * @returns {null|HtmlElement}
+	     */
         insertHtml: function(htmlRaw) {
             return (new Medium.Html(this, htmlRaw))
                 .insert(this.settings.beforeInsertHtml);
         },
-        insertElement: function(tagName, className, attributes) {
-            (new Medium.Element(this, tagName, className, attributes))
-                .insert(this.settings.beforeInsertElement);
+        invokeElement: function(tagName, attributes) {
+            (new Medium.Element(this, tagName, attributes))
+                .invoke(this.settings.beforeInvokeElement);
         }
     };
 
     /**
      * @param {Medium} medium
      * @param {String} tagName
-     * @param {String} className
-     * @param {Object} attributes
+     * @param {Object} [attributes]
      * @constructor
      */
-	Medium.Element = function(medium, tagName, className, attributes) {
+	Medium.Element = function(medium, tagName, attributes) {
         this.medium = medium;
+		this.element = medium.settings.element;
 		this.tagName = tagName;
-		this.className = className;
-		this.attributes = attributes;
+		this.attributes = attributes || {};
         this.clean = true;
 	};
 
@@ -646,6 +662,7 @@
      */
 	Medium.Html = function(medium, html) {
         this.medium = medium;
+		this.element = medium.settings.element;
 		this.html = html;
         this.clean = true;
 	};
@@ -656,9 +673,43 @@
      */
     Medium.Injector = function() {};
 
+	if (wild) {
+		Medium.Element.prototype = {
+			/**
+			 * @methodOf Medium.Element
+			 * @param {Function} [fn]
+			 */
+			invoke: function(fn) {
+				if (d.activeElement === this.element) {
+					if (fn) {
+						fn.apply(this);
+					}
+					d.execCommand(this.tagName, false);
+				}
+			}
+		};
 
-    //if rangy and undo.js are defined, then we use them and their methods to interact with html
-	if (rangy && undo) {
+		Medium.Injector.prototype = {
+			/**
+			 * @methodOf Medium.Injector
+			 * @param {String|HtmlElement} htmlRaw
+			 * @returns {null}
+			 */
+			inject: function(htmlRaw) {
+				d.execCommand('insertHtml', false, htmlRaw);
+				return null;
+			}
+		};
+
+		/**
+		 *
+		 * @constructor
+		 */
+		Medium.Undoable = function() {};
+	}
+
+	//if medium is domesticated (ie, not wild)
+	else {
 		rangy.rangePrototype.insertNodeAtEnd = function(node) {
 			var range = this.cloneRange();
 			range.collapse(false);
@@ -672,22 +723,24 @@
              * @methodOf Medium.Element
              * @param {Function} [fn]
              */
-			insert: function(fn) {
-                if (d.activeElement === this.medium.element) {
+			invoke: function(fn) {
+                if (d.activeElement === this.element) {
                     if (fn) {
                         fn.apply(this);
                     }
 
-                    var applier = (rangy.createCssClassApplier(this.className, {
+                    var applier = rangy.createCssClassApplier(this.attributes.className, {
                         elementTagName: this.tagName.toLowerCase(),
                         elementAttributes: this.attributes
-                    }));
+                    });
 
                     if (this.clean) {
                         //cleanup
                         this.medium.utils.html.clean();
                         this.medium.utils.html.placeholders();
                     }
+
+	                this.medium.makeUndoable();
 
                     applier.toggleSelection();
                 }
@@ -706,10 +759,6 @@
 
         Medium.Injector.prototype = {
             /**
-             * @attributeOf Medium.Injector
-             */
-            toString: '<span id="wedge"></span>',
-            /**
              * @methodOf Medium.Injector
              * @param {String|HtmlElement} htmlRaw
              * @returns {HtmlElement}
@@ -725,7 +774,8 @@
                     html = htmlRaw;
                 }
 
-                d.execCommand('insertHtml', false, this.toString);
+                d.execCommand('insertHtml', false, '<span id="wedge"></span>');
+
                 var wedge = d.getElementById('wedge'),
                     parent = wedge.parentNode,
                     i = 0;
@@ -745,36 +795,82 @@
             }
         };
 
+		/**
+		 * @param {Medium} medium
+		 * @constructor
+		 */
+		Medium.Undoable = function(medium) {
 
+			var element = medium.settings.element,
+				utils = medium.utils,
+				addEvent = utils.addEvent,
+				startValue = element.innerHTML,
+				timer,
+				stack = new Undo.Stack(),
+				EditCommand = Undo.Command.extend({
+					constructor: function(oldValue, newValue) {
+						this.oldValue = oldValue;
+						this.newValue = newValue;
+					},
+					execute: function() {},
+					undo: function() {
+						element.innerHTML = this.oldValue;
+						medium.canUndo = stack.canUndo();
+						medium.canRedo = stack.canRedo();
+						medium.dirty = stack.dirty();
+					},
+					redo: function() {
+						element.innerHTML = this.newValue;
+						medium.canUndo = stack.canUndo();
+						medium.canRedo = stack.canRedo();
+						medium.dirty = stack.dirty();
+					}
+				}),
+				makeUndoable = function() {
+					var newValue = element.innerHTML;
+					stack.execute(new EditCommand(startValue, newValue));
+					startValue = newValue;
+					medium.dirty = stack.dirty();
+				};
 
-    //If rangy and undo.js are not available, we let the browser handle the commands via d.execCommand
-	} else {
-		Medium.Element.prototype = {
-            /**
-             * @methodOf Medium.Element
-             * @param {Function} [fn]
-             */
-			insert: function(fn) {
-                if (d.activeElement === this.medium.settings.element) {
-                    if (fn) {
-                        fn.apply(this);
-                    }
-                    d.execCommand(this.tagName, false);
-                }
-			}
+			this.medium = medium;
+			this.timer = timer;
+			this.stack = stack;
+			this.makeUndoable = makeUndoable;
+			this.EditCommand = EditCommand;
+
+			addEvent(element, 'keyup', function(event) {
+				if (event.ctrlKey || event.keyCode === 90) {
+					event.preventDefault();
+					return;
+				}
+				// a way too simple algorithm in place of single-character undo
+				clearTimeout(timer);
+				timer = setTimeout(function() {
+					var newValue = element.innerHTML;
+					// ignore meta key presses
+					if (newValue != startValue) {
+						// this could try and make a diff instead of storing snapshots
+						stack.execute(new EditCommand(startValue, newValue));
+						startValue = newValue;
+					}
+				}, 250);
+			});
+
+			addEvent(element, 'keydown', function(event) {
+				if (!event.ctrlKey || event.keyCode != 90) {
+					return;
+				}
+
+				event.preventDefault();
+
+				if (event.shiftKey) {
+					stack.canRedo() && stack.redo()
+				} else {
+					stack.canUndo() && stack.undo();
+				}
+			});
 		};
-
-        Medium.Injector.prototype = {
-            /**
-             * @methodOf Medium.Injector
-             * @param {String|HtmlElement} htmlRaw
-             * @returns {null}
-             */
-            inject: function(htmlRaw) {
-                d.execCommand('insertHtml', false, htmlRaw);
-                return null;
-            }
-        };
 	}
 
     Medium.Html.prototype = {
@@ -784,7 +880,7 @@
          * @returns {HtmlElement}
          */
         insert: function(fn) {
-            if (d.activeElement === this.medium.settings.element) {
+            if (d.activeElement === this.element) {
                 if (fn) {
                     fn.apply(this);
                 }
@@ -796,6 +892,8 @@
                     this.medium.utils.html.clean();
                     this.medium.utils.html.placeholders();
                 }
+
+	            this.medium.makeUndoable();
 
                 return inserted;
             } else {
