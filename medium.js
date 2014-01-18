@@ -31,6 +31,7 @@
     var
         //two modes, wild (native) or domesticated (rangy + undo.js)
 	    wild = (!rangy || !undo),
+	    domesticated = (!wild),
 	    Medium = Medium || function (userOpts) {
 
         var
@@ -634,10 +635,23 @@
             return (new Medium.Html(this, htmlRaw))
                 .insert(this.settings.beforeInsertHtml);
         },
+
+	    /**
+	     *
+	     * @param {String} tagName
+	     * @param {Object} [attributes]
+	     */
         invokeElement: function(tagName, attributes) {
             (new Medium.Element(this, tagName, attributes))
                 .invoke(this.settings.beforeInvokeElement);
-        }
+        },
+
+	    /**
+	     * @returns {string}
+	     */
+	    behavior: function() {
+		    return (wild ? 'wild' : 'domesticated');
+	    }
     };
 
     /**

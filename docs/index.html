@@ -158,22 +158,31 @@
 
             <ul class="def">
                 <li>
-                    <div> <code class="ref">destroy</code>: Destroy the instantiated medium.js </div>
+                    <div> <code class="ref">behavior()</code>: The type of behavior currently being used with Medium.js.</div>
+                    <div class="important">returns <code>'wild'</code> or <code>'domesticated'</code></div>
                 </li>
                 <li>
-                    <div> <code class="ref">invokeElement</code>: invokes an element.  Accepts 2 parameters <code> {String} tagName, {Object} [attributes] </code> </div>
+                    <div> <code class="ref">destroy()</code>: Destroy the instantiated medium.js </div>
                 </li>
                 <li>
-                    <div> <code class="ref">insertHtml</code>: inserts html into the editor at the cursor. Accepts 1 parameter <code>{String|HtmlElement} html</code> </div>
+                    <div> <code class="ref">invokeElement({String}tagName, {Object} [attributes])</code>: invokes an element.</div>
+                    <div class="important">(attributes are domesticated mode only)</div>
                 </li>
                 <li>
-                    <div> <code class="ref">makeUndoable</code>: (domesticated mode only) makes the current state of the editor undoable/redoable. </div>
+                    <div> <code class="ref">insertHtml({String|HtmlElement} html)</code>: inserts html into the editor at the cursor.</div>
+                    <div class="important">(HtmlElement allowed in domesticated mode only)</div>
                 </li>
                 <li>
-                    <div> <code class="ref">redo</code>: (domesticated mode only) redo an edit. </div>
+                    <div> <code class="ref">makeUndoable()</code>: makes the current state of the editor undoable/redoable. </div>
+                    <div class="important">(domesticated mode only)</div>
                 </li>
                 <li>
-                    <div> <code class="ref">undo</code>: (domesticated mode only) undo an edit. </div>
+                    <div> <code class="ref">redo()</code>: redo an edit. </div>
+                    <div class="important">(domesticated mode only)</div>
+                </li>
+                <li>
+                    <div> <code class="ref">undo()</code>: undo an edit. </div>
+                    <div class="important">(domesticated mode only)</div>
                 </li>
             </ul>
             
