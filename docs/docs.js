@@ -26,5 +26,8 @@ var applyPrism = function(){
 };
 
 $(function(){
+	if (Medium.prototype.behavior() == 'wild') {
+		$('div.domesticated').hide();
+	}
     applyPrism();
 });
