@@ -842,9 +842,13 @@
 				}),
 				makeUndoable = function() {
 					var newValue = element.innerHTML;
-					stack.execute(new EditCommand(startValue, newValue));
-					startValue = newValue;
-					medium.dirty = stack.dirty();
+					// ignore meta key presses
+					if (newValue != startValue) {
+						// this could try and make a diff instead of storing snapshots
+						stack.execute(new EditCommand(startValue, newValue));
+						startValue = newValue;
+						medium.dirty = stack.dirty();
+					}
 				};
 
 			this.medium = medium;
@@ -861,13 +865,7 @@
 				// a way too simple algorithm in place of single-character undo
 				clearTimeout(timer);
 				timer = setTimeout(function() {
-					var newValue = element.innerHTML;
-					// ignore meta key presses
-					if (newValue != startValue) {
-						// this could try and make a diff instead of storing snapshots
-						stack.execute(new EditCommand(startValue, newValue));
-						startValue = newValue;
-					}
+					makeUndoable();
 				}, 250);
 			});
 

@@ -130,30 +130,6 @@
 
 
             <h3>Methods</h3>
-            <p>Make contenteditable do things</p>
-
-            <ul class="def">
-                <li>
-                    <div> <code class="ref">destroy</code>: Destroy an instantiated Medium.js </div>
-                </li>
-                <li>
-                    <div> <code class="ref">invokeElement</code>: invokes an element to be applied over selected content.  Accepts 2 parameters <code> {String} tagName, {Object} [attributes] </code> </div>
-                </li>
-                <li>
-                    <div> <code class="ref">insertHtml</code>: inserts html into the editor at the cursor. Accepts 1 parameter <code>{String|HtmlElement} html</code>, <code>HtmlElement is domesticated mode only</code> </div>
-                </li>
-                <li>
-                    <div> <code class="ref">makeUndoable</code>: (domesticated mode only) makes the current state of the editor undoable/redoable. </div>
-                </li>
-                <li>
-                    <div> <code class="ref">redo</code>: (domesticated mode only) redo an edit. </div>
-                </li>
-                <li>
-                    <div> <code class="ref">undo</code>: (domesticated mode only) undo an edit. </div>
-                </li>
-            </ul>
-
-            <h3>Methods</h3>
             <p>Methods provide functionality that can be used with buttons, toolbars, WYSIWYG editors, and the environment it is being used with.</p>
 
             <ul class="def">
@@ -240,6 +216,13 @@
                 <div id="article3" class="article demo"></div>
             </div>
 
+            <div class="domesticated">
+                <h4>Rich with Invoke Element (domesticated only)</h4>
+                <pre data-src="rich4.js"></pre>
+                <input id="article4Button" type="button" value="Invoke Element"/>
+                <div id="article4" class="article demo">Select me, then click the "Invoke Element" above.</div>
+            </div>
+
             <h4>Licensing</h4>
             <div class="license">
                <p><b>MIT Licensing</b></p>
@@ -251,9 +234,9 @@
         </div>
         
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-        <script src="../undo.js"></script>
-        <script src="../rangy/uncompressed/rangy-core.js"></script>
-        <script src="../rangy/uncompressed/rangy-cssclassapplier.js"></script>
+        <script src="../bower_components/undo/undo.js"></script>
+        <script src="../bower_components/rangy/uncompressed/rangy-core.js"></script>
+        <script src="../bower_components/rangy/uncompressed/rangy-cssclassapplier.js"></script>
         <script src="../medium.js"></script>
         <script src="prism.js"></script>
         <script src="partials/inline.js"></script>
@@ -261,6 +244,7 @@
         <script src="partials/rich.js"></script>
         <script src="partials/rich2.js"></script>
         <script src="partials/rich3.js"></script>
+        <script src="partials/rich4.js"></script>
         <script src="docs.js"></script>
     </body>
 </html>
