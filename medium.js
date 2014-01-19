@@ -24,13 +24,13 @@
     }
 
 
-    var
+        var 
         //two modes, wild (native) or domesticated (rangy + undo.js)
         rangy = w['rangy'] || null,
         undo = w['Undo'] || null,
 	    wild = (!rangy || !undo),
 	    domesticated = (!wild),
-
+        
         /**
          * Medium.js - Taking control of content editable
          * @constructor
@@ -39,86 +39,87 @@
 	    Medium = Medium || function (userOpts) {
             var
                 me = this,
-                settings = {
-                    debug: true,
-                    element: null,
-                    modifier: 'auto',
-                    placeholder: "",
-                    autofocus: false,
-                    autoHR: true,
-                    mode: 'rich', // inline, partial, rich
-                    maxLength: -1,
-                    modifiers: {
-                        66: 'bold',
-                        73: 'italicize',
-                        85: 'underline',
-                        86: 'paste'
-                    },
-                    tags: {
-                        paragraph: 'p',
-                        outerLevel: ['pre','blockquote', 'figure', 'hr'],
-                        innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong'] // Todo: Convert strong to b (IE)
-                    },
-                    cssClasses: {
-                        editor: 'Medium',
-                        pasteHook: 'Medium-paste-hook',
-                        placeholder: 'Medium-placeholder'
-                    },
-                    attributes: {
-                        remove: ['style','class']
-                    },
+        settings = {
+            debug: true,
+            element: null,
+            modifier: 'auto',
+            placeholder: "",
+            autofocus: false,
+            autoHR: true,
+            mode: 'rich', // inline, partial, rich
+            maxLength: -1,
+            modifiers: {
+                66: 'bold',
+                73: 'italicize',
+                81: 'quote',
+                85: 'underline',
+                86: 'paste',
+            },
+            tags: {
+                paragraph: 'p',
+                outerLevel: ['pre','blockquote', 'figure', 'hr'],
+                innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong'] // Todo: Convert strong to b (IE)
+            },
+            cssClasses: {
+                editor: 'Medium',
+                pasteHook: 'Medium-paste-hook',
+                placeholder: 'Medium-placeholder'
+            },
+            attributes: {
+                remove: ['style','class']
+        },
                     beforeInvokeElement: function() {},
                     beforeInsertHtml: function() {},
                     beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
                 },
-                cache = {
-                    initialized: false,
-                    cmd: false,
-                    focusedElement: null
-                },
-                _log = function (w) {
-                    if (settings.debug) {
-                        console.log(w);
-                    }
-                },
-                utils = {
-                    /*
-                     * Keyboard Interface events
-                     */
-                    isCommand: function(e, fnTrue, fnFalse){
-                        if((settings.modifier==='ctrl' && e.ctrlKey ) ||
-                           (settings.modifier==='cmd' && e.metaKey ) ||
-                           (settings.modifier==='auto' && (e.ctrlKey || e.metaKey) )
-                        ){
-                            return fnTrue.call();
-                        } else {
-                            return fnFalse.call();
-                        }
-                    },
-                    isShift: function(e, fnTrue, fnFalse){
-                        if(e.shiftKey){
-                            return fnTrue.call();
-                        } else {
-                            return fnFalse.call();
-                        }
-                    },
-                    isModifier: function(e, fn){
+        cache = {
+            initialized: false,
+            cmd: false,
+            focusedElement: null
+        },
+        _log = function (w) {
+            if (settings.debug) {
+                console.log(w);
+            }
+        },
+        utils = {
+            /*
+             * Keyboard Interface events
+             */
+            isCommand: function(e, fnTrue, fnFalse){
+                if((settings.modifier==='ctrl' && e.ctrlKey ) || 
+                   (settings.modifier==='cmd' && e.metaKey ) || 
+                   (settings.modifier==='auto' && (e.ctrlKey || e.metaKey) )
+                ){
+                    return fnTrue.call();
+                } else {
+                    return fnFalse.call();
+                }
+            },
+            isShift: function(e, fnTrue, fnFalse){
+                if(e.shiftKey){
+                    return fnTrue.call();
+                } else {
+                    return fnFalse.call();
+                }
+            },
+            isModifier: function(e, fn){
                         var w = e.keyCode,
-                            cmd = settings.modifiers[w];
-                        if(cmd){
-                            return fn.call(null, cmd);
-                        }
+                    cmd = settings.modifiers[w];
+                if(cmd){
+                    return fn.call(null, cmd);
+                }
                         return false;
-                    },
+            },
                     isSpecial: function(e){
-                        var special = {
-                            16: 'shift',
-                            17: 'ctrl',
-                            18: 'alt',
-                            91: 'cmd',
+                var special = {
+                    16: 'shift',
+                    17: 'ctrl',
+                    18: 'alt',
+                    91: 'cmd',
                             8: 'backspace',
                             46: 'delete'
-                        };
+                };
                         if(cache.cmd){ return true; }
                         return (e.keyCode in special);
                     },
@@ -130,42 +131,42 @@
                             40: 'down-arrow'
                         };
                         return (e.keyCode in navigational);
-                    },
-
-                    /*
-                     * Handle Events
-                     */
-                    addEvent: function addEvent(element, eventName, func) {
-                        if (element.addEventListener) {
-                            element.addEventListener(eventName, func, false);
-                        } else if (element.attachEvent) {
-                            element.attachEvent("on" + eventName, func);
+            },
+            
+            /*
+             * Handle Events
+             */
+            addEvent: function addEvent(element, eventName, func) {
+                if (element.addEventListener) {
+                    element.addEventListener(eventName, func, false);
+                } else if (element.attachEvent) {
+                    element.attachEvent("on" + eventName, func);
                         } else {
                             element['on' + eventName] = func;
-                        }
+                }
 
                         return this;
-                    },
+            },
                     removeEvent: function removeEvent(element, eventName, func) {
                         if (element.removeEventListener) {
-                            element.removeEventListener(eventName, func, false);
+                    element.removeEventListener(eventName, func, false);
                         } else if (element.detachEvent) {
-                            element.detachEvent("on" + eventName, func);
+                    element.detachEvent("on" + eventName, func);
                         } else {
                             element['on' + eventName] = null;
-                        }
+                }
 
                         return this;
-                    },
-                    preventDefaultEvent: function (e) {
-                        if (e.preventDefault) {
-                            e.preventDefault();
-                        } else {
-                            e.returnValue = false;
-                        }
+            },
+            preventDefaultEvent: function (e) {
+                if (e.preventDefault) {
+                    e.preventDefault();
+                } else {
+                    e.returnValue = false;
+                }
 
                         return this;
-                    },
+            },
                     triggerEvent: function(element, eventName) {
                         var event;
                         if (d.createEvent) {
@@ -182,112 +183,112 @@
 
                         return this;
                     },
-
-                    /*
-                     * Utilities
-                     */
-                    getElementsByClassName: function(classname, el) {
-                        el = el ? el : document.body;
+            
+            /*
+             * Utilities
+             */
+            getElementsByClassName: function(classname, el) {
+                el = el ? el : document.body;
                         if (el.getElementsByClassName) {
                             return el.getElementsByClassName(classname);
                         } else {
-                            var a = [],
-                                re = new RegExp('(^| )'+classname+'( |$)'),
-                                els = el.getElementsByTagName("*");
-                            for(var i=0,j=els.length; i<j; i++){
-                                if(re.test(els[i].className)){
-                                    a.push(els[i]);
-                                }
-                            }
-                            return a;
+                var a = [],
+                    re = new RegExp('(^| )'+classname+'( |$)'),
+                    els = el.getElementsByTagName("*");
+                for(var i=0,j=els.length; i<j; i++){
+                    if(re.test(els[i].className)){
+                        a.push(els[i]);
+                    }
+                }
+                return a;
                         }
-                    },
-
-                    deepExtend: function (destination, source) {
-                        for (var property in source) {
+            },
+            
+            deepExtend: function (destination, source) {
+                for (var property in source) {
                             if (
                                 source[property]
                                 && source[property].constructor
                                 && source[property].constructor === Object
                             ) {
-                                destination[property] = destination[property] || {};
-                                utils.deepExtend(destination[property], source[property]);
-                            } else {
-                                destination[property] = source[property];
-                            }
+                        destination[property] = destination[property] || {};
+                        utils.deepExtend(destination[property], source[property]);
+                    } else {
+                        destination[property] = source[property];
+                    }
+                }
+                return destination;
+            },
+            
+            /*
+             * Handle Selection Logic
+             */
+            selection: {
+                saveSelection: function() {
+                    if (w.getSelection) {
+                        var sel = w.getSelection();
+                        if (sel.rangeCount > 0) {
+                              return sel.getRangeAt(0);
                         }
-                        return destination;
-                    },
-
-                    /*
-                     * Handle Selection Logic
-                     */
-                    selection: {
-                        saveSelection: function() {
-                            if (w.getSelection) {
-                                var sel = w.getSelection();
-                                if (sel.rangeCount > 0) {
-                                      return sel.getRangeAt(0);
-                                }
-                            } else if (d.selection && d.selection.createRange) { // IE
-                                return d.selection.createRange();
-                            }
-                            return null;
-                        },
-
-                        restoreSelection: function(range) {
-                            if (range) {
-                                if (w.getSelection) {
-                                    var sel = w.getSelection();
-                                    sel.removeAllRanges();
-                                    sel.addRange(range);
-                                } else if (d.selection && range.select) { // IE
-                                    range.select();
-                                }
-                            }
+                    } else if (d.selection && d.selection.createRange) { // IE
+                        return d.selection.createRange();
+                    }
+                    return null;
+                },
+                
+                restoreSelection: function(range) {
+                    if (range) {
+                        if (w.getSelection) {
+                            var sel = w.getSelection();
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                        } else if (d.selection && range.select) { // IE
+                            range.select();
                         }
-                    },
-
-                    /*
-                     * Handle Cursor Logic
-                     */
-                    cursor: {
-                        set: function (pos, el) {
+                    }
+                }
+            },
+            
+            /*
+             * Handle Cursor Logic
+             */
+            cursor: {
+                set: function (pos, el) {
                             var range;
-                            if( d.createRange ){
+                    if( d.createRange ){
                                 var selection = w.getSelection(),
-                                    lastChild = utils.html.lastChild(),
-                                    length =  utils.html.text(lastChild).length-1,
-                                    toModify = el ? el : lastChild,
-                                    theLength = typeof pos !== 'undefined' ? pos : length;
+                            lastChild = utils.html.lastChild(),
+                            length =  utils.html.text(lastChild).length-1,
+                            toModify = el ? el : lastChild,
+                            theLength = typeof pos !== 'undefined' ? pos : length;
 
                                 range = d.createRange();
-                                range.setStart(toModify, theLength);
-                                range.collapse(true);
-                                selection.removeAllRanges();
-                                selection.addRange(range);
-                            } else {
+                        range.setStart(toModify, theLength);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    } else {
                                 range = d.body.createTextRange();
-                                range.moveToElementText(el);
-                                range.collapse(false);
-                                range.select();
-                            }
+                        range.moveToElementText(el);
+                        range.collapse(false);
+                        range.select();
+                    }
+                }
+            },
+            
+            /*
+             * HTML Abstractions
+             */
+            html: {
+                text: function(node, val){
+                    node = node || settings.element;
+                    if(val){
+                        if ((node.textContent) && (typeof (node.textContent) != "undefined")) {
+                            node.textContent = val;
+                        } else {
+                            node.innerText = val;
                         }
-                    },
-
-                    /*
-                     * HTML Abstractions
-                     */
-                    html: {
-                        text: function(node, val){
-                            node = node || settings.element;
-                            if(val){
-                                if ((node.textContent) && (typeof (node.textContent) != "undefined")) {
-                                    node.textContent = val;
-                                } else {
-                                    node.innerText = val;
-                                }
-                            }
+                    }
 
                             else if (node.innerText) {
                                 return node.innerText.trim();
@@ -302,26 +303,26 @@
 
                             //for good measure
                             return '';
-                        },
-                        changeTag: function(oldNode, newTag) {
-                            var newNode = d.createElement(newTag),
-                                node,
-                                nextNode;
+                },
+                changeTag: function(oldNode, newTag) {
+                    var newNode = d.createElement(newTag),
+                        node,
+                        nextNode;
 
-                            node = oldNode.firstChild;
-                            while (node) {
-                                nextNode = node.nextSibling;
-                                newNode.appendChild(node);
-                                node = nextNode;
-                            }
+                    node = oldNode.firstChild;
+                    while (node) {
+                        nextNode = node.nextSibling;
+                        newNode.appendChild(node);
+                        node = nextNode;
+                    }
 
-                            oldNode.parentNode.insertBefore(newNode, oldNode);
-                            oldNode.parentNode.removeChild(oldNode);
-                        },
-                        deleteNode: function(el){
-                            el.parentNode.removeChild(el);
-                        },
-                        placeholders: function(){
+                    oldNode.parentNode.insertBefore(newNode, oldNode);
+                    oldNode.parentNode.removeChild(oldNode);
+                },
+                deleteNode: function(el){
+                    el.parentNode.removeChild(el);
+                },
+                placeholders: function(){
                             var that = this,
                                 placeholder = this._placeholder || (this._placeholder = d.createElement('div')),
                                 el = settings.element,
@@ -331,22 +332,22 @@
                                     return elStyle.getPropertyValue(prop)
                                 },
                                 text = utils.html.text(el);
-
+                
                             el.placeholder = placeholder;
-
+                    
                             // Empty Editor
                             if( text.length < 1 ){
-                                settings.element.innerHTML = '';
-
-                                // We need to add placeholders
-                                if(settings.placeholder.length > 0){
+                        settings.element.innerHTML = '';
+                        
+                        // We need to add placeholders
+                        if(settings.placeholder.length > 0){ 
                                     if (!placeholder.setup) {
                                         placeholder.setup = true;
                                         utils
                                             .addEvent(el, 'blur', function() {
                                                 that.placeholders();
                                             });
-
+                        
 
                                         //background & background color
                                         style.background = qStyle('background');
@@ -388,7 +389,7 @@
                                         placeholder.className = settings.cssClasses.placeholder + ' ' + settings.cssClasses.placeholder + "-" + settings.mode;
                                         placeholder.innerHTML = '<div>' + settings.placeholder + '</div>';
                                         el.parentNode.insertBefore(placeholder, el);
-                                    }
+                            }
                                     el.style.background = 'transparent';
                                     el.style.backgroundColor = 'transparent';
                                     el.style.borderColor = 'transparent';
@@ -396,57 +397,57 @@
                                     // Add base P tag and do auto focus, give it a min height if el has one
                                     style.minHeight = el.clientHeight + 'px';
                                     style.minWidth = el.clientWidth + 'px';
-                                }
+                        }
                             } else {
                                 style.display = 'none';
                                 el.style.background = style.background;
                                 el.style.backgroundColor = style.backgroundColor;
                                 el.style.borderColor = style.borderColor;
-                            }
-                        },
-                        clean: function () {
+                    }
+                },
+                clean: function () {
 
-                            /*
-                             * Deletes invalid nodes
-                             * Removes Attributes
-                             */
-                            var attsToRemove = settings.attributes.remove,
+                    /*
+                     * Deletes invalid nodes
+                     * Removes Attributes
+                     */
+                    var attsToRemove = settings.attributes.remove,
                                 only = (settings.tags.outerLevel !== null ? (settings.tags.outerLevel).concat([settings.tags.paragraph]) : null),
-                                children = settings.element.children,
-                                i, j, k;
+                        children = settings.element.children,
+                        i, j, k;
+                    
+                    // Go through top level children
+                    for(i=0; i<children.length; i++){
+                        var child = children[i],
+                            nodeName = child.nodeName,
+                            shouldDelete = true;
 
-                            // Go through top level children
-                            for(i=0; i<children.length; i++){
-                                var child = children[i],
-                                    nodeName = child.nodeName,
-                                    shouldDelete = true;
-
-                                // Remove attributes
-                                for(k=0; k<attsToRemove.length; k++){
-                                    if( child.hasAttribute( attsToRemove[k] ) ){
-                                        if( child.getAttribute( attsToRemove[k] ) !== settings.cssClasses.placeholder ){
-                                            child.removeAttribute( attsToRemove[k] );
-                                        }
-                                    }
+                        // Remove attributes                   
+                        for(k=0; k<attsToRemove.length; k++){
+                            if( child.hasAttribute( attsToRemove[k] ) ){
+                                if( child.getAttribute( attsToRemove[k] ) !== settings.cssClasses.placeholder ){
+                                    child.removeAttribute( attsToRemove[k] );
                                 }
+                            }
+                        }
 
                                 if (only === null) {
                                     return;
                                 }
 
-                                // Determine if we should modify node
-                                for(j=0; j<only.length;j++){
-                                    if( only[j] === nodeName.toLowerCase() ){
-                                        shouldDelete = false;
-                                    }
-                                }
-
-                                // Convert tags or delete
-                                if(shouldDelete){
-                                    switch( nodeName.toLowerCase() ){
-                                        case 'div':
-                                            utils.html.changeTag(child, settings.tags.paragraph);
-                                            break;
+                        // Determine if we should modify node
+                        for(j=0; j<only.length;j++){
+                            if( only[j] === nodeName.toLowerCase() ){
+                                shouldDelete = false;
+                            }
+                        }
+                        
+                        // Convert tags or delete
+                        if(shouldDelete){
+                            switch( nodeName.toLowerCase() ){
+                                case 'div':
+                                    utils.html.changeTag(child, settings.tags.paragraph);
+                                    break;
                                         case 'br':
                                             if (child === child.parentNode.lastChild) {
                                                 if (child === child.parentNode.firstChild) {
@@ -457,93 +458,93 @@
                                                 child.parentNode.insertBefore(text, child);
                                                 break;
                                             }
-                                        default:
-                                            utils.html.deleteNode(child);
-                                            break;
-                                    }
-                                }
+                                default:
+                                    utils.html.deleteNode(child);
+                                    break;
                             }
-                        },
-                        lastChild: function () {
-                            return settings.element.lastChild;
-                        },
-                        addTag: function (tag, shouldFocus, isEditable, afterElement) {
+                        }
+                    }
+                },
+                lastChild: function () {
+                    return settings.element.lastChild;
+                },
+                addTag: function (tag, shouldFocus, isEditable, afterElement) {
                             if (!settings.beforeAddTag(tag, shouldFocus, isEditable, afterElement)) {
-                                var newEl = d.createElement(tag),
-                                    toFocus;
+                    var newEl = d.createElement(tag),
+                        toFocus;
 
-                                if( typeof isEditable !== "undefined" && isEditable === false ){
-                                    newEl.contentEditable = false;
-                                }
+                    if( typeof isEditable !== "undefined" && isEditable === false ){
+                        newEl.contentEditable = false;
+                    }
                                 if (newEl.innerHTML.length == 0) {
-                                    newEl.innerHTML = ' ';
+                    newEl.innerHTML = ' ';
                                 }
-                                if( afterElement && afterElement.nextSibling ){
-                                    afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
-                                    toFocus = afterElement.nextSibling;
-
-                                } else {
-                                    settings.element.appendChild(newEl);
-                                    toFocus = utils.html.lastChild();
-                                }
-
-                                if( shouldFocus ){
-                                    cache.focusedElement = toFocus;
-                                    utils.cursor.set( 0, toFocus );
-                                }
+                    if( afterElement && afterElement.nextSibling ){
+                        afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
+                        toFocus = afterElement.nextSibling;
+                        
+                    } else {
+                        settings.element.appendChild(newEl);
+                        toFocus = utils.html.lastChild();
+                    }
+                    
+                    if( shouldFocus ){
+                        cache.focusedElement = toFocus;
+                        utils.cursor.set( 0, toFocus );
+                    }
                                 return newEl;
                             }
                             return null;
-                        }
-                    },
-
-                    /*
-                     * This is a Paste Hook. When the user pastes
-                     * content, this ultimately converts it into
-                     * plain text before inserting the data.
-                     */
-                    pasteHook: function(fn){
-                        var input = d.createElement('textarea');
-                        input.className = settings.cssClasses.pasteHook;
-                        settings.element.appendChild(input);
-                        var pasteHookNode = utils.getElementsByClassName( settings.cssClasses.pasteHook, settings.element )[0];
-                        pasteHookNode.focus();
-                        setTimeout(function(){
+                }
+            },
+            
+            /*
+             * This is a Paste Hook. When the user pastes
+             * content, this ultimately converts it into
+             * plain text before inserting the data.
+             */
+            pasteHook: function(fn){
+                var input = d.createElement('textarea');
+                input.className = settings.cssClasses.pasteHook;
+                settings.element.appendChild(input);
+                var pasteHookNode = utils.getElementsByClassName( settings.cssClasses.pasteHook, settings.element )[0];
+                pasteHookNode.focus();
+                setTimeout(function(){
                             settings.element.focus();
-                            var v = pasteHookNode.value;
-                            fn.call(null, v);
-                            utils.html.deleteNode( pasteHookNode );
-                        }, 1);
-                    }
-                },
-                intercept = {
-                    focus: function(e){
+                    var v = pasteHookNode.value;
+                    fn.call(null, v);
+                    utils.html.deleteNode( pasteHookNode );
+                }, 1);
+            }
+        },
+        intercept = {
+            focus: function(e){
                         e = e || w.event;
-                        //_log('FOCUSED');
-                    },
-                    down: function(e){
+                //_log('FOCUSED');
+            },
+            down: function(e){
                         e = e || w.event;
+                
+                utils.isCommand(e, function(){
+                    cache.cmd = true;
+                }, function(){
+                    cache.cmd = false;
+                });
 
-                        utils.isCommand(e, function(){
-                            cache.cmd = true;
-                        }, function(){
-                            cache.cmd = false;
-                        });
+                utils.isShift(e, function(){
+                    cache.shift = true;
+                }, function(){
+                    cache.shift = false;
+                });
 
-                        utils.isShift(e, function(){
-                            cache.shift = true;
-                        }, function(){
-                            cache.shift = false;
-                        });
-
-                        utils.isModifier(e, function(cmd){
-                            if( cache.cmd ){
-
-                                if( ( (settings.mode === "inline") || (settings.mode === "partial") ) && cmd !== "paste" ){
+                utils.isModifier(e, function(cmd){
+                    if( cache.cmd ){
+                        
+                        if( ( (settings.mode === "inline") || (settings.mode === "partial") ) && cmd !== "paste" ){
                                     utils.preventDefaultEvent(e);
-                                    return;
-                                }
-
+                            return;
+                        }
+                        
                                 var cmdType = typeof cmd;
                                 var fn = null;
                                 if (cmdType === "function") {
@@ -553,16 +554,16 @@
                                 }
 
                                 fn.call(null, e);
-                            }
-                        });
-
-                        if( settings.maxLength !== -1 ){
+                    }
+                });
+                
+                if( settings.maxLength !== -1 ){
                             var ph = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element)[0],
-                                len = utils.html.text().length;
-
-                            if(settings.placeholder && ph){
-                                len -= settings.placeholder.length;
-                            }
+                        len = utils.html.text().length;
+                        
+                    if(settings.placeholder && ph){
+                        len -= settings.placeholder.length;
+                    }
                             var hasSelection = false, selection = w.getSelection();
 
                             if(selection) {
@@ -570,191 +571,194 @@
                             }
 
                             if( len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection ){
-                                return utils.preventDefaultEvent(e);
-                            }
-                            _log(len+'/'+settings.maxLength);
-                        }
-
+                        return utils.preventDefaultEvent(e);
+                    }
+                    _log(len+'/'+settings.maxLength);
+                }
+                
                         if( e.keyCode === 13 ){
-                            intercept.enterKey.call(null, e);
-                        }
+                    intercept.enterKey.call(null, e);
+                }
 
                         return true;
-                    },
-                    up: function(e){
+            },
+            up: function(e){
                         e = e || w.event;
-                        utils.isCommand(e, function(){
-                            cache.cmd = false;
-                        }, function(){
-                            cache.cmd = true;
-                        });
-                        utils.html.clean();
-                        utils.html.placeholders();
-                        action.preserveElementFocus();
-                    },
-                    command: {
-                        bold: function(e){
-                            utils.preventDefaultEvent(e);
-                            // IE uses strong instead of b
+                utils.isCommand(e, function(){
+                    cache.cmd = false;
+                }, function(){
+                    cache.cmd = true;
+                });
+                utils.html.clean();
+                utils.html.placeholders();
+                action.preserveElementFocus();
+            },
+            command: {
+                bold: function(e){
+                    utils.preventDefaultEvent(e);
+                    // IE uses strong instead of b
                             (new Medium.Element(me, 'bold'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
                             _log('Bold');
-                        },
-                        underline: function(e){
-                            utils.preventDefaultEvent(e);
+                },
+                underline: function(e){
+                    utils.preventDefaultEvent(e);
                             (new Medium.Element(me, 'underline'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
                             _log('Underline');
-                        },
-                        italicize: function(e){
-                            utils.preventDefaultEvent(e);
+                },
+                italicize: function(e){
+                    utils.preventDefaultEvent(e);
                             (new Medium.Element(me, 'italic'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
                             _log('Italic');
-                        },
-                        quote: function(e){},
-                        paste: function(e){
-                            var sel = utils.selection.saveSelection();
-                            utils.pasteHook(function(text){
-                                utils.selection.restoreSelection( sel );
+                },
+                quote: function (e) {
+                    utils.preventDefaultEvent(e);
+                    d.execCommand('formatBlock', false, 'blockquote'); _log('Quote');
+                },
+                paste: function(e){
+                    var sel = utils.selection.saveSelection();
+                    utils.pasteHook(function(text){
+                        utils.selection.restoreSelection( sel );
                                 (new Medium.Html(me, text.replace(/\n/g, '<br>')))
                                     .setClean(false)
                                     .insert(settings.beforeInsertHtml);
 
                                 _log('Html');
-                            });
-                        }
-                    },
-                    enterKey: function (e) {
-                        if( settings.mode === "inline" ){
-                            return utils.preventDefaultEvent(e);
-                        }
+                    });
+                }
+            },
+            enterKey: function (e) {
+                if( settings.mode === "inline" ){
+                    return utils.preventDefaultEvent(e);
+                }
 
-                        if( !cache.shift ){
-
-                            var focusedElement = cache.focusedElement;
-
-                            if( settings.autoHR && settings.mode !== 'partial' ){
+                if( !cache.shift ){
+                    
+                    var focusedElement = cache.focusedElement;
+                    
+                    if( settings.autoHR && settings.mode !== 'partial' ){
                                 var el = settings.element,
                                     children = el.children,
                                     lastChild = children[ Math.max(0, children.length - 1) ],
                                     makeHR,
                                     secondToLast;
-
+                        
                                 utils.preventDefaultEvent(e);
 
                                 makeHR =
                                     ( utils.html.text(lastChild) === "" )
                                     && ( lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
 
-                                if( makeHR && children.length >=2 ){
+                        if( makeHR && children.length >=2 ){
                                     secondToLast = children[ children.length-2 ];
-
-                                    if( secondToLast.nodeName.toLowerCase() === "hr" ){
-                                        makeHR = false;
-                                    }
-                                }
-
-                                if( makeHR ){
-                                    utils.preventDefaultEvent(e);
-                                    utils.html.deleteNode( lastChild );
-                                    utils.html.addTag('hr', false, false, focusedElement);
-                                    focusedElement = focusedElement.nextSibling;
-                                }
-                                utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
-                            } else {
-                                utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
+                            
+                            if( secondToLast.nodeName.toLowerCase() === "hr" ){
+                                makeHR = false;
                             }
                         }
+        
+                        if( makeHR ){
+                            utils.preventDefaultEvent(e);
+                            utils.html.deleteNode( lastChild );
+                            utils.html.addTag('hr', false, false, focusedElement);
+                            focusedElement = focusedElement.nextSibling;
+                        }
+                        utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
+                    } else {
+                        utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
+                    }
+                }
 
                         return true;
-                    }
-                },
-                action = {
-                    listen: function () {
+            }
+        },
+        action = {
+            listen: function () {
                         var el = settings.element;
                         utils
                             .addEvent(el, 'keyup', intercept.up)
                             .addEvent(el, 'keydown', intercept.down)
                             .addEvent(el, 'focus', intercept.focus);
-                    },
-                    preserveElementFocus: function(){
-                        // Fetch node that has focus
-                        var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
-                        if(anchorNode){
-                            var cur = anchorNode.parentNode,
-                                children = settings.element.children,
-                                diff = cur !== cache.focusedElement,
-                                elementIndex = 0,
-                                i;
-
-                            // anchorNode is our target if element is empty
-                            if (cur===settings.element){
-                                cur = anchorNode;
-                            }
-
-                            // Find our child index
-                            for(i=0;i<children.length;i++){
-                                if(cur === children[i]){
-                                    elementIndex = i;
-                                    break;
-                                }
-                            }
-
-                            // Focused element is different
-                            if( diff ){
-                                cache.focusedElement = cur;
-                                cache.focusedElementIndex = elementIndex;
-                            }
+            },
+            preserveElementFocus: function(){
+                // Fetch node that has focus
+                var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
+                if(anchorNode){
+                    var cur = anchorNode.parentNode,
+                        children = settings.element.children,
+                        diff = cur !== cache.focusedElement,
+                        elementIndex = 0,
+                        i;
+                    
+                    // anchorNode is our target if element is empty
+                    if (cur===settings.element){
+                        cur = anchorNode;
+                    }
+                    
+                    // Find our child index
+                    for(i=0;i<children.length;i++){
+                        if(cur === children[i]){
+                            elementIndex = i;
+                            break;
                         }
                     }
-                },
-                init = function (opts) {
+                    
+                    // Focused element is different
+                    if( diff ){
+                        cache.focusedElement = cur;
+                        cache.focusedElementIndex = elementIndex;
+                    }
+                }
+            }
+        },
+        init = function (opts) {
                     var key, el, newVal;
-
+        
                     for(key in settings){
-
-                        // Override defaults with data-attributes
+                
+                // Override defaults with data-attributes
                         if(
                             typeof settings[key] !== 'object'
                             && settings.hasOwnProperty(key)
                             && opts.element.getAttribute('data-medium-'+key)
                         ){
                             newVal = opts.element.getAttribute('data-medium-'+key);
-
-                            if( newVal.toLowerCase()==="false" || newVal.toLowerCase()==="true" ){
-                                newVal = newVal.toLowerCase()==="true";
-                            }
-                            settings[key] = newVal;
-                        }
+                    
+                    if( newVal.toLowerCase()==="false" || newVal.toLowerCase()==="true" ){
+                        newVal = newVal.toLowerCase()==="true";
                     }
-
-                    // Extend Settings
-                    utils.deepExtend(settings, opts);
+                    settings[key] = newVal;
+                }
+            }
+        
+            // Extend Settings
+            utils.deepExtend(settings, opts);
                     el = settings.element;
-
-                    // Editable
+    
+            // Editable
                     el.contentEditable = true;
                     el.className
                         += (" " + settings.cssClasses.editor)
                         + (" " + settings.cssClasses.editor + "-" + settings.mode);
-
-                    // Initialize editor
-                    utils.html.clean();
-                    utils.html.placeholders();
-                    action.preserveElementFocus();
-
-                    // Capture Events
-                    action.listen();
-
-                    // Set as initialized
-                    cache.initialized = true;
-                };
-
-            this.destroy = function(){
+            
+            // Initialize editor
+            utils.html.clean();
+            utils.html.placeholders();
+            action.preserveElementFocus();
+            
+            // Capture Events
+            action.listen();
+            
+            // Set as initialized
+            cache.initialized = true;
+        };
+        
+        this.destroy = function(){
                 var el = settings.element;
                 utils
                     .removeEvent(el, 'keyup', intercept.up)
@@ -762,8 +766,8 @@
                     .removeEvent(el, 'focus', intercept.focus)
                     .removeEvent(el, 'blur')
                     .removeEvent(el, 'mouseout');
-            };
-
+        };
+        
             // Sets or returns the content of element
             this.val = function(content){
                 // Set content if content is provided
@@ -782,8 +786,8 @@
                 utils.html.placeholders();
             };
 
-            init(userOpts);
-
+        init(userOpts);
+    
             this.settings = settings;
             this.utils = utils;
             this.cache = cache;
@@ -927,8 +931,8 @@
                 //d.execCommand('insertHtml', false, htmlRaw);
                 return null;
             }
-        };
-
+    };
+    
         /**
          *
          * @constructor
