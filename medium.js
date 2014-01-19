@@ -392,7 +392,15 @@
                             return;
                         }
                         
-                        intercept.command[cmd].call(null, e);
+                        var cmdType = typeof cmd;
+                        var fn = null;
+                        if (cmdType === "function") {
+                            fn = cmd;
+                        } else {
+                            fn = intercept.command[cmd];
+                        }
+
+                        fn.call(null, e);
                     }
                 });
                 
