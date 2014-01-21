@@ -124,7 +124,7 @@
                     <div> <code class="ref">wild</code>: (default) uses web browser's <code>document.execCommand()</code> method to insert and invoke elements, which has limitations when using complex html in more tailored scenarios.</div>
                 </li>
                 <li>
-                    <div> <code class="ref">domesticated</code>: when <code>undo.js</code> & <code>rangy</code> are included before Medium.js, domesticated behavior is triggered.  Domesticated behavior makes contenteditable behave when dealing with inserting and invoking more complex html.  By using undo.js, complex elements can be injected without difficulty and be undoable.  By using rangy, we are able to control contenteditable's ability to invoke elements.</div>
+                    <div> <code class="ref">domesticated</code>: when <code>undo.js</code> & <code>rangy</code> are included before Medium.js, domesticated behavior is triggered.  Domesticated behavior makes contenteditable behave when dealing with inserting and invoking more complex html.  By using undo.js, complex elements can be injected without difficulty and be undoable.  By using rangy, we are able to control contenteditable's ability to invoke elements.  Also, created is the <code>onchange</code> event (which does not exist in modern browsers for <code>contenteditable</code> element for some unknown reason) is fired when the value of the element changes.</div>
                 </li>
             </ul>
 
@@ -142,11 +142,14 @@
                 </li>
                 <li>
                     <div> <code class="ref">invokeElement({String}tagName, {Object} [attributes])</code>: invokes an element.</div>
+                    <div class="important">returns {Medium}</div>
                     <div class="important">(attributes are domesticated mode only)</div>
                 </li>
                 <li>
-                    <div> <code class="ref">insertHtml({String|HtmlElement} html)</code>: inserts html into the editor at the cursor.</div>
-                    <div class="important">(HtmlElement allowed in domesticated mode only)</div>
+                    <div> <code class="ref">insertHtml({String|HtmlElement} html, {Function} [callback])</code>: inserts html into the editor at the cursor.</div>
+                    <div class="important">returns {Medium}</div>
+                    <div class="important">callback's "this" is inserted/created HtmlElement</div>
+                    <div class="important">(HtmlElement & callback allowed in domesticated mode only)</div>
                 </li>
                 <li>
                     <div> <code class="ref">makeUndoable()</code>: makes the current state of the editor undoable/redoable. </div>
@@ -160,8 +163,13 @@
                     <div> <code class="ref">undo()</code>: undo an edit. </div>
                     <div class="important">(domesticated mode only)</div>
                 </li>
+                <li>
+                    <div> <code class="ref">value({String} [value])</code>: set or get value from medium.</div>
+                    <div class="important">When value is defined, element's innerHTML is set, and {Medium} is returned.</div>
+                    <div class="important">When value is undefined, will return element's innerHTML {String} value.</div>
+                </li>
             </ul>
-            
+
             <div class="faq">
                 <h3>Common Questions</h3>
             

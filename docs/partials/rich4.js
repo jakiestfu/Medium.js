@@ -15,3 +15,10 @@ article4Button.onmousedown = function() {
 	    style: "background-color: #66D9EF; color: #272B2F"
     });
 };
+
+article4.onchange = function(e) {
+    console.log('Behave ;)');
+    console.log(article4Medium.value());
+    article4Medium.value("Test ;)");
+    console.log(article4Medium.value());
+};

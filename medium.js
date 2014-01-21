@@ -142,6 +142,20 @@
                     e.returnValue = false;
                 }
             },
+            triggerEvent: function(element, eventName) {
+                var event;
+                if (d.createEvent) {
+                    event = d.createEvent("HTMLEvents");
+                    event.initEvent(eventName, true, true);
+                    event.eventName = eventName;
+                    element.dispatchEvent(event);
+                } else {
+                    event = d.createEventObject();
+                    event.eventType = eventName;
+                    event.eventName = eventName;
+                    element.fireEvent("on" + event.eventType, event);
+                }
+            },
 
             /*
              * Utilities
@@ -629,21 +643,35 @@
 	    /**
 	     *
 	     * @param {String|Object} htmlRaw
-	     * @returns {null|HtmlElement}
+         * @param {Function} [callback]
+	     * @returns {Medium}
 	     */
-        insertHtml: function(htmlRaw) {
-            return (new Medium.Html(this, htmlRaw))
+        insertHtml: function(htmlRaw, callback) {
+            var result = (new Medium.Html(this, htmlRaw))
                 .insert(this.settings.beforeInsertHtml);
+
+            this.utils.triggerEvent(this.settings.element, "change");
+
+            if (callback) {
+                callback.apply(result);
+            }
+
+            return this;
         },
 
 	    /**
 	     *
 	     * @param {String} tagName
 	     * @param {Object} [attributes]
+         * @returns {Medium}
 	     */
         invokeElement: function(tagName, attributes) {
             (new Medium.Element(this, tagName, attributes))
                 .invoke(this.settings.beforeInvokeElement);
+
+            this.utils.triggerEvent(this.settings.element, "change");
+
+            return this;
         },
 
 	    /**
@@ -651,7 +679,22 @@
 	     */
 	    behavior: function() {
 		    return (wild ? 'wild' : 'domesticated');
-	    }
+	    },
+
+        /**
+         *
+         * @param value
+         * @returns {Medium}
+         */
+        value: function(value) {
+            if (typeof value !== 'undefined') {
+                this.settings.element.innerHTML = value;
+            } else {
+                return this.settings.element.innerHTML;
+            }
+
+            return this;
+        }
     };
 
     /**
@@ -743,7 +786,7 @@
                         fn.apply(this);
                     }
 
-                    var applier = rangy.createCssClassApplier(this.attributes.className, {
+                    var applier = rangy.createCssClassApplier(this.attributes.className || '', {
                         elementTagName: this.tagName.toLowerCase(),
                         elementAttributes: this.attributes
                     });
@@ -814,8 +857,8 @@
 		 * @constructor
 		 */
 		Medium.Undoable = function(medium) {
-
-			var element = medium.settings.element,
+			var me = this,
+                element = medium.settings.element,
 				utils = medium.utils,
 				addEvent = utils.addEvent,
 				startValue = element.innerHTML,
@@ -844,10 +887,15 @@
 					var newValue = element.innerHTML;
 					// ignore meta key presses
 					if (newValue != startValue) {
-						// this could try and make a diff instead of storing snapshots
-						stack.execute(new EditCommand(startValue, newValue));
-						startValue = newValue;
-						medium.dirty = stack.dirty();
+
+                        if (!me.movingThroughStack) {
+                            // this could try and make a diff instead of storing snapshots
+                            stack.execute(new EditCommand(startValue, newValue));
+                            startValue = newValue;
+                            medium.dirty = stack.dirty();
+                        }
+
+                        medium.utils.triggerEvent(medium.settings.element, "change");
 					}
 				};
 
@@ -856,25 +904,30 @@
 			this.stack = stack;
 			this.makeUndoable = makeUndoable;
 			this.EditCommand = EditCommand;
+            this.movingThroughStack = false;
 
 			addEvent(element, 'keyup', function(event) {
 				if (event.ctrlKey || event.keyCode === 90) {
 					event.preventDefault();
 					return;
 				}
+
 				// a way too simple algorithm in place of single-character undo
-				clearTimeout(timer);
-				timer = setTimeout(function() {
-					makeUndoable();
-				}, 250);
-			});
+                clearTimeout(timer);
+                timer = setTimeout(function() {
+                    makeUndoable();
+                }, 250);
+            });
 
 			addEvent(element, 'keydown', function(event) {
-				if (!event.ctrlKey || event.keyCode != 90) {
+				if (!event.ctrlKey || event.keyCode !== 90) {
+                    me.movingThroughStack = false;
 					return;
 				}
 
 				event.preventDefault();
+
+                me.movingThroughStack = true;
 
 				if (event.shiftKey) {
 					stack.canRedo() && stack.redo()
