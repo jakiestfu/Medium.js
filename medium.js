@@ -10,7 +10,7 @@
  */
 
 
-(function(w, d, rangy, undo){
+(function(w, d){
 
     'use strict';
     
@@ -30,6 +30,8 @@
      */
     var
         //two modes, wild (native) or domesticated (rangy + undo.js)
+        rangy = w['rangy'] || null,
+        undo = w['Undo'] || null,
 	    wild = (!rangy || !undo),
 	    domesticated = (!wild),
 	    Medium = Medium || function (userOpts) {
@@ -65,7 +67,8 @@
                 remove: ['style','class']
             },
 	        beforeInvokeElement: function() {},
-	        beforeInsertHtml: function() {}
+	        beforeInsertHtml: function() {},
+            beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
         },
         cache = {
             initialized: false,
@@ -361,33 +364,32 @@
                     return settings.element.lastChild;
                 },
                 addTag: function (tag, shouldFocus, isEditable, afterElement) {
-                    var newEl = d.createElement(tag);
+                    if (!settings.beforeAddTag(tag, shouldFocus, isEditable, afterElement)) {
+                        var newEl = d.createElement(tag),
+                            toFocus;
 
-                    return this.addCustomTag(newEl, shouldFocus, isEditable, afterElement);
-                },
-                addCustomTag: function(el, shouldFocus, isEditable, afterElement) {
-                    var toFocus;
+                        if( typeof isEditable !== "undefined" && isEditable === false ){
+                            newEl.contentEditable = false;
+                        }
+                        if (newEl.innerHTML.length == 0) {
+                            newEl.innerHTML = ' ';
+                        }
+                        if( afterElement && afterElement.nextSibling ){
+                            afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
+                            toFocus = afterElement.nextSibling;
 
-                    if( typeof isEditable !== "undefined" && isEditable === false ){
-                        el.contentEditable = false;
-                    }
-                    if (el.innerHTML.length == 0) {
-                        el.innerHTML = ' ';
-                    }
-                    if( afterElement && afterElement.nextSibling ){
-                        afterElement.parentNode.insertBefore( el, afterElement.nextSibling );
-                        toFocus = afterElement.nextSibling;
+                        } else {
+                            settings.element.appendChild(newEl);
+                            toFocus = utils.html.lastChild();
+                        }
 
-                    } else {
-                        settings.element.appendChild(el);
-                        toFocus = utils.html.lastChild();
+                        if( shouldFocus ){
+                            cache.focusedElement = toFocus;
+                            utils.cursor.set( 0, toFocus );
+                        }
+                        return newEl;
                     }
-
-                    if( shouldFocus ){
-                        cache.focusedElement = toFocus;
-                        utils.cursor.set( 0, toFocus );
-                    }
-                    return el;
+                    return null;
                 }
             },
 
@@ -471,21 +473,21 @@
                     // IE uses strong instead of b
                     (new Medium.Element(me, 'bold'))
                         .setClean(false)
-                        .insert(settings.beforeInvokeElement);
+                        .invoke(settings.beforeInvokeElement);
                     _log('Bold');
                 },
                 underline: function(e){
                     utils.preventDefaultEvent(e);
                     (new Medium.Element(me, 'underline'))
                         .setClean(false)
-                        .insert(settings.beforeInvokeElement);
+                        .invoke(settings.beforeInvokeElement);
                     _log('Underline');
                 },
                 italicize: function(e){
                     utils.preventDefaultEvent(e);
                     (new Medium.Element(me, 'italic'))
                         .setClean(false)
-                        .insert(settings.beforeInvokeElement);
+                        .invoke(settings.beforeInvokeElement);
                     _log('Italic');
                 },
                 quote: function(e){},
@@ -799,7 +801,7 @@
 
 	                this.medium.makeUndoable();
 
-                    applier.toggleSelection();
+                    applier.toggleSelection(w);
                 }
 			},
 
@@ -997,4 +999,4 @@
         });
     }
 
-}).call(this, window, document, window['rangy'], window['Undo']);
+}).call(this, window, document);
