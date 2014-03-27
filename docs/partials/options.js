@@ -22,5 +22,12 @@ new Medium({
         editor: 'Medium',
         pasteHook: 'Medium-paste-hook',
         placeholder: 'Medium-placeholder'
-    }
+    },
+	beforeInvokeElement: function() {
+		//this.tagName
+		//this.attributes
+	},
+	beforeInsertHtml: function() {
+		//this.html
+	}
 });

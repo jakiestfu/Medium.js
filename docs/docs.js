@@ -23,32 +23,11 @@ var applyPrism = function(){
 	$('.span4 pre').each(function(){
 		Prism.highlightElement($(this).find('code')[0]);
 	});
-},
-
-applyMedium = function(){
-    new Medium({
-        element: document.getElementById('title'),
-        mode: 'inline',
-        maxLength: 25,
-        placeholder: 'Your Title'
-    });
-    
-    new Medium({
-        element: document.getElementById('article'),
-        mode: 'rich',
-        placeholder: 'Your Article'
-    });
-    
-    new Medium({
-        element: document.getElementById('comment'),
-        mode: 'partial',
-        placeholder: 'Your Comment'
-    });
 };
 
-
-$(document).ready(function(){
-    
-    applyMedium();
+$(function(){
+	if (Medium.prototype.behavior() == 'wild') {
+		$('div.domesticated').hide();
+	}
     applyPrism();
 });
