@@ -321,7 +321,7 @@
                      * Removes Attributes
                      */
                     var attsToRemove = settings.attributes.remove,
-                        only = (settings.tags.outerLevel).concat([settings.tags.paragraph]),
+                        only = (settings.tags.outerLevel !== null ? (settings.tags.outerLevel).concat([settings.tags.paragraph]) : null),
                         children = settings.element.children,
                         i, j, k;
 
@@ -338,6 +338,10 @@
                                     child.removeAttribute( attsToRemove[k] );
                                 }
                             }
+                        }
+
+                        if (only === null) {
+                            return;
                         }
 
                         // Determine if we should modify node
