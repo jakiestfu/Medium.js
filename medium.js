@@ -409,6 +409,7 @@
                 var pasteHookNode = utils.getElementsByClassName( settings.cssClasses.pasteHook, settings.element )[0];
                 pasteHookNode.focus();
                 setTimeout(function(){
+                    settings.element.focus();
                     var v = pasteHookNode.value;
                     fn.call(null, v);
                     utils.html.deleteNode( pasteHookNode );
