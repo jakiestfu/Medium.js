@@ -435,6 +435,7 @@
                     if( cache.cmd ){
 
                         if( ( (settings.mode === "inline") || (settings.mode === "partial") ) && cmd !== "paste" ){
+                            utils.preventDefaultEvent(e);
                             return;
                         }
 
