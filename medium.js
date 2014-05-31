@@ -447,7 +447,7 @@
                 });
 
                 if( settings.maxLength !== -1 ){
-                    var ph = settings.element.getElementsByClassName(settings.cssClasses.placeholder)[0],
+                    var ph = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element)[0],
                         len = utils.html.text().length;
 
                     if(settings.placeholder && ph){
