@@ -165,15 +165,19 @@
              */
             getElementsByClassName: function(classname, el) {
                 el = el ? el : document.body;
-                var a = [],
-                    re = new RegExp('(^| )'+classname+'( |$)'),
-                    els = el.getElementsByTagName("*");
-                for(var i=0,j=els.length; i<j; i++){
-                    if(re.test(els[i].className)){
-                        a.push(els[i]);
+                if (el.getElementsByClassName) {
+                    return el.getElementsByClassName(classname);
+                } else {
+                    var a = [],
+                        re = new RegExp('(^| )'+classname+'( |$)'),
+                        els = el.getElementsByTagName("*");
+                    for(var i=0,j=els.length; i<j; i++){
+                        if(re.test(els[i].className)){
+                            a.push(els[i]);
+                        }
                     }
+                    return a;
                 }
-                return a;
             },
 
             deepExtend: function (destination, source) {
@@ -444,7 +448,7 @@
                 });
 
                 if( settings.maxLength !== -1 ){
-                    var ph = settings.element.getElementsByClassName(settings.cssClasses.placeholder)[0],
+                    var ph = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element)[0],
                         len = utils.html.text().length;
 
                     if(settings.placeholder && ph){
