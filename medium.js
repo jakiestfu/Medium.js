@@ -109,16 +109,26 @@
                 }
                 return false;
             },
-            isNotSpecial: function(e){
+            isSpecial: function(e){
                 var special = {
                     16: 'shift',
                     17: 'ctrl',
                     18: 'alt',
                     91: 'cmd',
-                    8: 'delete'
+                    8: 'backspace',
+                    46: 'delete',
                 };
-                if(cache.cmd){ return false; }
-                return !(e.which in special);
+                if(cache.cmd){ return true; }
+                return (e.which in special);
+            },
+            isNavigational: function(e) {
+                var navigational = {
+                    37: 'right-arrow',
+                    38: 'up-arrow',
+                    39: 'left-arrow',
+                    40: 'down-arrow',
+                };
+                return (e.which in navigational);
             },
 
             /*
@@ -454,7 +464,13 @@
                     if(settings.placeholder && ph){
                         len -= settings.placeholder.length;
                     }
-                    if( len >= settings.maxLength && utils.isNotSpecial(e) ){
+                    var hasSelection = false, selection = w.getSelection();
+                    
+                    if(selection) {
+                        hasSelection = !selection.isCollapsed;
+                    }
+                    
+                    if( len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection ){
                         return utils.preventDefaultEvent(e);
                     }
                     _log(len+'/'+settings.maxLength);
