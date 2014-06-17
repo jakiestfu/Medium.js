@@ -754,7 +754,16 @@
 					}
 					d.execCommand(this.tagName, false);
 				}
-			}
+			},
+
+	            	/**
+	             	*
+	             	* @param {Boolean} clean
+	             	* @returns {Medium.Element}
+	             	*/
+	            	setClean: function(clean) {
+	                	throw 'This operation requires that you include "rangy" and "undo".';
+	            	}
 		};
 
 		Medium.Injector.prototype = {
