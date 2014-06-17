@@ -476,6 +476,9 @@
                 utils.html.placeholders();
                 action.preserveElementFocus();
             },
+            mouseup: function(e){
+                action.preserveElementFocus();
+            },
             command: {
                 bold: function(e){
                     utils.preventDefaultEvent(e);
@@ -557,6 +560,7 @@
                 utils.addEvent(settings.element, 'keyup', intercept.up);
                 utils.addEvent(settings.element, 'keydown', intercept.down);
                 utils.addEvent(settings.element, 'focus', intercept.focus);
+                utils.addEvent(settings.element, 'mouseup', intercept.mouseup);
             },
             preserveElementFocus: function(){
 
@@ -629,6 +633,7 @@
             utils.removeEvent(settings.element, 'keyup', intercept.up);
             utils.removeEvent(settings.element, 'keydown', intercept.down);
             utils.removeEvent(settings.element, 'focus', intercept.focus);
+            utils.removeEvent(settings.element, 'mouseup', intercept.mouseup);
         };
 
         init(userOpts);
