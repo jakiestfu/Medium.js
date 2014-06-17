@@ -116,7 +116,7 @@
                     18: 'alt',
                     91: 'cmd',
                     8: 'backspace',
-                    46: 'delete',
+                    46: 'delete'
                 };
                 if(cache.cmd){ return true; }
                 return (e.which in special);
@@ -126,7 +126,7 @@
                     37: 'right-arrow',
                     38: 'up-arrow',
                     39: 'left-arrow',
-                    40: 'down-arrow',
+                    40: 'down-arrow'
                 };
                 return (e.which in navigational);
             },
