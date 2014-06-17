@@ -1,0 +1,12 @@
+{
+	"name": "Medium.js",
+	"version": "1.0.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jakiestfu/Medium.js"
+	},
+	"dependencies": {
+		"rangy": "https://rangy.googlecode.com/files/rangy-1.3alpha.804.zip",
+		"undo": "https://github.com/jzaefferer/undo/archive/master.zip"
+	}
+}

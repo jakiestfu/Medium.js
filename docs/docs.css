@@ -137,7 +137,9 @@ pre{
             background: lightyellow;
             background: rgba(255,255,0,0.3);
         }
-
+    .def .important{
+	    font-weight: bold;
+    }
 p a{
     text-decoration: none;
     color: #57ad68;

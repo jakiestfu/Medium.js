@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <title>Medium.js</title>
-        <meta charset='utf-8'> 
+        <meta charset="utf-8"> 
         
         <link rel="stylesheet" type="text/css" href="../medium.css">
         <link rel="stylesheet" type="text/css" href="docs.css">
@@ -10,7 +10,7 @@
         
         <meta property="og:title" content="Medium.js"/>
         <meta property="og:type" content="website"/>
-        <meta property="og:url" content="http://jakiestfu.github.io/Medium.js/"/>
+        <meta property="og:url" content="//jakiestfu.github.io/Medium.js/"/>
         <meta property="og:site_name" content="Medium.js"/>
         <meta property="og:description" content="Medium.js is a tiny JavaScript library for making HTML5's contenteditable beautiful." />
 
@@ -22,15 +22,15 @@
     </head>
 
     <body>
-        <a class="fork" href="http://github.com/jakiestfu/Medium.js/"><img src="http://i.imgur.com/saRwNCY.jpg"></a>
+        <a class="fork" href="//github.com/jakiestfu/Medium.js/"><img src="//i.imgur.com/saRwNCY.jpg"></a>
         
         <div class="wrap">
-            <a class="brand" href="http://jakiestfu.github.io/Medium.js/">Medium.js</a>
+            <a class="brand" href="//jakiestfu.github.io/Medium.js/">Medium.js</a>
             <h1 class="catch">Taking control of content editable</h1>
             
             <div class="share">
-				<iframe src="http://ghbtns.com/github-btn.html?user=jakiestfu&repo=Medium.js&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="120" height="20"></iframe>
-				<iframe src="http://ghbtns.com/github-btn.html?user=jakiestfu&repo=Medium.js&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="120" height="20"></iframe>
+				<iframe src="//ghbtns.com/github-btn.html?user=jakiestfu&repo=Medium.js&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="120" height="20"></iframe>
+				<iframe src="//ghbtns.com/github-btn.html?user=jakiestfu&repo=Medium.js&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="120" height="20"></iframe>
 								
 				<a href="https://twitter.com/share" class="twitter-share-button" data-via="jakiestfu" data-text="Medium.js is a tiny JavaScript library for making HTML5's contenteditable beautiful.">Tweet</a>
 				<a href="https://twitter.com/jakiestfu" class="twitter-follow-button" data-show-count="false">Follow @jakiestfu</a>
@@ -40,30 +40,32 @@
 
             <hr />
             
-            <p>This is Medium.js. It keeps HTML code within <code>contenteditable</code> semantic, simple, and clean. It also allows for placeholders, automatic HR creation, events, hotkeys, and more.</p>
-            <p>This script is inspired by <a href="http://medium.com" target="_blank">Medium's</a> beautiful content editor, something I have aspired to emulate since its inception.</p>
-            <p>Medium.js has been tested in Firefox 17+ (No Placeholders), Safari 5+, IE 10+, and Opera 11+ (No placeholders and no hotkeys). Hopefully, browser support (through abstraction), can be improved upon in the near future.</p>
+            <p>This is Medium.js. It keeps HTML code within <code>contenteditable</code> semantic, simple, and clean. It also allows for placeholders, automatic HR creation, events, hotkeys, simple & complex element injection, and more!</p>
+            <p>This script is inspired by <a href="http://medium.com" target="_blank">Medium's</a> beautiful content editor, something I have aspired to emulate since it's inception.</p>
+            <p>Medium.js has been tested in Firefox 17+ (No Placeholders), Safari 5+, IE 10+, and Opera 11+ (No placeholders and no hotkeys).  Browser support is constantly improving!</p>
             <p>This code is brought to you by <a href="http://jakiestfu.com/" target="_blank">jakiestfu</a>, author of <a href="http://github.com/jakiestfu/Snap.js/" target="_blank">Snap.js</a> and <a href="http://jakiestfu.github.io/Behave.js/" target="_blank">Behave.js</a>. Please share!</p>
+
             <hr />
             
             <h3>Features</h3>
-            <p>
-                <ul>
-                    <li>Library Independent</li>
-                    <li>Keeps HTML organized and semantic (even on paste events)</li>
-                    <li>Rich text editing with hotkeys <code>(cmd/ctrl+[,b,u,i])</code></li>
-                    <li>Placeholders</li>
-                    <li>Inline editors, partial editors, and rich editors</li>
-                    <li>Automatic HR tag insertion on two empty paragraphs in succession</li>
-                    <li>Great for writing articles, comments, or titles. Great to use instead of <code>input</code></li>
-                </ul>
-            </p>
+            <ul>
+                <li>Library Independent</li>
+                <li>Modern browser compliant!</li>
+                <li>Can be used easily with your own WYSIWYG editor or Toolbar</li>
+                <li>Keeps HTML organized and semantic (even on paste events)</li>
+                <li>Rich text editing with hotkeys <code>(cmd/ctrl+[b,u,i])</code></li>
+                <li>Placeholders</li>
+                <li>Inline editors, partial editors, and rich editors</li>
+                <li>Automatics HR tag insertion on two empty paragraphs in succession</li>
+                <li>Great for writing titles, comments, or entire articles.</li>
+                <li>Much more expressive and customizable than <code>input</code> or <code>textarea</code></li>
+            </ul>
             
             <hr />
             
             <h3>Usage</h3>
             <pre data-src="usage.html"></pre>
-            <p>Simply include the Medium JS library and CSS, and you are ready to rock. <b>No dependencies</b></p>
+            <p>Simply include the Medium.js library and CSS, and you are ready to rock. <b>No dependencies</b></p>
             
             <hr />
             
@@ -82,7 +84,7 @@
                     <div> <code class="ref">debug</code>: Log properties to the console </div>
                 </li>
                 <li>
-                    <div> <code class="ref">element</code>: The element in which you want to apply the Medium editor to.</div>
+                    <div> <code class="ref">element</code>: The element in which you want to apply the Medium.js' editor to.</div>
                 </li>
                 <li>
                     <div> <code class="ref">modifier</code>: The modifier you want for making things bold/italic etc. May be set to <code>'auto'</code>, <code>'cmd'</code>, or <code>'ctrl'</code>. </div>
@@ -106,19 +108,86 @@
                     <div> <code class="ref">modifiers</code>: Key modifiers from <code>e.which</code> that will be used to apply the respective styling changes or hook into events. </div>
                 </li>
                 <li>
-                    <div> <code class="ref">tags</code>: Dictates the base tags allows. <code>tags.paragraph</code> is the element that will be created for paragraphs. <code>tags.outerLevel</code> are the only elements allows to replace a top-level <code>p</code> tag. <code>tags.innerLevel</code> are the only tags allowed within the parent tags. No additional tags are allowed unless included here.</div>
+                    <div> <code class="ref">tags</code>: Dictates the base tags allowed. <code>tags.paragraph</code> is the element that will be created for paragraphs. <code>tags.outerLevel</code> are the only elements allowed to replace a top-level <code>p</code> tag. <code>tags.innerLevel</code> are the only tags allowed within the parent tags. No additional tags are allowed unless included here.</div>
                 </li>
                 <li>
-                    <div> <code class="ref">cssClasses</code>: Various classes used within Medium, customizable to your liking. </div>
+                    <div> <code class="ref">cssClasses</code>: Various classes used within Medium.js, customizable to your liking. </div>
+                </li>
+                <li>
+                    <div> <code class="ref">beforeInvokeElement()</code>: Triggered just before an element is invoked.  An element is invoked over a highlighted area.</div>
+                </li>
+                <li>
+                    <div> <code class="ref">beforeInsertHtml()</code>: Triggered just before html is added.  Inserted at cursor, but only if medium's element has focus. </div>
+                </li>
+                <li>
+                    <div> <code class="ref">beforeAddTag()</code>: Triggered just before a tag is told to be created from a keyboard action. </div>
                 </li>
             </ul>
-            
+
+            <hr />
+
+            <h3>Behavior</h3>
+            <p>There are two behaviors available, wild and domesticated.</p>
+            <ul class="def">
+                <li>
+                    <div> <code class="ref">wild</code>: (default) uses web browser's <code>document.execCommand()</code> method to insert and invoke elements, which has limitations when using complex html in more tailored scenarios.</div>
+                </li>
+                <li>
+                    <div> <code class="ref">domesticated</code>: when <code>undo.js</code> & <code>rangy</code> are included before Medium.js, domesticated behavior is triggered.  Domesticated behavior makes contenteditable behave when dealing with inserting and invoking more complex html.  By using undo.js, complex elements can be injected without difficulty and be undoable.  By using rangy, we are able to control contenteditable's ability to invoke elements.  Also, created is the <code>onchange</code> event (which does not exist in modern browsers for <code>contenteditable</code> element for some unknown reason) is fired when the value of the element changes.</div>
+                </li>
+            </ul>
+
+
+            <h3>Methods</h3>
+            <p>Methods provide functionality that can be used with buttons, toolbars, WYSIWYG editors, and the environment it is being used with.</p>
+
+            <ul class="def">
+                <li>
+                    <div> <code class="ref">behavior()</code>: The type of behavior currently being used with Medium.js.</div>
+                    <div class="important">returns <code>'wild'</code> or <code>'domesticated'</code></div>
+                </li>
+                <li>
+                    <div> <code class="ref">destroy()</code>: Destroy the instantiated medium.js </div>
+                </li>
+                <li>
+                    <div> <code class="ref">invokeElement({String}tagName, {Object} [attributes])</code>: invokes an element.</div>
+                    <div class="important">returns {Medium}</div>
+                    <div class="important">(attributes are domesticated mode only)</div>
+                </li>
+                <li>
+                    <div> <code class="ref">insertHtml({String|HtmlElement} html, {Function} [callback])</code>: inserts html into the editor at the cursor.</div>
+                    <div class="important">returns {Medium}</div>
+                    <div class="important">callback's "this" is inserted/created HtmlElement</div>
+                    <div class="important">(HtmlElement & callback allowed in domesticated mode only)</div>
+                </li>
+                <li>
+                    <div> <code class="ref">makeUndoable()</code>: makes the current state of the editor undoable/redoable. </div>
+                    <div class="important">(domesticated mode only)</div>
+                </li>
+                <li>
+                    <div> <code class="ref">redo()</code>: redo an edit. </div>
+                    <div class="important">(domesticated mode only)</div>
+                </li>
+                <li>
+                    <div> <code class="ref">undo()</code>: undo an edit. </div>
+                    <div class="important">(domesticated mode only)</div>
+                </li>
+                <li>
+                    <div> <code class="ref">value({String} [value])</code>: set or get value from medium.</div>
+                    <div class="important">When value is defined, element's innerHTML is set, and {Medium} is returned.</div>
+                    <div class="important">When value is undefined, will return element's innerHTML {String} value.</div>
+                </li>
+            </ul>
+
             <div class="faq">
                 <h3>Common Questions</h3>
             
                 <h4>What is the purpose of Medium.js?</h4>
                 <p>Medium.js overrides many default keyboard events and substitutes a more cross-browser compliant way to interact with <code>contenteditable</code> elements. This means that you can use <code>contenteditable</code> without fearing your user is going to enter poor or invalid HTML. It keeps things tight, organized, and semantic.</p>
-                
+
+                <h4>Why are there different behaviours available?</h4>
+                <p>Medium.js was written to be used in many environments, of which, toolbars and WYSIWYG (what you see is what you get editors) editors are used commonly.  Plus, when domesticated, you can teach contenteditable all kinds of new tricks ;).</p>
+
                 <h4>Does this give me the cool highlighting toolbar like Medium's editor</h4>
                 <p><b>No</b>, it does not. If you're looking for a script that adds support for Medium's toolbar, take a look at <a href="http://zenpen.io/" target="_blank">ZenPen.io</a></p>
                 
@@ -127,26 +196,50 @@
                 
                 <h4>Medium.js does not work in all browsers!</h4>
                 <p>Please fork Medium.js and contribute, wide support is so close!</p>
-                
             </div>
 
             <hr />
             
             <h3>Demos</h3>
-            <p>Below each code block is a demo for inline, partial, and rich editors. On the rich editor, try using hotkeys like cmd+b or ctrl+i, etc.</p>
-            
-            <h4>Inline</h4>
-            <pre data-src="inline.js"></pre>
-            <div id="title" class="title demo"></div>
-            
-            <h4>Partial</h4>
-            <pre data-src="partial.js"></pre>
-            <div id="comment" class="comment demo"></div>
-            
-            <h4>Rich</h4>
-            <pre data-src="rich.js"></pre>
-            <div id="article" class="article demo"></div>
-            
+            <div>
+                <h4>Inline</h4>
+                <pre data-src="inline.js"></pre>
+                <div id="title" class="title demo"></div>
+            </div>
+
+            <div>
+                <h4>Partial</h4>
+                <pre data-src="partial.js"></pre>
+                <div id="comment" class="comment demo"></div>
+            </div>
+
+            <div>
+                <h4>Rich</h4>
+                <pre data-src="rich.js"></pre>
+                <div id="article" class="article demo"></div>
+            </div>
+
+            <div>
+                <h4>Rich with Insert Html</h4>
+                <pre data-src="rich2.js"></pre>
+                <input id="article2Button" type="button" value="Insert"/>
+                <div id="article2" class="article demo"></div>
+            </div>
+
+            <div class="domesticated">
+                <h4>Rich with Insert Html Object (domesticated only)</h4>
+                <pre data-src="rich3.js"></pre>
+                <input id="article3Button" type="button" value="Insert"/>
+                <div id="article3" class="article demo"></div>
+            </div>
+
+            <div class="domesticated">
+                <h4>Rich with Invoke Element (domesticated only)</h4>
+                <pre data-src="rich4.js"></pre>
+                <input id="article4Button" type="button" value="Invoke Element"/>
+                <div id="article4" class="article demo">Select me, then click the "Invoke Element" above.</div>
+            </div>
+
             <h4>Licensing</h4>
             <div class="license">
                <p><b>MIT Licensing</b></p>
@@ -157,9 +250,18 @@
             </div>
         </div>
         
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="../bower_components/undo/undo.js"></script>
+        <script src="../bower_components/rangy/uncompressed/rangy-core.js"></script>
+        <script src="../bower_components/rangy/uncompressed/rangy-cssclassapplier.js"></script>
         <script src="../medium.js"></script>
         <script src="prism.js"></script>
+        <script src="partials/inline.js"></script>
+        <script src="partials/partial.js"></script>
+        <script src="partials/rich.js"></script>
+        <script src="partials/rich2.js"></script>
+        <script src="partials/rich3.js"></script>
+        <script src="partials/rich4.js"></script>
         <script src="docs.js"></script>
     </body>
 </html>
