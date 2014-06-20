@@ -5,7 +5,7 @@ new Medium({
     placeholder: "",
     autofocus: false,
     autoHR: true,
-    mode: 'rich',
+    mode: Medium.richMode,
     maxLength: -1,
     modifiers: {
         66: 'bold',

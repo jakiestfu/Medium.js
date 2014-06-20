@@ -1,5 +1,5 @@
 new Medium({
     element: document.getElementById('comment'),
-    mode: 'partial',
+    mode: Medium.partialMode,
     placeholder: 'Your Comment'
 });

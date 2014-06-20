@@ -1,6 +1,6 @@
 new Medium({
     element: document.getElementById('title'),
-    mode: 'inline',
+    mode: Medium.inlineMode,
     maxLength: 25,
     placeholder: 'Your Title'
 });

@@ -18,14 +18,11 @@
         
         <meta http-equiv="Pragma" content="no-cache">
         <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
-        
     </head>
 
     <body>
-        <a class="fork" href="//github.com/jakiestfu/Medium.js/"><img src="//i.imgur.com/saRwNCY.jpg"></a>
-        
         <div class="wrap">
-            <a class="brand" href="//jakiestfu.github.io/Medium.js/">Medium.js</a>
+            <a class="brand" href="//jakiestfu.github.io/Medium.js/" id="ThisisMediumjs">Medium.js</a>
             <h1 class="catch">Taking control of content editable</h1>
             
             <div class="share">
@@ -38,44 +35,75 @@
 				<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 			</div>
 
-            <hr />
-            
-            <p>This is Medium.js. It keeps HTML code within <code>contenteditable</code> semantic, simple, and clean. It also allows for placeholders, automatic HR creation, events, hotkeys, simple & complex element injection, and more!</p>
-            <p>This script is inspired by <a href="http://medium.com" target="_blank">Medium's</a> beautiful content editor, something I have aspired to emulate since it's inception.</p>
-            <p>Medium.js has been tested in Firefox 17+ (No Placeholders), Safari 5+, IE 10+, and Opera 11+ (No placeholders and no hotkeys).  Browser support is constantly improving!</p>
-            <p>This code is brought to you by <a href="http://jakiestfu.com/" target="_blank">jakiestfu</a>, author of <a href="http://github.com/jakiestfu/Snap.js/" target="_blank">Snap.js</a> and <a href="http://jakiestfu.github.io/Behave.js/" target="_blank">Behave.js</a>. Please share!</p>
 
             <hr />
-            
-            <h3>Features</h3>
+
+
+            <h3 style="text-align: center;">This is Medium.js</h3>
+            <h4>Easy</h4>
+            <p>Medium.js keeps HTML code within <code>contenteditable</code> semantic, simple, and clean. Medium.js also supports placeholders, automatic HR (or BR, or P) creation, events, hotkeys, simple & complex element injection, and more!</p>
+
+            <h4>Compliant</h4>
+            <p>Medium.js is html5 compliant and has been tested in Firefox, Chrome, Safari, Opera, & IE 9+.  Browser support is constantly improving!</p>
+            <div style="text-align: center; opacity: 0.75;">
+                <img src="//www.w3.org/html/logo/badge/html5-badge-h-connectivity-css3-device-graphics-multimedia-performance-semantics.png" width="325" height="64" alt="HTML5 Powered with Connectivity / Realtime, CSS3 / Styling, Device Access, Graphics, 3D &amp; Effects, Multimedia, Performance &amp; Integration, and Semantics" title="HTML5 Powered with Connectivity / Realtime, CSS3 / Styling, Device Access, Graphics, 3D &amp; Effects, Multimedia, Performance &amp; Integration, and Semantics">
+                <br />
+                <img src="img/firefox.gif"/>
+                <img src="img/chrome.gif"/>
+                <img src="img/safari.gif"/>
+                <img src="img/opera.gif"/>
+                <img src="img/ie.gif"/>
+            </div>
+
+            <h4>Inspired</h4>
+            <p>This script is inspired by <a href="http://medium.com" target="_blank">Medium's</a> beautiful content editor, something we have aspired to emulate since it's inception.</p>
+
+            <h4>Authors</h4>
+            <p>This code is brought to you by
+                <a href="http://jakiestfu.com/" target="_blank">jakiestfu</a> author of <a href="http://github.com/jakiestfu/Snap.js/" target="_blank">Snap.js</a> and <a href="http://jakiestfu.github.io/Behave.js/" target="_blank">Behave.js</a><br>
+                and
+                <a href="http://visop-dev.com/" target="_blank">Robert Plummer</a> author of <a href="http://wikiLingoDOesThat.com/" target="_blank">wikiLingo</a> and <a href="http://github.com/Spreadsheets/jQuery.sheet" target="_blank">jQuery.sheet</a>.
+                Please share!
+            </p>
+
+
+            <hr />
+
+
+            <h3 id="Features">Features</h3>
             <ul>
                 <li>Library Independent</li>
-                <li>Modern browser compliant!</li>
-                <li>Can be used easily with your own WYSIWYG editor or Toolbar</li>
+                <li>Modern browser compliant</li>
+                <li>Free</li>
+                <li>Contributions Welcomes</li>
+                <li>WYSIWYG editor or Toolbar ready</li>
                 <li>Keeps HTML organized and semantic (even on paste events)</li>
                 <li>Rich text editing with hotkeys <code>(cmd/ctrl+[b,u,i])</code></li>
                 <li>Placeholders</li>
-                <li>Inline editors, partial editors, and rich editors</li>
-                <li>Automatics HR tag insertion on two empty paragraphs in succession</li>
-                <li>Great for writing titles, comments, or entire articles.</li>
+                <li>Inline, partial, and rich editors</li>
+                <li>Automatics HR (or BR, or P) tag insertion on two empty paragraphs in succession</li>
+                <li>Great for writing titles, comments, or entire articles</li>
                 <li>Much more expressive and customizable than <code>input</code> or <code>textarea</code></li>
             </ul>
-            
+
+
             <hr />
-            
-            <h3>Usage</h3>
+
+
+
+            <h3 id="Usage">Usage</h3>
             <pre data-src="usage.html"></pre>
             <p>Simply include the Medium.js library and CSS, and you are ready to rock. <b>No dependencies</b></p>
             
             <hr />
             
-            <h3>Semantic</h3>
+            <h3 id="Semantic">Semantic</h3>
             <pre data-src="semantic.html"></pre>
             <p>The code within Medium.js editors are very semantic and organized, giving you peace of mind with using <code>contenteditable</code>.</p>
             
             <hr />
             
-            <h3>Options</h3>
+            <h3 id="Options">Options</h3>
             <pre data-src="options.js"></pre>
             <p>All options (excluding <code>modifiers</code>, <code>tags</code>, and <code>cssClasses</code>) may be overridden with <code>data-medium-*</code> attributes on the element.</p>
             
@@ -99,7 +127,13 @@
                     <div> <code class="ref">autoHR</code>: An HR tag will automatically be inserted if there are two empty paragraphs in succession </div>
                 </li>
                 <li>
-                    <div> <code class="ref">mode</code>: Dictate the mode in which you want to allow editing. Currently there are three: <code>"inline"</code> allows for no rich text editing, and no newlines. Similar to an <code>input</code> element. <code>"partial"</code> is like a <code>textarea</code>, but allows support for paragraphs. <code>"rich"</code> allows styling of the text, paragraphs, and hr tags. </div>
+                    <div> <code class="ref">mode</code>: Dictate the mode in which you want to allow editing. Currently there are three:
+                        <ul>
+                            <li><code class="ref">Medium.inlineMode</code> or <code>"inline"</code> allows for no rich text editing, and no newlines. Similar to an <code>input</code> element.</li>
+                            <li><code class="ref">Medium.partialMode</code> or <code>"partial"</code> is like a <code>textarea</code>, but allows support for paragraphs.</li>
+                            <li><code class="ref">Medium.richMode</code> or <code>"rich"</code> allows styling of the text, paragraphs, and hr tags.</li>
+                        </ul>
+                    </div>
                 </li>
                 <li>
                     <div> <code class="ref">maxLength</code>: The max size you want to allow for the editor </div>
@@ -124,9 +158,11 @@
                 </li>
             </ul>
 
+
             <hr />
 
-            <h3>Behavior</h3>
+
+            <h3 id="Behavior">Behavior</h3>
             <p>There are two behaviors available, wild and domesticated.</p>
             <ul class="def">
                 <li>
@@ -138,7 +174,10 @@
             </ul>
 
 
-            <h3>Methods</h3>
+            <hr />
+
+
+            <h3 id="Methods">Methods</h3>
             <p>Methods provide functionality that can be used with buttons, toolbars, WYSIWYG editors, and the environment it is being used with.</p>
 
             <ul class="def">
@@ -179,9 +218,12 @@
                 </li>
             </ul>
 
+
+            <hr/>
+
+
             <div class="faq">
-                <h3>Common Questions</h3>
-            
+                <h3 id="FAQ">FAQ</h3>
                 <h4>What is the purpose of Medium.js?</h4>
                 <p>Medium.js overrides many default keyboard events and substitutes a more cross-browser compliant way to interact with <code>contenteditable</code> elements. This means that you can use <code>contenteditable</code> without fearing your user is going to enter poor or invalid HTML. It keeps things tight, organized, and semantic.</p>
 
@@ -194,13 +236,21 @@
                 <h4>There are weird style issues when inserting empty tags. What gives?</h4>
                 <p>Empty tags do not have what is called <code>layout</code>, a sort of property of an element. You need to set a <code>min-height</code> on the paragraph element you specify. </p>
                 
-                <h4>Medium.js does not work in all browsers!</h4>
-                <p>Please fork Medium.js and contribute, wide support is so close!</p>
+                <h4>Medium.js works in modern browsers</h4>
+                <p>This is because of you. But if you find a bug, please fork Medium.js and contribute so we can continue wide support!</p>
+
+                <h4>Who uses Medium.js</h4>
+                <ul>
+                    <li><a href="http://wikiLingoDoesThat.com/">wikiLingo</a></li>
+                    <li>More to come</li>
+                </ul>
             </div>
 
+
             <hr />
-            
-            <h3>Demos</h3>
+
+
+            <h3 id="Demos">Demos</h3>
             <div>
                 <h4>Inline</h4>
                 <pre data-src="inline.js"></pre>
@@ -240,7 +290,15 @@
                 <div id="article4" class="article demo">Select me, then click the "Invoke Element" above.</div>
             </div>
 
-            <h4>Licensing</h4>
+
+            <hr/>
+
+
+            <h4 id="Support">Support</h4>
+            <p>Need commercial support for Medium.js? Currently provided by <a href="//visop-dev.com/Contact%20Us">Visual Interop Development llc.</a>, drop us a line, we can't wait to see what we can do together.</p>
+
+
+            <h4 id="Licensing">Licensing</h4>
             <div class="license">
                <p><b>MIT Licensing</b></p>
                <p>Copyright (c) 2013 Jacob Kelley</p>
@@ -249,8 +307,29 @@
                <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
             </div>
         </div>
-        
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+        <!--Navigation-->
+        <div id="menu">
+            <ul class="shadow">
+                <li class="catch"><a href="#ThisisMediumjs">This is Medium.js</a></li>
+                <li><a href="#Features">Features</a></li>
+                <li><a href="#Usage">Usage</a></li>
+                <li><a href="#Semantic">Semantic</a></li>
+                <li><a href="#Options">Options</a></li>
+                <li><a href="#Behavior">Behavior</a></li>
+                <li><a href="#Methods">Methods</a></li>
+                <li><a href="#FAQ">FAQ</a></li>
+                <li><a href="#Demos">Demos</a></li>
+                <li><a href="#Support">Support</a></li>
+                <li><a href="#Licensing">Licensing</a></li>
+            </ul>
+            <div class="actuator"><a href="#">+</a></div>
+        </div>
+
+        <!--Make Forkable-->
+        <a href="//github.com/jakiestfu/Medium.js"><img style="position: fixed; top: 0; right: 0; border: 0;" src="//camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="//s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
         <script src="../bower_components/undo/undo.js"></script>
         <script src="../bower_components/rangy/uncompressed/rangy-core.js"></script>
         <script src="../bower_components/rangy/uncompressed/rangy-cssclassapplier.js"></script>
