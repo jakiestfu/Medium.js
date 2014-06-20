@@ -10,7 +10,7 @@
  */
 
 
-(function(w, d){
+(function(w, d, Math){
 
     'use strict';
     
@@ -140,13 +140,17 @@
                 } else if (element.attachEvent) {
                     element.attachEvent("on" + eventName, func);
                 }
+
+	            return this;
             },
-            removeEvent: function addEvent(element, eventName, func) {
-                if (element.addEventListener) {
+            removeEvent: function removeEvent(element, eventName, func) {
+                if (element.removeEventListener) {
                     element.removeEventListener(eventName, func, false);
-                } else if (element.attachEvent) {
+                } else if (element.detachEvent) {
                     element.detachEvent("on" + eventName, func);
                 }
+
+	            return this;
             },
             preventDefaultEvent: function (e) {
                 if (e.preventDefault) {
@@ -154,6 +158,8 @@
                 } else {
                     e.returnValue = false;
                 }
+
+	            return this;
             },
             triggerEvent: function(element, eventName) {
                 var event;
@@ -168,6 +174,8 @@
                     event.eventName = eventName;
                     element.fireEvent("on" + event.eventType, event);
                 }
+
+	            return this;
             },
 
             /*
@@ -296,36 +304,49 @@
                     el.parentNode.removeChild(el);
                 },
                 placeholders: function(){
+                    var that = this,
+	                    placeholder = this._placeholder || (this._placeholder = d.createElement('p')),
+	                    el = settings.element,
+	                    style = placeholder.style,
+	                    elStyle = getComputedStyle(el),
+	                    text = utils.html.text(el);
 
+	                el.placeholder = placeholder;
 
-                    var placeholders = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element),
-                        innerText = utils.html.text(settings.element),
-                        c = null;
-
-                    // Empty Editer
-                    if( innerText === ""  ){
+                    // Empty Editor
+                    if( text.length < 1 ){
                         settings.element.innerHTML = '';
 
                         // We need to add placeholders
                         if(settings.placeholder.length > 0){
-                            utils.html.addTag(settings.tags.paragraph, false, false);
-                            c = utils.html.lastChild();
-                            c.className = settings.cssClasses.placeholder;
-                            utils.html.text(c, settings.placeholder);
-                        }
-
-                        // Add base P tag and do autofocus, give it a min height if c has one
-                        var p = utils.html.addTag(settings.tags.paragraph, cache.initialized ? true : settings.autofocus);
-                        if (c) {
-                            p.style.minHeight = c.clientHeight + 'px';
+	                        if (!placeholder.setup) {
+		                        placeholder.setup = true;
+		                        utils
+			                        .addEvent(el, 'blur', function() {
+				                        that.placeholders();
+			                        })
+			                        .addEvent(el, 'mouseout', function() {
+				                        that.placeholders();
+			                        });
+		                        style.background = elStyle.background;
+		                        style.color = elStyle.color;
+	                        }
+                            placeholder.className = settings.cssClasses.placeholder + ' ' + settings.cssClasses.placeholder + "-" + settings.mode;
+	                        placeholder.innerHTML = '<span>' + settings.placeholder + '</span>';
+	                        style.display = '';
+	                        el.background = 'transparent';
+	                        // Add base P tag and do auto focus, give it a min height if el has one
+	                        style.minHeight = el.clientHeight + 'px';
+	                        style.minWidth = el.clientWidth + 'px';
+	                        style.margin = elStyle.margin;
+	                        style.padding = elStyle.padding;
+	                        style.border = elStyle.border;
+	                        style.fontSize = elStyle.fontSize;
+	                        el.parentNode.insertBefore(placeholder, el);
                         }
                     } else {
-                        if(innerText !== settings.placeholder){
-                            var i;
-                            for(i=0; i<placeholders.length; i++){
-                                utils.html.deleteNode(placeholders[i]);
-                            }
-                        }
+                        style.display = 'none';
+	                    el.style.background = style.background;
                     }
                 },
                 clean: function () {
@@ -371,6 +392,16 @@
                                 case 'div':
                                     utils.html.changeTag(child, settings.tags.paragraph);
                                     break;
+	                            case 'br':
+		                            if (child === child.parentNode.lastChild) {
+			                            if (child === child.parentNode.firstChild) {
+				                            break;
+			                            }
+			                            var text = document.createTextNode("");
+			                            text.innerHTML = '&nbsp';
+			                            child.parentNode.insertBefore(text, child);
+			                            break;
+		                            }
                                 default:
                                     utils.html.deleteNode(child);
                                     break;
@@ -551,8 +582,14 @@
 
                     if( settings.autoHR && settings.mode !== 'partial' ){
                         var children = settings.element.children,
-                            lastChild = children[ children.length-1 ],
-                            makeHR = ( utils.html.text(lastChild) === "" ) && (lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
+                            lastChild = children[ Math.max(0, children.length - 1) ],
+                            makeHR;
+
+	                    if (!lastChild) {
+		                    return true;
+	                    }
+
+	                    makeHR = ( utils.html.text(lastChild) === "" ) && (lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
 
                         if( makeHR && children.length >=2 ){
                             var secondToLast = children[ children.length-2 ];
@@ -635,8 +672,9 @@
 
             // Editable
             settings.element.contentEditable = true;
-            settings.element.className += (" ")+settings.cssClasses.editor;
-            settings.element.className += (" ")+settings.cssClasses.editor+"-"+settings.mode;
+            settings.element.className
+	            += (" " + settings.cssClasses.editor)
+	            + (" " + settings.cssClasses.editor + "-" + settings.mode);
 
             // Initialize editor
             utils.html.clean();
@@ -651,9 +689,13 @@
         };
 
         this.destroy = function(){
-            utils.removeEvent(settings.element, 'keyup', intercept.up);
-            utils.removeEvent(settings.element, 'keydown', intercept.down);
-            utils.removeEvent(settings.element, 'focus', intercept.focus);
+	        var el = settings.element;
+            utils
+	            .removeEvent(el, 'keyup', intercept.up)
+                .removeEvent(el, 'keydown', intercept.down)
+                .removeEvent(el, 'focus', intercept.focus)
+	            .removeEvent(el, 'blur')
+	            .removeEvent(el, 'mouseout');
         };
 
         // Sets or returns the content of element
@@ -664,22 +706,13 @@
                 utils.html.placeholders();
                 return content;
             }
-            else {
-                var placeholders = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element),
-                    innerText = utils.html.text(settings.element);
 
-                if( innerText !== settings.placeholder ){
-                    return settings.element.innerHTML
-                }
-                else {
-                    return ''
-                }
-            }
+            return settings.element.innerHTML;
         };
  
         // Clears the element and restores the placeholder
         this.clear = function(){
-        settings.element.innerHTML = '';
+            settings.element.innerHTML = '';
             utils.html.placeholders();
         };
 
@@ -978,9 +1011,9 @@
 			this.EditCommand = EditCommand;
             this.movingThroughStack = false;
 
-			addEvent(element, 'keyup', function(event) {
-				if (event.ctrlKey || event.keyCode === 90) {
-					event.preventDefault();
+			addEvent(element, 'keyup', function(e) {
+				if (e.ctrlKey || e.keyCode === 90) {
+					utils.preventDefaultEvent(e);
 					return;
 				}
 
@@ -991,17 +1024,17 @@
                 }, 250);
             });
 
-			addEvent(element, 'keydown', function(event) {
-				if (!event.ctrlKey || event.keyCode !== 90) {
+			addEvent(element, 'keydown', function(e) {
+				if (!e.ctrlKey || e.keyCode !== 90) {
                     me.movingThroughStack = false;
 					return;
 				}
 
-				event.preventDefault();
+				utils.preventDefaultEvent(e);
 
                 me.movingThroughStack = true;
 
-				if (event.shiftKey) {
+				if (e.shiftKey) {
 					stack.canRedo() && stack.redo()
 				} else {
 					stack.canUndo() && stack.undo();
@@ -1069,4 +1102,9 @@
         });
     }
 
-}).call(this, window, document);
+	//Modes;
+	Medium.inlineMode = 'inline';
+	Medium.partialMode = 'partial';
+	Medium.richMode = 'rich';
+
+}).call(this, window, document, Math);

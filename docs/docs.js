@@ -29,5 +29,34 @@ $(function(){
 	if (Medium.prototype.behavior() == 'wild') {
 		$('div.domesticated').hide();
 	}
+
+	//Make menu toggle-able, so it doesn't hog all the realestate
+	var menu = $('#menu'),
+		links = menu.find('ul');
+
+	menu.down = function() {
+		this.isUp = false;
+		menu.css('top', 0);
+	};
+	menu.up = function() {
+		menu.isUp = true;
+		menu.css('top', (-links.outerHeight() + 5) + 'px');
+	};
+	menu.toggleUpDown = function() {
+		if (menu.isUp) {
+			menu.down();
+		} else {
+			menu.up();
+		}
+	};
+
+	menu.up();
+
+	menu.find('.actuator').parent()
+		.click(function(e) {
+			e.preventDefault();
+			menu.toggleUpDown();
+		});
+
     applyPrism();
 });
