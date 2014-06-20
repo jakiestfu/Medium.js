@@ -52,7 +52,7 @@ $(function(){
 
 	menu.up();
 
-	menu.find('.actuator').parent()
+	menu.find('.actuator')
 		.click(function(e) {
 			e.preventDefault();
 			menu.toggleUpDown();

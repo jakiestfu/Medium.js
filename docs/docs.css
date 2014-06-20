@@ -93,7 +93,13 @@ p{
     color: #333;
     margin-top: 20px;
     }
+.shadow {
+	-webkit-box-shadow: 0px 3px 15px 2px rgba(0,0,0,0.25);
+	-moz-box-shadow: 0px 3px 15px 2px rgba(0,0,0,0.25);
+	box-shadow: 0px 3px 15px 2px rgba(0,0,0,0.25);
+    }
 #menu{
+	opacity: 0.9;
     position: fixed;
     top: 0;
     -webkit-transition: top 2s,-webkit-transform 2s;  /* For Safari 3.1 to 6.0 */
@@ -106,13 +112,18 @@ p{
         margin-right:auto;
         width: 50px;
         text-align: center;
-        border-bottom-left-radius: 15px;
-        border-bottom-right-radius: 15px;
         }
+        #menu .actuator a{
+	        display: block;
+	        border-bottom-left-radius: 15px;
+	        border-bottom-right-radius: 15px;
+	        background-color: #333332;
+            }
     #menu ul{
+	    background-color: #333332;
         margin: 0;
         list-style-type: none;
-        padding: 5px;
+        padding: 15px;
         border-bottom-left-radius: 15px;
         border-bottom-right-radius: 15px;
         }
@@ -121,7 +132,6 @@ p{
             display: block;
             }
     #menu *{
-        background-color: #333332;
         color: white;
         text-decoration: none;
         width: 100%:
