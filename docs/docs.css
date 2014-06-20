@@ -131,7 +131,7 @@ p{
             text-transform: uppercase;
             display: block;
             }
-    #menu *{
+    #menu a{
         color: white;
         text-decoration: none;
         width: 100%:
@@ -188,10 +188,11 @@ p a{
     color: #57ad68;
     border-bottom: 2px solid;
     }
-
+pre[data-src]{
+	margin-bottom: 20px !important;
+}
 .demo{
     border-bottom: 1px dashed #ccc;
-    margin-top: 20px;
     }
     .faqs p{
         font-size: 14px;
@@ -203,3 +204,10 @@ p a{
 .share{
     text-align: center;
     }
+.demo{
+	background-color: #F5F5F0;
+	-webkit-box-shadow: 0px 3px 15px 2px #F5F5F0;
+	-moz-box-shadow: 0px 3px 15px 2px #F5F5F0;
+	box-shadow: 0px 3px 15px 2px #F5F5F0;
+	padding: 10px;
+}

@@ -32,7 +32,8 @@ $(function(){
 
 	//Make menu toggle-able, so it doesn't hog all the realestate
 	var menu = $('#menu'),
-		links = menu.find('ul');
+		links = menu.find('ul'),
+		viewPort = $('html,body');
 
 	menu.down = function() {
 		this.isUp = false;
@@ -49,6 +50,22 @@ $(function(){
 			menu.up();
 		}
 	};
+
+	links.find('a').click(function(e) {
+		e.preventDefault();
+		var target = $(this.getAttribute('href').valueOf());
+		viewPort.animate({
+			'scrollTop': target.offset().top
+		}, 1000, function() {
+			target.animate({
+				'padding-left': '10%'
+			},500, function() {
+				target.animate({
+					'padding-left': '0px'
+				}, 2000);
+			});
+		});
+	});
 
 	menu.up();
 

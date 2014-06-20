@@ -28,11 +28,12 @@
 .Medium-placeholder{
 	position: absolute;
 	}
-.Medium-placeholder span {
+.Medium-placeholder div {
 	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
 	filter: alpha(opacity=50);
 	opacity: 0.5;
+	position: absolute;
 	}
-.Medium-placeholder-rich span {
+.Medium-placeholder-rich div {
 	font-style: italic;
 	}

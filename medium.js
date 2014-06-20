@@ -305,10 +305,13 @@
                 },
                 placeholders: function(){
                     var that = this,
-	                    placeholder = this._placeholder || (this._placeholder = d.createElement('p')),
+	                    placeholder = this._placeholder || (this._placeholder = d.createElement('div')),
 	                    el = settings.element,
 	                    style = placeholder.style,
-	                    elStyle = getComputedStyle(el),
+	                    elStyle = w.getComputedStyle(el, null),
+	                    qStyle = function(prop) {
+		                    return elStyle.getPropertyValue(prop)
+	                    },
 	                    text = utils.html.text(el);
 
 	                el.placeholder = placeholder;
@@ -324,29 +327,63 @@
 		                        utils
 			                        .addEvent(el, 'blur', function() {
 				                        that.placeholders();
-			                        })
-			                        .addEvent(el, 'mouseout', function() {
-				                        that.placeholders();
 			                        });
-		                        style.background = elStyle.background;
+
+
+		                        //background & background color
+		                        style.background = qStyle('background');
+		                        style.backgroundColor = qStyle('background-color');
+
+		                        //text size & text color
+		                        style.fontSize = qStyle('font-size');
 		                        style.color = elStyle.color;
+
+		                        //begin box-model
+		                        //margin
+		                        style.marginTop = qStyle('margin-top');
+		                        style.marginBottom = qStyle('margin-bottom');
+		                        style.marginLeft = qStyle('margin-left');
+		                        style.marginRight = qStyle('margin-right');
+
+		                        //padding
+		                        style.paddingTop = qStyle('padding-top');
+		                        style.paddingBottom = qStyle('padding-bottom');
+		                        style.paddingLeft = qStyle('padding-left');
+		                        style.paddingRight = qStyle('padding-right');
+
+		                        //border
+		                        style.borderStyle = qStyle('border-top-width');
+		                        style.borderTopColor = qStyle('border-top-color');
+		                        style.borderTopStyle = qStyle('border-top-style');
+		                        style.borderBottomWidth = qStyle('border-bottom-width');
+		                        style.borderBottomColor = qStyle('border-bottom-color');
+		                        style.borderBottomStyle = qStyle('border-bottom-style');
+		                        style.borderLeftWidth = qStyle('border-left-width');
+		                        style.borderLeftColor = qStyle('border-left-color');
+		                        style.borderLeftStyle = qStyle('border-left-style');
+		                        style.borderRightWidth = qStyle('border-right-width');
+		                        style.borderRightColor = qStyle('border-right-color');
+		                        style.borderRightStyle = qStyle('border-right-style');
+		                        //end box model
+
+		                        //element setup
+		                        placeholder.className = settings.cssClasses.placeholder + ' ' + settings.cssClasses.placeholder + "-" + settings.mode;
+		                        placeholder.innerHTML = '<div>' + settings.placeholder + '</div>';
+		                        el.parentNode.insertBefore(placeholder, el);
 	                        }
-                            placeholder.className = settings.cssClasses.placeholder + ' ' + settings.cssClasses.placeholder + "-" + settings.mode;
-	                        placeholder.innerHTML = '<span>' + settings.placeholder + '</span>';
+	                        el.style.background = 'transparent';
+	                        el.style.backgroundColor = 'transparent';
+	                        el.style.borderColor = 'transparent';
 	                        style.display = '';
-	                        el.background = 'transparent';
 	                        // Add base P tag and do auto focus, give it a min height if el has one
 	                        style.minHeight = el.clientHeight + 'px';
 	                        style.minWidth = el.clientWidth + 'px';
-	                        style.margin = elStyle.margin;
-	                        style.padding = elStyle.padding;
-	                        style.border = elStyle.border;
-	                        style.fontSize = elStyle.fontSize;
-	                        el.parentNode.insertBefore(placeholder, el);
                         }
                     } else {
-                        style.display = 'none';
+	                    style.display = 'none';
 	                    el.style.background = style.background;
+	                    el.style.backgroundColor = style.backgroundColor;
+	                    el.style.borderColor = style.borderColor;
                     }
                 },
                 clean: function () {
@@ -653,8 +690,9 @@
             }
         },
         init = function (opts) {
+	        var key, el;
 
-            for(var key in settings){
+            for(key in settings){
 
                 // Override defaults with data-attributes
                 if( typeof settings[key] !== 'object' && settings.hasOwnProperty(key) && opts.element.getAttribute('data-medium-'+key) ){
@@ -669,10 +707,11 @@
 
             // Extend Settings
             utils.deepExtend(settings, opts);
+	        el = settings.element;
 
             // Editable
-            settings.element.contentEditable = true;
-            settings.element.className
+            el.contentEditable = true;
+            el.className
 	            += (" " + settings.cssClasses.editor)
 	            + (" " + settings.cssClasses.editor + "-" + settings.mode);
 
