@@ -613,8 +613,6 @@
 
                 if( !cache.shift ){
 
-                    utils.preventDefaultEvent(e);
-
                     var focusedElement = cache.focusedElement;
 
                     if( settings.autoHR && settings.mode !== 'partial' ){
@@ -625,6 +623,8 @@
 	                    if (!lastChild) {
 		                    return true;
 	                    }
+
+                        utils.preventDefaultEvent(e);
 
 	                    makeHR = ( utils.html.text(lastChild) === "" ) && (lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
 
@@ -1067,7 +1067,7 @@
 			addEvent(element, 'keydown', function(e) {
 				if (!e.ctrlKey || e.keyCode !== 90) {
                     me.movingThroughStack = false;
-					return;
+					return true;
 				}
 
 				utils.preventDefaultEvent(e);
