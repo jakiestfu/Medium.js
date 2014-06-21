@@ -1,5 +1,5 @@
 new Medium({
     element: document.getElementById('article'),
-    mode: 'rich',
+    mode: Medium.richMode,
     placeholder: 'Your Article'
 });

@@ -5,7 +5,7 @@ new Medium({
     placeholder: "",
     autofocus: false,
     autoHR: true,
-    mode: 'rich',
+    mode: Medium.richMode,
     maxLength: -1,
     modifiers: {
         66: 'bold',
@@ -23,11 +23,11 @@ new Medium({
         pasteHook: 'Medium-paste-hook',
         placeholder: 'Medium-placeholder'
     },
-	beforeInvokeElement: function() {
-		//this.tagName
-		//this.attributes
-	},
-	beforeInsertHtml: function() {
-		//this.html
-	}
+    beforeInvokeElement: function() {
+        //this.tagName
+        //this.attributes
+    },
+    beforeInsertHtml: function() {
+        //this.html
+    }
 });
