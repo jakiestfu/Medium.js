@@ -1,27 +1,27 @@
 var applyPrism = function(){
+    var jsPattern = /[.](js)$/i;
 	$('[data-src]').each(function(){
-		var _this = $(this),
-			isJS = (_this[0].dataset.src).indexOf('.js')!=-1 || (_this[0].dataset.src).indexOf('.php')!=-1;
+		var that = $(this),
+            src = this.getAttribute('src') || this.getAttribute('data-src'),
+			isJS = jsPattern.test(src);
+
 		$.ajax({
-			url: 'partials/'+_this[0].dataset.src+'?'+ new Date().getTime(),
+			url: 'partials/' + src + '?' + new Date().getTime(),
 			dataType:'text',
 			success: function(d){
 				if(isJS){
-					_this.html('<code class="language-javascript"></code>');
+                    that.html('<code class="language-javascript"></code>');
 				} else {
-					_this.html('<code class="language-markup"></code>');
+                    that.html('<code class="language-markup"></code>');
 				}
-				
-				_this.find('code').text(d);
-				Prism.highlightElement(_this.find('code')[0]);
-				var r = _this.html();
+
+                that.find('code').text(d);
+				Prism.highlightElement(that.find('code')[0]);
+				var r = that.html();
 				r = r.replace(/_FOLD_/g, '<div class="fold"></div>');
-				_this.html(r);
+                that.html(r);
 			}
 		});
-	});
-	$('.span4 pre').each(function(){
-		Prism.highlightElement($(this).find('code')[0]);
 	});
 };
 
