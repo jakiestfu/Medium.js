@@ -516,9 +516,11 @@
                 },
                 intercept = {
                     focus: function(e){
+                        e = e || w.event;
                         //_log('FOCUSED');
                     },
                     down: function(e){
+                        e = e || w.event;
 
                         utils.isCommand(e, function(){
                             cache.cmd = true;
@@ -578,6 +580,7 @@
                         return true;
                     },
                     up: function(e){
+                        e = e || w.event;
                         utils.isCommand(e, function(){
                             cache.cmd = false;
                         }, function(){
@@ -624,7 +627,6 @@
                         }
                     },
                     enterKey: function (e) {
-
                         if( settings.mode === "inline" ){
                             return utils.preventDefaultEvent(e);
                         }
@@ -671,9 +673,11 @@
                 },
                 action = {
                     listen: function () {
-                        utils.addEvent(settings.element, 'keyup', intercept.up);
-                        utils.addEvent(settings.element, 'keydown', intercept.down);
-                        utils.addEvent(settings.element, 'focus', intercept.focus);
+                        var el = settings.element;
+                        utils
+                            .addEvent(el, 'keyup', intercept.up)
+                            .addEvent(el, 'keydown', intercept.down)
+                            .addEvent(el, 'focus', intercept.focus);
                     },
                     preserveElementFocus: function(){
                         // Fetch node that has focus
