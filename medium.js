@@ -103,7 +103,7 @@
                         }
                     },
                     isModifier: function(e, fn){
-                        var w = e.which,
+                        var w = e.keyCode,
                             cmd = settings.modifiers[w];
                         if(cmd){
                             return fn.call(null, cmd);
@@ -120,7 +120,7 @@
                             46: 'delete'
                         };
                         if(cache.cmd){ return true; }
-                        return (e.which in special);
+                        return (e.keyCode in special);
                     },
                     isNavigational: function(e) {
                         var navigational = {
@@ -129,7 +129,7 @@
                             39: 'left-arrow',
                             40: 'down-arrow'
                         };
-                        return (e.which in navigational);
+                        return (e.keyCode in navigational);
                     },
 
                     /*
@@ -140,6 +140,8 @@
                             element.addEventListener(eventName, func, false);
                         } else if (element.attachEvent) {
                             element.attachEvent("on" + eventName, func);
+                        } else {
+                            element['on' + eventName] = func;
                         }
 
                         return this;
@@ -149,6 +151,8 @@
                             element.removeEventListener(eventName, func, false);
                         } else if (element.detachEvent) {
                             element.detachEvent("on" + eventName, func);
+                        } else {
+                            element['on' + eventName] = null;
                         }
 
                         return this;
@@ -285,16 +289,14 @@
                                 }
                             }
 
-                            //html5 compliant browsers html element
-                            else if (node.innerText !== null) {
+                            else if (node.innerText) {
                                 return node.innerText.trim();
                             }
-                            //IE html element
-                            else if (node.textContent !== null) {
+                            else if (node.textContent) {
                                 return node.textContent.trim();
                             }
                             //document fragment
-                            else if (node.data !== null) {
+                            else if (node.data) {
                                 return node.data.trim();
                             }
 
@@ -573,7 +575,7 @@
                             _log(len+'/'+settings.maxLength);
                         }
 
-                        if( e.which === 13 ){
+                        if( e.keyCode === 13 ){
                             intercept.enterKey.call(null, e);
                         }
 
