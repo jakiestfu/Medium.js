@@ -53,7 +53,7 @@
                 73: 'italicize',
                 81: 'quote',
                 85: 'underline',
-                86: 'paste',
+                86: 'paste'
             },
             tags: {
                 paragraph: 'p',
@@ -71,7 +71,7 @@
                     beforeInvokeElement: function() {},
                     beforeInsertHtml: function() {},
                     beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
-                },
+        },
         cache = {
             initialized: false,
             cmd: false,
@@ -182,7 +182,7 @@
                         }
 
                         return this;
-                    },
+            },
             
             /*
              * Utilities
@@ -493,7 +493,7 @@
                         utils.cursor.set( 0, toFocus );
                     }
                                 return newEl;
-                            }
+                }
                             return null;
                 }
             },
@@ -551,7 +551,7 @@
                                     fn = cmd;
                                 } else {
                                     fn = intercept.command[cmd];
-                                }
+                    }
 
                                 fn.call(null, e);
                     }
@@ -653,7 +653,7 @@
                                 makeHR =
                                     ( utils.html.text(lastChild) === "" )
                                     && ( lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
-
+                        
                         if( makeHR && children.length >=2 ){
                                     secondToLast = children[ children.length-2 ];
                             
