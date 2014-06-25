@@ -412,8 +412,20 @@
                              */
                             var attsToRemove = settings.attributes.remove,
                                 only = (settings.tags.outerLevel !== null ? (settings.tags.outerLevel).concat([settings.tags.paragraph]) : null),
-                                children = settings.element.children,
-                                i, j, k;
+                                el = settings.element,
+                                children = el.children,
+                                childNodes = el.childNodes,
+                                initialParagraph,
+                                i,
+                                j,
+                                k;
+
+                            if (children.length === 0 && childNodes.length > 0) {
+                                initialParagraph = d.createElement(settings.tags.paragraph);
+                                initialParagraph.innerHTML = el.innerHTML;
+                                el.innerHTML = '';
+                                el.appendChild(initialParagraph);
+                            }
 
                             // Go through top level children
                             for(i=0; i<children.length; i++){
