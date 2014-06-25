@@ -855,6 +855,42 @@
             }
 
             return this;
+        },
+
+        /**
+         * Focus on element
+         * @returns {Medium}
+         */
+        focus: function() {
+            var el = this.settings.element;
+            el.focus();
+            return this;
+        },
+
+        /**
+         * Select all text
+         * @returns {Medium}
+         */
+        select: function() {
+            var el = this.settings.element,
+                range,
+                selection;
+
+            el.focus();
+
+            if (d.body.createTextRange) {
+                range = d.body.createTextRange();
+                range.moveToElementText(el);
+                range.select();
+            } else if (w.getSelection) {
+                selection = w.getSelection();
+                range = d.createRange();
+                range.selectNodeContents(el);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+
+            return this;
         }
     };
 
