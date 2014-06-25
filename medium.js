@@ -412,8 +412,20 @@
                              */
                             var attsToRemove = settings.attributes.remove,
                                 only = (settings.tags.outerLevel !== null ? (settings.tags.outerLevel).concat([settings.tags.paragraph]) : null),
-                                children = settings.element.children,
-                                i, j, k;
+                                el = settings.element,
+                                children = el.children,
+                                childNodes = el.childNodes,
+                                initialParagraph,
+                                i,
+                                j,
+                                k;
+
+                            if (children.length === 0 && childNodes.length > 0) {
+                                initialParagraph = d.createElement(settings.tags.paragraph);
+                                initialParagraph.innerHTML = el.innerHTML;
+                                el.innerHTML = '';
+                                el.appendChild(initialParagraph);
+                            }
 
                             // Go through top level children
                             for(i=0; i<children.length; i++){
@@ -852,6 +864,42 @@
                 this.settings.element.innerHTML = value;
             } else {
                 return this.settings.element.innerHTML;
+            }
+
+            return this;
+        },
+
+        /**
+         * Focus on element
+         * @returns {Medium}
+         */
+        focus: function() {
+            var el = this.settings.element;
+            el.focus();
+            return this;
+        },
+
+        /**
+         * Select all text
+         * @returns {Medium}
+         */
+        select: function() {
+            var el = this.settings.element,
+                range,
+                selection;
+
+            el.focus();
+
+            if (d.body.createTextRange) {
+                range = d.body.createTextRange();
+                range.moveToElementText(el);
+                range.select();
+            } else if (w.getSelection) {
+                selection = w.getSelection();
+                range = d.createRange();
+                range.selectNodeContents(el);
+                selection.removeAllRanges();
+                selection.addRange(range);
             }
 
             return this;
