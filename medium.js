@@ -411,21 +411,12 @@
                              * Removes Attributes
                              */
                             var attsToRemove = settings.attributes.remove,
-                                only = (settings.tags.outerLevel !== null ? (settings.tags.outerLevel).concat([settings.tags.paragraph]) : null),
+                                only = settings.tags.outerLevel,
                                 el = settings.element,
                                 children = el.children,
-                                childNodes = el.childNodes,
-                                initialParagraph,
                                 i,
                                 j,
                                 k;
-
-                            if (children.length === 0 && childNodes.length > 0) {
-                                initialParagraph = d.createElement(settings.tags.paragraph);
-                                initialParagraph.innerHTML = el.innerHTML;
-                                el.innerHTML = '';
-                                el.appendChild(initialParagraph);
-                            }
 
                             // Go through top level children
                             for(i=0; i<children.length; i++){
@@ -526,6 +517,31 @@
                             fn.call(null, v);
                             utils.html.deleteNode( pasteHookNode );
                         }, 1);
+                    },
+                    setupContents: function() {
+                        var el = settings.element,
+                            children = el.children,
+                            childNodes = el.childNodes,
+                            initialParagraph;
+
+                        if (
+                            children.length > 0
+                            || settings.mode === Medium.inlineMode
+                        ) {
+                            return;
+                        }
+
+                        //has content, but no children
+                        if (childNodes.length > 0) {
+                            initialParagraph = d.createElement(settings.tags.paragraph);
+                            initialParagraph.innerHTML = el.innerHTML + '&nbsp;';
+                            el.innerHTML = '';
+                            el.appendChild(initialParagraph);
+                        } else {
+                            initialParagraph = d.createElement(settings.tags.paragraph);
+                            initialParagraph.innerHTML = '&nbsp;';
+                            el.appendChild(initialParagraph);
+                        }
                     }
                 },
                 intercept = {
@@ -761,6 +777,12 @@
 
                     // Capture Events
                     action.listen();
+
+                    if (settings.tags.outerLevel !== null) {
+                        settings.tags.outerLevel = (settings.tags.outerLevel).concat([settings.tags.paragraph]);
+                    }
+
+                    utils.setupContents();
 
                     // Set as initialized
                     cache.initialized = true;

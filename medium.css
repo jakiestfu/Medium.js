@@ -13,6 +13,7 @@
     
 .Medium p{
 	position: relative;
+    min-height: 12px;
 	}
     .Medium p:first-child,
     .Medium .Medium-placeholder + p{
