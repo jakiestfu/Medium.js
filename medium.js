@@ -663,14 +663,14 @@
 
                         if( !cache.shift ){
 
-                            var focusedElement = cache.focusedElement;
+                            var focusedElement = cache.focusedElement,
+                                el = settings.element,
+                                children = el.children,
+                                lastChild = children[ Math.max(0, children.length - 1) ],
+                                makeHR,
+                                secondToLast;
 
-                            if( settings.autoHR && settings.mode !== 'partial' ){
-                                var el = settings.element,
-                                    children = el.children,
-                                    lastChild = children[ Math.max(0, children.length - 1) ],
-                                    makeHR,
-                                    secondToLast;
+                            if( lastChild && settings.autoHR && settings.mode !== 'partial' ){
 
                                 utils.preventDefaultEvent(e);
 
@@ -770,6 +770,10 @@
                         += (" " + settings.cssClasses.editor)
                         + (" " + settings.cssClasses.editor + "-" + settings.mode);
 
+                    if (settings.tags.outerLevel !== null) {
+                        settings.tags.outerLevel = (settings.tags.outerLevel).concat([settings.tags.paragraph]);
+                    }
+
                     // Initialize editor
                     utils.html.clean();
                     utils.html.placeholders();
@@ -777,10 +781,6 @@
 
                     // Capture Events
                     action.listen();
-
-                    if (settings.tags.outerLevel !== null) {
-                        settings.tags.outerLevel = (settings.tags.outerLevel).concat([settings.tags.paragraph]);
-                    }
 
                     utils.setupContents();
 
