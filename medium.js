@@ -488,7 +488,10 @@
                      */
                     pasteHook: function(fn){
                         var textarea = d.createElement('textarea'),
-                            el = settings.element;
+                            el = settings.element,
+                            existingValue,
+                            existingLength,
+                            overallLength;
 
                         textarea.className = settings.cssClasses.pasteHook;
 
@@ -496,8 +499,19 @@
 
                         textarea.focus();
 
+                        if (!wild) {
+                            me.makeUndoable();
+                        }
                         setTimeout(function(){
                             el.focus();
+                            if (settings.maxLength > 0) {
+                                existingValue = utils.html.text(el);
+                                existingLength = existingValue.length;
+                                overallLength = existingLength + textarea.value.length;
+                                if (overallLength > existingLength) {
+                                    textarea.value = textarea.value.substring(0, settings.maxLength - existingLength);
+                                }
+                            }
                             fn(textarea.value);
                             //utils.html.deleteNode( textarea );
                         }, 2);
