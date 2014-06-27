@@ -1017,10 +1017,20 @@
                         fn.apply(this);
                     }
 
-                    var applier = rangy.createCssClassApplier(this.attributes.className || '', {
-                        elementTagName: this.tagName.toLowerCase(),
+                    var
+                        attr = this.attributes,
+                        tagName = this.tagName.toLowerCase(),
+                        cl = (attr.className ? attr.className.split[' '].shift() : 'medium-' + tagName),
+                        applier;
+
+                    applier = rangy.createCssClassApplier(cl, {
+                        elementTagName: tagName,
                         elementAttributes: this.attributes
                     });
+
+                    this.medium.makeUndoable();
+
+                    applier.toggleSelection(w);
 
                     if (this.clean) {
                         //cleanup
@@ -1028,9 +1038,7 @@
                         this.medium.utils.html.placeholders();
                     }
 
-                    this.medium.makeUndoable();
 
-                    applier.toggleSelection(w);
                 }
             },
 
