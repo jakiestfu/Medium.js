@@ -22,10 +22,6 @@
     .Medium p:last-child{
         margin-bottom:0;
         }
-.Medium .Medium-paste-hook{
-    position: absolute;
-    opacity:0;
-    }
 .Medium-placeholder{
 	position: absolute;
 	}
