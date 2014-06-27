@@ -184,26 +184,6 @@
                         return this;
                     },
 
-                    /*
-                     * Utilities
-                     */
-                    getElementsByClassName: function(classname, el) {
-                        el = el ? el : document.body;
-                        if (el.getElementsByClassName) {
-                            return el.getElementsByClassName(classname);
-                        } else {
-                            var a = [],
-                                re = new RegExp('(^| )'+classname+'( |$)'),
-                                els = el.getElementsByTagName("*");
-                            for(var i=0,j=els.length; i<j; i++){
-                                if(re.test(els[i].className)){
-                                    a.push(els[i]);
-                                }
-                            }
-                            return a;
-                        }
-                    },
-
                     deepExtend: function (destination, source) {
                         for (var property in source) {
                             if (
