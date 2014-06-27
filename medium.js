@@ -61,6 +61,7 @@
                     },
                     cssClasses: {
                         editor: 'Medium',
+                        pasteHook: 'Medium-paste-hook',
                         placeholder: 'Medium-placeholder'
                     },
                     attributes: {
@@ -509,16 +510,17 @@
                         var textarea = d.createElement('textarea'),
                             el = settings.element;
 
+                        textarea.className = settings.cssClasses.pasteHook;
+
                         el.parentNode.appendChild(textarea);
 
                         textarea.focus();
-                        textarea.select();
 
                         setTimeout(function(){
                             el.focus();
                             fn(textarea.value);
-                            utils.html.deleteNode( textarea );
-                        }, 1);
+                            //utils.html.deleteNode( textarea );
+                        }, 2);
                     },
                     setupContents: function() {
                         var el = settings.element,
@@ -1074,7 +1076,7 @@
                 if (typeof htmlRaw === 'string') {
                     var htmlConverter = d.createElement('div');
                     htmlConverter.innerHTML = htmlRaw;
-                    html = htmlConverter.children;
+                    html = htmlConverter.childNodes;
                     html.isConverted = true;
                 } else {
                     html = htmlRaw;
