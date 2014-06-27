@@ -61,12 +61,12 @@
                     },
                     cssClasses: {
                         editor: 'Medium',
-                        pasteHook: 'Medium-paste-hook',
                         placeholder: 'Medium-placeholder'
                     },
                     attributes: {
                         remove: ['style','class']
                     },
+                    pasteAsText: true,
                     beforeInvokeElement: function() {},
                     beforeInsertHtml: function() {},
                     beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
@@ -323,7 +323,7 @@
                         },
                         placeholders: function(){
                             var that = this,
-                                placeholder = this._placeholder || (this._placeholder = d.createElement('div')),
+                                placeholder = me._placeholder || (me._placeholder = d.createElement('div')),
                                 el = settings.element,
                                 style = placeholder.style,
                                 elStyle = w.getComputedStyle(el, null),
@@ -506,16 +506,18 @@
                      * plain text before inserting the data.
                      */
                     pasteHook: function(fn){
-                        var input = d.createElement('textarea');
-                        input.className = settings.cssClasses.pasteHook;
-                        settings.element.appendChild(input);
-                        var pasteHookNode = utils.getElementsByClassName( settings.cssClasses.pasteHook, settings.element )[0];
-                        pasteHookNode.focus();
+                        var textarea = d.createElement('textarea'),
+                            el = settings.element;
+
+                        el.parentNode.appendChild(textarea);
+
+                        textarea.focus();
+                        textarea.select();
+
                         setTimeout(function(){
-                            settings.element.focus();
-                            var v = pasteHookNode.value;
-                            fn.call(null, v);
-                            utils.html.deleteNode( pasteHookNode );
+                            el.focus();
+                            fn(textarea.value);
+                            utils.html.deleteNode( textarea );
                         }, 1);
                     },
                     setupContents: function() {
@@ -585,13 +587,9 @@
                         });
 
                         if( settings.maxLength !== -1 ){
-                            var ph = utils.getElementsByClassName(settings.cssClasses.placeholder, settings.element)[0],
-                                len = utils.html.text().length;
-
-                            if(settings.placeholder && ph){
-                                len -= settings.placeholder.length;
-                            }
-                            var hasSelection = false, selection = w.getSelection();
+                            var len = utils.html.text().length,
+                                hasSelection = false,
+                                selection = w.getSelection();
 
                             if(selection) {
                                 hasSelection = !selection.isCollapsed;
@@ -645,15 +643,18 @@
                         },
                         quote: function(e){},
                         paste: function(e){
-                            var sel = utils.selection.saveSelection();
-                            utils.pasteHook(function(text){
-                                utils.selection.restoreSelection( sel );
-                                (new Medium.Html(me, text.replace(/\n/g, '<br>')))
-                                    .setClean(false)
-                                    .insert(settings.beforeInsertHtml);
+                            if (settings.pasteAsText) {
+                                var sel = utils.selection.saveSelection();
+                                utils.pasteHook(function(text){
+                                    utils.selection.restoreSelection( sel );
 
-                                _log('Html');
-                            });
+                                    (new Medium.Html(me, text.replace(/\n/g, '<br>')))
+                                        .setClean(false)
+                                        .insert(settings.beforeInsertHtml);
+
+                                    _log('Html');
+                                });
+                            }
                         }
                     },
                     enterKey: function (e) {
@@ -937,7 +938,20 @@
     Medium.Element = function(medium, tagName, attributes) {
         this.medium = medium;
         this.element = medium.settings.element;
-        this.tagName = tagName;
+        if (wild) {
+            this.tagName = tagName;
+        } else {
+            switch (tagName.toLowerCase()) {
+                case 'bold': this.tagName = 'b';
+                    break;
+                case 'italic': this.tagName = 'i';
+                    break;
+                case 'underline': this.tagName = 'u';
+                    break;
+                default:
+                    this.tagName = tagName;
+            }
+        }
         this.attributes = attributes || {};
         this.clean = true;
     };
@@ -975,14 +989,8 @@
                     d.execCommand(this.tagName, false);
                 }
             },
-
-            /**
-            *
-            * @param {Boolean} clean
-            * @returns {Medium.Element}
-            */
-            setClean: function(clean) {
-                throw 'This operation requires that you include "rangy" and "undo".';
+            setClean: function() {
+                return this;
             }
         };
 
