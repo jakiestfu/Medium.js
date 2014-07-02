@@ -70,12 +70,15 @@
                     pasteAsText: true,
                     beforeInvokeElement: function() {},
                     beforeInsertHtml: function() {},
-                    beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
+                    beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {},
+                    onBlur: function() {},
+                    onFocus: function() {}
                 },
                 cache = {
                     initialized: false,
                     cmd: false,
-                    focusedElement: null
+                    focusedElement: null,
+                    originalVal: null
                 },
                 _log = function (w) {
                     if (settings.debug) {
@@ -161,10 +164,11 @@
                     preventDefaultEvent: function (e) {
                         if (e.preventDefault) {
                             e.preventDefault();
-                        } else {
-                            e.returnValue = false;
+                        } 
+                        if (e.stopImmediatePropagation) {
+                            e.stopImmediatePropagation();
                         }
-
+                        e.returnValue = false;
                         return this;
                     },
                     triggerEvent: function(element, eventName) {
@@ -545,7 +549,12 @@
                 intercept = {
                     focus: function(e){
                         e = e || w.event;
+                        cache.originalVal = e.target.textContent;
+                        settings.onFocus(e);
                         //_log('FOCUSED');
+                    },
+                    blur: function(e) {
+                        settings.onBlur(e);
                     },
                     down: function(e){
                         e = e || w.event;
@@ -599,6 +608,10 @@
 
                         if( e.keyCode === 13 ){
                             intercept.enterKey.call(null, e);
+                        }
+
+                        if( e.which === 27 ){
+                            intercept.escKey.call(null, e);
                         }
 
                         return true;
@@ -655,6 +668,12 @@
                     },
                     enterKey: function (e) {
                         if( settings.mode === "inline" ){
+                            if (settings.element.blur) {
+                                settings.element.blur();
+                            } else if (settings.element.onblur) {
+                                settings.element.onblur();
+                            }
+
                             return utils.preventDefaultEvent(e);
                         }
 
@@ -696,7 +715,18 @@
                         }
 
                         return true;
-                    }
+                    },
+                    escKey: function (e) {
+                        if( settings.mode === "inline" ){
+                            e.target.textContent = cache.originalVal;
+                        if (settings.element.blur) {
+                            settings.element.blur();
+                        } else if (settings.element.onblur) {
+                            settings.element.onblur();
+                        }
+                        return utils.preventDefaultEvent(e);
+                      }
+
                 },
                 action = {
                     listen: function () {
@@ -704,7 +734,8 @@
                         utils
                             .addEvent(el, 'keyup', intercept.up)
                             .addEvent(el, 'keydown', intercept.down)
-                            .addEvent(el, 'focus', intercept.focus);
+                            .addEvent(el, 'focus', intercept.focus)
+                            .addEvent(el, 'blur', intercept.blur);
                     },
                     preserveElementFocus: function(){
                         // Fetch node that has focus
@@ -792,6 +823,7 @@
                     .removeEvent(el, 'keydown', intercept.down)
                     .removeEvent(el, 'focus', intercept.focus)
                     .removeEvent(el, 'blur')
+                    .removeEvent(el, 'blur', intercept.blur)
                     .removeEvent(el, 'mouseout');
             };
 
