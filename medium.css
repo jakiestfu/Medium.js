@@ -13,6 +13,7 @@
     
 .Medium p{
 	position: relative;
+    min-height: 12px;
 	}
     .Medium p:first-child,
     .Medium .Medium-placeholder + p{
@@ -21,7 +22,7 @@
     .Medium p:last-child{
         margin-bottom:0;
         }
-.Medium .Medium-paste-hook{
+.Medium-paste-hook{
     position: absolute;
     opacity:0;
     }

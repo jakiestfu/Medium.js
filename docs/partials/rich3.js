@@ -18,5 +18,6 @@ article3Button.onmousedown = function(e) {
 	p.className = 'insertedElement';
 	p.innerHTML = 'I came from an Object!';
 
+    article3Medium.focus();
     article3Medium.insertHtml(p);
 };
