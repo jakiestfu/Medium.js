@@ -51,6 +51,7 @@
                     modifiers: {
                         66: 'bold',
                         73: 'italicize',
+                81: 'quote'
                         85: 'underline',
                         86: 'paste'
                     },
@@ -510,12 +511,12 @@
                                 overallLength = existingLength + textarea.value.length;
                                 if (overallLength > existingLength) {
                                     textarea.value = textarea.value.substring(0, settings.maxLength - existingLength);
-                                }
-                            }
+                    }
+            }
                             fn(textarea.value);
                             //utils.html.deleteNode( textarea );
                         }, 2);
-                    },
+        },
                     setupContents: function() {
                         var el = settings.element,
                             children = el.children,
@@ -637,20 +638,23 @@
                                 .invoke(settings.beforeInvokeElement);
                             _log('Italic');
                         },
-                        quote: function(e){},
+                quote: function (e) {
+                    utils.preventDefaultEvent(e);
+                    d.execCommand('formatBlock', false, 'blockquote'); _log('Quote');
+                },
                         paste: function(e){
                             if (settings.pasteAsText) {
-                                var sel = utils.selection.saveSelection();
-                                utils.pasteHook(function(text){
-                                    utils.selection.restoreSelection( sel );
+                            var sel = utils.selection.saveSelection();
+                            utils.pasteHook(function(text){
+                                utils.selection.restoreSelection( sel );
 
-                                    (new Medium.Html(me, text.replace(/\n/g, '<br>')))
-                                        .setClean(false)
-                                        .insert(settings.beforeInsertHtml);
+                                (new Medium.Html(me, text.replace(/\n/g, '<br>')))
+                                    .setClean(false)
+                                    .insert(settings.beforeInsertHtml);
 
-                                    _log('Html');
-                                });
-                            }
+                                _log('Html');
+                            });
+                        }
                         }
                     },
                     enterKey: function (e) {
@@ -662,10 +666,10 @@
 
                             var focusedElement = cache.focusedElement,
                                 el = settings.element,
-                                children = el.children,
-                                lastChild = children[ Math.max(0, children.length - 1) ],
-                                makeHR,
-                                secondToLast;
+                                    children = el.children,
+                                    lastChild = children[ Math.max(0, children.length - 1) ],
+                                    makeHR,
+                                    secondToLast;
 
                             if( lastChild && settings.autoHR && settings.mode !== 'partial' ){
 
@@ -919,7 +923,7 @@
                 range.selectNodeContents(el);
                 selection.removeAllRanges();
                 selection.addRange(range);
-            }
+        }
 
             return this;
         }
@@ -935,7 +939,7 @@
         this.medium = medium;
         this.element = medium.settings.element;
         if (wild) {
-            this.tagName = tagName;
+        this.tagName = tagName;
         } else {
             switch (tagName.toLowerCase()) {
                 case 'bold': this.tagName = 'b';
