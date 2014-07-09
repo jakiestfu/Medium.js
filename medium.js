@@ -10,21 +10,13 @@
  */
 
 
-(function(w, d, Math){
+var Medium = (function(w, d){
 
     'use strict';
-    
-    /*
-     * Fix IE
-     */
-    if( typeof String.prototype.trim !== 'function' ){
-        String.prototype.trim = function() {
-            return this.replace(/^\s+|\s+$/g, '');
-        }
-    }
 
-
-    var
+    var trim = function(string) {
+            return string.replace(/^\s+|\s+$/g, '');
+        },
         //two modes, wild (native) or domesticated (rangy + undo.js)
         rangy = w['rangy'] || null,
         undo = w['Undo'] || null,
@@ -34,518 +26,28 @@
         /**
          * Medium.js - Taking control of content editable
          * @constructor
-         * @param {Object} [userOpts] user options
+         * @param {Object} [userSettings] user options
          */
-	    Medium = Medium || function (userOpts) {
-            var
-                me = this,
-                settings = {
-                    debug: true,
-                    element: null,
-                    modifier: 'auto',
-                    placeholder: "",
-                    autofocus: false,
-                    autoHR: true,
-                    mode: 'rich', // inline, partial, rich
-                    maxLength: -1,
-                    modifiers: {
-                        66: 'bold',
-                        73: 'italicize',
-                        85: 'underline',
-                        86: 'paste'
-                    },
-                    tags: {
-                        paragraph: 'p',
-                        outerLevel: ['pre','blockquote', 'figure', 'hr'],
-                        innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong'] // Todo: Convert strong to b (IE)
-                    },
-                    cssClasses: {
-                        editor: 'Medium',
-                        pasteHook: 'Medium-paste-hook',
-                        placeholder: 'Medium-placeholder'
-                    },
-                    attributes: {
-                        remove: ['style','class']
-                    },
-                    pasteAsText: true,
-                    beforeInvokeElement: function() {},
-                    beforeInsertHtml: function() {},
-                    beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
-                },
-                cache = {
-                    initialized: false,
-                    cmd: false,
-                    focusedElement: null
-                },
-                _log = function (w) {
-                    if (settings.debug) {
-                        console.log(w);
-                    }
-                },
-                utils = {
-                    /*
-                     * Keyboard Interface events
-                     */
-                    isCommand: function(e, fnTrue, fnFalse){
-                        if((settings.modifier==='ctrl' && e.ctrlKey ) ||
-                           (settings.modifier==='cmd' && e.metaKey ) ||
-                           (settings.modifier==='auto' && (e.ctrlKey || e.metaKey) )
-                        ){
-                            return fnTrue.call();
-                        } else {
-                            return fnFalse.call();
-                        }
-                    },
-                    isShift: function(e, fnTrue, fnFalse){
-                        if(e.shiftKey){
-                            return fnTrue.call();
-                        } else {
-                            return fnFalse.call();
-                        }
-                    },
-                    isModifier: function(e, fn){
-                        var w = e.keyCode,
-                            cmd = settings.modifiers[w];
-                        if(cmd){
-                            return fn.call(null, cmd);
-                        }
-                        return false;
-                    },
-                    isSpecial: function(e){
-                        var special = {
-                            16: 'shift',
-                            17: 'ctrl',
-                            18: 'alt',
-                            91: 'cmd',
-                            8: 'backspace',
-                            46: 'delete'
-                        };
-                        if(cache.cmd){ return true; }
-                        return (e.keyCode in special);
-                    },
-                    isNavigational: function(e) {
-                        var navigational = {
-                            37: 'right-arrow',
-                            38: 'up-arrow',
-                            39: 'left-arrow',
-                            40: 'down-arrow'
-                        };
-                        return (e.keyCode in navigational);
-                    },
-
-                    /*
-                     * Handle Events
-                     */
-                    addEvent: function addEvent(element, eventName, func) {
-                        if (element.addEventListener) {
-                            element.addEventListener(eventName, func, false);
-                        } else if (element.attachEvent) {
-                            element.attachEvent("on" + eventName, func);
-                        } else {
-                            element['on' + eventName] = func;
-                        }
-
-                        return this;
-                    },
-                    removeEvent: function removeEvent(element, eventName, func) {
-                        if (element.removeEventListener) {
-                            element.removeEventListener(eventName, func, false);
-                        } else if (element.detachEvent) {
-                            element.detachEvent("on" + eventName, func);
-                        } else {
-                            element['on' + eventName] = null;
-                        }
-
-                        return this;
-                    },
-                    preventDefaultEvent: function (e) {
-                        if (e.preventDefault) {
-                            e.preventDefault();
-                        } else {
-                            e.returnValue = false;
-                        }
-
-                        return this;
-                    },
-                    triggerEvent: function(element, eventName) {
-                        var event;
-                        if (d.createEvent) {
-                            event = d.createEvent("HTMLEvents");
-                            event.initEvent(eventName, true, true);
-                            event.eventName = eventName;
-                            element.dispatchEvent(event);
-                        } else {
-                            event = d.createEventObject();
-                            event.eventType = eventName;
-                            event.eventName = eventName;
-                            element.fireEvent("on" + event.eventType, event);
-                        }
-
-                        return this;
-                    },
-
-                    deepExtend: function (destination, source) {
-                        for (var property in source) {
-                            if (
-                                source[property]
-                                && source[property].constructor
-                                && source[property].constructor === Object
-                            ) {
-                                destination[property] = destination[property] || {};
-                                utils.deepExtend(destination[property], source[property]);
-                            } else {
-                                destination[property] = source[property];
-                            }
-                        }
-                        return destination;
-                    },
-
-                    /*
-                     * Handle Selection Logic
-                     */
-                    selection: {
-                        saveSelection: function() {
-                            if (w.getSelection) {
-                                var sel = w.getSelection();
-                                if (sel.rangeCount > 0) {
-                                      return sel.getRangeAt(0);
-                                }
-                            } else if (d.selection && d.selection.createRange) { // IE
-                                return d.selection.createRange();
-                            }
-                            return null;
-                        },
-
-                        restoreSelection: function(range) {
-                            if (range) {
-                                if (w.getSelection) {
-                                    var sel = w.getSelection();
-                                    sel.removeAllRanges();
-                                    sel.addRange(range);
-                                } else if (d.selection && range.select) { // IE
-                                    range.select();
-                                }
-                            }
-                        }
-                    },
-
-                    /*
-                     * Handle Cursor Logic
-                     */
-                    cursor: {
-                        set: function (pos, el) {
-                            var range;
-                            if( d.createRange ){
-                                var selection = w.getSelection(),
-                                    lastChild = utils.html.lastChild(),
-                                    length =  utils.html.text(lastChild).length-1,
-                                    toModify = el ? el : lastChild,
-                                    theLength = typeof pos !== 'undefined' ? pos : length;
-
-                                range = d.createRange();
-                                range.setStart(toModify, theLength);
-                                range.collapse(true);
-                                selection.removeAllRanges();
-                                selection.addRange(range);
-                            } else {
-                                range = d.body.createTextRange();
-                                range.moveToElementText(el);
-                                range.collapse(false);
-                                range.select();
-                            }
-                        }
-                    },
-
-                    /*
-                     * HTML Abstractions
-                     */
-                    html: {
-                        text: function(node, val){
-                            node = node || settings.element;
-                            if(val){
-                                if ((node.textContent) && (typeof (node.textContent) != "undefined")) {
-                                    node.textContent = val;
-                                } else {
-                                    node.innerText = val;
-                                }
-                            }
-
-                            else if (node.innerText) {
-                                return node.innerText.trim();
-                            }
-                            else if (node.textContent) {
-                                return node.textContent.trim();
-                            }
-                            //document fragment
-                            else if (node.data) {
-                                return node.data.trim();
-                            }
-
-                            //for good measure
-                            return '';
-                        },
-                        changeTag: function(oldNode, newTag) {
-                            var newNode = d.createElement(newTag),
-                                node,
-                                nextNode;
-
-                            node = oldNode.firstChild;
-                            while (node) {
-                                nextNode = node.nextSibling;
-                                newNode.appendChild(node);
-                                node = nextNode;
-                            }
-
-                            oldNode.parentNode.insertBefore(newNode, oldNode);
-                            oldNode.parentNode.removeChild(oldNode);
-                        },
-                        deleteNode: function(el){
-                            el.parentNode.removeChild(el);
-                        },
-                        placeholders: function(){
-                            var that = this,
-                                placeholder = me._placeholder || (me._placeholder = d.createElement('div')),
-                                el = settings.element,
-                                style = placeholder.style,
-                                elStyle = w.getComputedStyle(el, null),
-                                qStyle = function(prop) {
-                                    return elStyle.getPropertyValue(prop)
-                                },
-                                text = utils.html.text(el);
-
-                            el.placeholder = placeholder;
-
-                            // Empty Editor
-                            if( text.length < 1 ){
-                                settings.element.innerHTML = '';
-
-                                // We need to add placeholders
-                                if(settings.placeholder.length > 0){
-                                    if (!placeholder.setup) {
-                                        placeholder.setup = true;
-                                        utils
-                                            .addEvent(el, 'blur', function() {
-                                                that.placeholders();
-                                            });
-
-
-                                        //background & background color
-                                        style.background = qStyle('background');
-                                        style.backgroundColor = qStyle('background-color');
-
-                                        //text size & text color
-                                        style.fontSize = qStyle('font-size');
-                                        style.color = elStyle.color;
-
-                                        //begin box-model
-                                        //margin
-                                        style.marginTop = qStyle('margin-top');
-                                        style.marginBottom = qStyle('margin-bottom');
-                                        style.marginLeft = qStyle('margin-left');
-                                        style.marginRight = qStyle('margin-right');
-
-                                        //padding
-                                        style.paddingTop = qStyle('padding-top');
-                                        style.paddingBottom = qStyle('padding-bottom');
-                                        style.paddingLeft = qStyle('padding-left');
-                                        style.paddingRight = qStyle('padding-right');
-
-                                        //border
-                                        style.borderStyle = qStyle('border-top-width');
-                                        style.borderTopColor = qStyle('border-top-color');
-                                        style.borderTopStyle = qStyle('border-top-style');
-                                        style.borderBottomWidth = qStyle('border-bottom-width');
-                                        style.borderBottomColor = qStyle('border-bottom-color');
-                                        style.borderBottomStyle = qStyle('border-bottom-style');
-                                        style.borderLeftWidth = qStyle('border-left-width');
-                                        style.borderLeftColor = qStyle('border-left-color');
-                                        style.borderLeftStyle = qStyle('border-left-style');
-                                        style.borderRightWidth = qStyle('border-right-width');
-                                        style.borderRightColor = qStyle('border-right-color');
-                                        style.borderRightStyle = qStyle('border-right-style');
-                                        //end box model
-
-                                        //element setup
-                                        placeholder.className = settings.cssClasses.placeholder + ' ' + settings.cssClasses.placeholder + "-" + settings.mode;
-                                        placeholder.innerHTML = '<div>' + settings.placeholder + '</div>';
-                                        el.parentNode.insertBefore(placeholder, el);
-                                    }
-                                    el.style.background = 'transparent';
-                                    el.style.backgroundColor = 'transparent';
-                                    el.style.borderColor = 'transparent';
-                                    style.display = '';
-                                    // Add base P tag and do auto focus, give it a min height if el has one
-                                    style.minHeight = el.clientHeight + 'px';
-                                    style.minWidth = el.clientWidth + 'px';
-                                }
-                            } else {
-                                style.display = 'none';
-                                el.style.background = style.background;
-                                el.style.backgroundColor = style.backgroundColor;
-                                el.style.borderColor = style.borderColor;
-                            }
-                        },
-                        clean: function () {
-
-                            /*
-                             * Deletes invalid nodes
-                             * Removes Attributes
-                             */
-                            var attsToRemove = settings.attributes.remove,
-                                only = settings.tags.outerLevel,
-                                el = settings.element,
-                                children = el.children,
-                                i,
-                                j,
-                                k;
-
-                            // Go through top level children
-                            for(i=0; i<children.length; i++){
-                                var child = children[i],
-                                    nodeName = child.nodeName,
-                                    shouldDelete = true;
-
-                                // Remove attributes
-                                for(k=0; k<attsToRemove.length; k++){
-                                    if( child.hasAttribute( attsToRemove[k] ) ){
-                                        if( child.getAttribute( attsToRemove[k] ) !== settings.cssClasses.placeholder ){
-                                            child.removeAttribute( attsToRemove[k] );
-                                        }
-                                    }
-                                }
-
-                                if (only === null) {
-                                    return;
-                                }
-
-                                // Determine if we should modify node
-                                for(j=0; j<only.length;j++){
-                                    if( only[j] === nodeName.toLowerCase() ){
-                                        shouldDelete = false;
-                                    }
-                                }
-
-                                // Convert tags or delete
-                                if(shouldDelete){
-                                    switch( nodeName.toLowerCase() ){
-                                        case 'div':
-                                            utils.html.changeTag(child, settings.tags.paragraph);
-                                            break;
-                                        case 'br':
-                                            if (child === child.parentNode.lastChild) {
-                                                if (child === child.parentNode.firstChild) {
-                                                    break;
-                                                }
-                                                var text = document.createTextNode("");
-                                                text.innerHTML = '&nbsp';
-                                                child.parentNode.insertBefore(text, child);
-                                                break;
-                                            }
-                                        default:
-                                            utils.html.deleteNode(child);
-                                            break;
-                                    }
-                                }
-                            }
-                        },
-                        lastChild: function () {
-                            return settings.element.lastChild;
-                        },
-                        addTag: function (tag, shouldFocus, isEditable, afterElement) {
-                            if (!settings.beforeAddTag(tag, shouldFocus, isEditable, afterElement)) {
-                                var newEl = d.createElement(tag),
-                                    toFocus;
-
-                                if( typeof isEditable !== "undefined" && isEditable === false ){
-                                    newEl.contentEditable = false;
-                                }
-                                if (newEl.innerHTML.length == 0) {
-                                    newEl.innerHTML = ' ';
-                                }
-                                if( afterElement && afterElement.nextSibling ){
-                                    afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
-                                    toFocus = afterElement.nextSibling;
-
-                                } else {
-                                    settings.element.appendChild(newEl);
-                                    toFocus = utils.html.lastChild();
-                                }
-
-                                if( shouldFocus ){
-                                    cache.focusedElement = toFocus;
-                                    utils.cursor.set( 0, toFocus );
-                                }
-                                return newEl;
-                            }
-                            return null;
-                        }
-                    },
-
-                    /*
-                     * This is a Paste Hook. When the user pastes
-                     * content, this ultimately converts it into
-                     * plain text before inserting the data.
-                     */
-                    pasteHook: function(fn){
-                        var textarea = d.createElement('textarea'),
-                            el = settings.element,
-                            existingValue,
-                            existingLength,
-                            overallLength;
-
-                        textarea.className = settings.cssClasses.pasteHook;
-
-                        el.parentNode.appendChild(textarea);
-
-                        textarea.focus();
-
-                        if (!wild) {
-                            me.makeUndoable();
-                        }
-                        setTimeout(function(){
-                            el.focus();
-                            if (settings.maxLength > 0) {
-                                existingValue = utils.html.text(el);
-                                existingLength = existingValue.length;
-                                overallLength = existingLength + textarea.value.length;
-                                if (overallLength > existingLength) {
-                                    textarea.value = textarea.value.substring(0, settings.maxLength - existingLength);
-                                }
-                            }
-                            fn(textarea.value);
-                            //utils.html.deleteNode( textarea );
-                        }, 2);
-                    },
-                    setupContents: function() {
-                        var el = settings.element,
-                            children = el.children,
-                            childNodes = el.childNodes,
-                            initialParagraph;
-
-                        if (
-                            children.length > 0
-                            || settings.mode === Medium.inlineMode
-                        ) {
-                            return;
-                        }
-
-                        //has content, but no children
-                        if (childNodes.length > 0) {
-                            initialParagraph = d.createElement(settings.tags.paragraph);
-                            initialParagraph.innerHTML = el.innerHTML + '&nbsp;';
-                            el.innerHTML = '';
-                            el.appendChild(initialParagraph);
-                        } else {
-                            initialParagraph = d.createElement(settings.tags.paragraph);
-                            initialParagraph.innerHTML = '&nbsp;';
-                            el.appendChild(initialParagraph);
-                        }
-                    }
-                },
+	    Medium = function (userSettings) {
+            var medium = this,
+                action = new Medium.Action(),
+                cache = new Medium.Cache(),
+                cursor = new Medium.Cursor(),
+                html = new Medium.HtmlAssistant(),
+                utils = new Medium.Utilities(),
+                selection = new Medium.Selection(),
                 intercept = {
                     focus: function(e){
                         e = e || w.event;
-                        //_log('FOCUSED');
+                        Medium.activeElement = el;
+                    },
+                    blur: function(e) {
+                        e = e || w.event;
+                        if (Medium.activeElement === el) {
+                            Medium.activeElement = null;
+                        }
+
+                        medium.placeholders();
                     },
                     down: function(e){
                         e = e || w.event;
@@ -578,12 +80,12 @@
                                     fn = intercept.command[cmd];
                                 }
 
-                                fn.call(null, e);
+                                fn.call(intercept, e);
                             }
                         });
 
                         if( settings.maxLength !== -1 ){
-                            var len = utils.html.text().length,
+                            var len = html.text().length,
                                 hasSelection = false,
                                 selection = w.getSelection();
 
@@ -594,11 +96,16 @@
                             if( len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection ){
                                 return utils.preventDefaultEvent(e);
                             }
-                            _log(len+'/'+settings.maxLength);
                         }
 
-                        if( e.keyCode === 13 ){
-                            intercept.enterKey.call(null, e);
+                        switch ( e.keyCode ){
+                            case 13:
+                                intercept.enterKey(e);
+                                break;
+                            case 8:
+                            case 46:
+                                intercept.backspaceOrDeleteKey(e);
+                                break;
                         }
 
                         return true;
@@ -610,32 +117,29 @@
                         }, function(){
                             cache.cmd = true;
                         });
-                        utils.html.clean();
-                        utils.html.placeholders();
+                        html.clean();
+                        html.placeholders();
                         action.preserveElementFocus();
                     },
                     command: {
                         bold: function(e){
                             utils.preventDefaultEvent(e);
                             // IE uses strong instead of b
-                            (new Medium.Element(me, 'bold'))
+                            (new Medium.Element(medium, 'bold'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
-                            _log('Bold');
                         },
                         underline: function(e){
                             utils.preventDefaultEvent(e);
-                            (new Medium.Element(me, 'underline'))
+                            (new Medium.Element(medium, 'underline'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
-                            _log('Underline');
                         },
                         italicize: function(e){
                             utils.preventDefaultEvent(e);
-                            (new Medium.Element(me, 'italic'))
+                            (new Medium.Element(medium, 'italic'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
-                            _log('Italic');
                         },
                         quote: function(e){},
                         paste: function(e){
@@ -644,11 +148,10 @@
                                 utils.pasteHook(function(text){
                                     utils.selection.restoreSelection( sel );
 
-                                    (new Medium.Html(me, text.replace(/\n/g, '<br>')))
+                                    (new Medium.Html(medium, text.replace(/\n/g, '<br>')))
                                         .setClean(false)
                                         .insert(settings.beforeInsertHtml);
 
-                                    _log('Html');
                                 });
                             }
                         }
@@ -660,10 +163,9 @@
 
                         if( !cache.shift ){
 
-                            var focusedElement = cache.focusedElement,
-                                el = settings.element,
+                            var focusedElement = html.baseContainerAtCaret(),
                                 children = el.children,
-                                lastChild = children[ Math.max(0, children.length - 1) ],
+                                lastChild = focusedElement === el.lastChild ? el.lastChild : null,
                                 makeHR,
                                 secondToLast;
 
@@ -672,153 +174,146 @@
                                 utils.preventDefaultEvent(e);
 
                                 makeHR =
-                                    ( utils.html.text(lastChild) === "" )
-                                    && ( lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
+                                    ( html.text(lastChild) === "" )
+                                        && ( lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
 
                                 if( makeHR && children.length >=2 ){
                                     secondToLast = children[ children.length-2 ];
 
-                                    if( secondToLast.nodeName.toLowerCase() === "hr" ){
+                                    if( secondToLast.nodeName.toLowerCase() === settings.tags.horizontalRule ){
                                         makeHR = false;
                                     }
                                 }
 
                                 if( makeHR ){
-                                    utils.preventDefaultEvent(e);
-                                    utils.html.deleteNode( lastChild );
-                                    utils.html.addTag('hr', false, false, focusedElement);
+                                    html.deleteNode( lastChild );
+                                    html.addTag(settings.tags.horizontalRule, false, false, focusedElement);
                                     focusedElement = focusedElement.nextSibling;
                                 }
-                                utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
-                            } else {
-                                utils.html.addTag(settings.tags.paragraph, true, null, focusedElement);
+                                html.addTag(settings.tags.paragraph, true, null, focusedElement);
                             }
                         }
 
                         return true;
-                    }
-                },
-                action = {
-                    listen: function () {
-                        var el = settings.element;
-                        utils
-                            .addEvent(el, 'keyup', intercept.up)
-                            .addEvent(el, 'keydown', intercept.down)
-                            .addEvent(el, 'focus', intercept.focus);
                     },
-                    preserveElementFocus: function(){
-                        // Fetch node that has focus
-                        var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
-                        if(anchorNode){
-                            var cur = anchorNode.parentNode,
-                                children = settings.element.children,
-                                diff = cur !== cache.focusedElement,
-                                elementIndex = 0,
-                                i;
-
-                            // anchorNode is our target if element is empty
-                            if (cur===settings.element){
-                                cur = anchorNode;
-                            }
-
-                            // Find our child index
-                            for(i=0;i<children.length;i++){
-                                if(cur === children[i]){
-                                    elementIndex = i;
-                                    break;
-                                }
-                            }
-
-                            // Focused element is different
-                            if( diff ){
-                                cache.focusedElement = cur;
-                                cache.focusedElementIndex = elementIndex;
-                            }
+                    backspaceOrDeleteKey: function(e) {
+                        var lastChild = el.lastChild;
+                        if (lastChild && lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule) {
+                            el.removeChild(lastChild);
                         }
                     }
                 },
-                init = function (opts) {
-                    var key, el, newVal;
+                o = [],
+                defaultSettings = {
+                    debug: true,
+                    element: null,
+                    modifier: 'auto',
+                    placeholder: "",
+                    autofocus: false,
+                    autoHR: true,
+                    mode: Medium.richMode,
+                    maxLength: -1,
+                    modifiers: {
+                        66: 'bold',
+                        73: 'italicize',
+                        85: 'underline',
+                        86: 'paste'
+                    },
+                    tags: {
+                        break: 'br',
+                        horizontalRule: 'hr',
+                        paragraph: 'p',
+                        outerLevel: ['pre','blockquote', 'figure'],
+                        innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong'] // Todo: Convert strong to b (IE)
+                    },
+                    cssClasses: {
+                        editor: 'Medium',
+                        pasteHook: 'Medium-paste-hook',
+                        placeholder: 'Medium-placeholder'
+                    },
+                    attributes: {
+                        remove: ['style','class']
+                    },
+                    pasteAsText: true,
+                    beforeInvokeElement: function() {},
+                    beforeInsertHtml: function() {},
+                    beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
+                },
+                settings = utils.deepExtend(defaultSettings, userSettings),
+                key,
+                el,
+                newVal,
+                i = 0;
 
-                    for(key in settings){
+            for(key in defaultSettings){
+                // Override defaults with data-attributes
+                if(
+                    typeof defaultSettings[key] !== 'object'
+                        && defaultSettings.hasOwnProperty(key)
+                        && settings.element.getAttribute('data-medium-'+key)
+                ){
+                    newVal = settings.element.getAttribute('data-medium-'+key);
 
-                        // Override defaults with data-attributes
-                        if(
-                            typeof settings[key] !== 'object'
-                            && settings.hasOwnProperty(key)
-                            && opts.element.getAttribute('data-medium-'+key)
-                        ){
-                            newVal = opts.element.getAttribute('data-medium-'+key);
-
-                            if( newVal.toLowerCase()==="false" || newVal.toLowerCase()==="true" ){
-                                newVal = newVal.toLowerCase()==="true";
-                            }
-                            settings[key] = newVal;
-                        }
+                    if( newVal.toLowerCase()==="false" || newVal.toLowerCase()==="true" ){
+                        newVal = newVal.toLowerCase()==="true";
                     }
-
-                    // Extend Settings
-                    utils.deepExtend(settings, opts);
-                    el = settings.element;
-
-                    // Editable
-                    el.contentEditable = true;
-                    el.className
-                        += (" " + settings.cssClasses.editor)
-                        + (" " + settings.cssClasses.editor + "-" + settings.mode);
-
-                    if (settings.tags.outerLevel !== null) {
-                        settings.tags.outerLevel = (settings.tags.outerLevel).concat([settings.tags.paragraph]);
-                    }
-
-                    // Initialize editor
-                    utils.html.clean();
-                    utils.html.placeholders();
-                    action.preserveElementFocus();
-
-                    // Capture Events
-                    action.listen();
-
-                    utils.setupContents();
-
-                    // Set as initialized
-                    cache.initialized = true;
-                };
-
-            this.destroy = function(){
-                var el = settings.element;
-                utils
-                    .removeEvent(el, 'keyup', intercept.up)
-                    .removeEvent(el, 'keydown', intercept.down)
-                    .removeEvent(el, 'focus', intercept.focus)
-                    .removeEvent(el, 'blur')
-                    .removeEvent(el, 'mouseout');
-            };
-
-            // Sets or returns the content of element
-            this.val = function(content){
-                // Set content if content is provided
-                if( typeof (content) != "undefined") {
-                    settings.element.innerHTML = content;
-                    utils.html.placeholders();
-                    return content;
+                    settings[key] = newVal;
                 }
+            }
 
-                return settings.element.innerHTML;
-            };
+            // Extend Settings
+            el = settings.element;
 
-            // Clears the element and restores the placeholder
-            this.clear = function(){
-                settings.element.innerHTML = '';
-                utils.html.placeholders();
-            };
+            // Editable
+            el.contentEditable = true;
+            el.className
+                += (" " + settings.cssClasses.editor)
+                + (" " + settings.cssClasses.editor + "-" + settings.mode);
 
-            init(userOpts);
+            if (settings.tags.outerLevel !== null) {
+                settings.tags.outerLevel = (settings.tags.outerLevel).concat([settings.tags.paragraph, settings.tags.horizontalRule]);
+            }
 
             this.settings = settings;
-            this.utils = utils;
-            this.cache = cache;
+            this.element = el;
             this.intercept = intercept;
+
+            this.action = action;
+            this.cache = cache;
+            this.cursor = cursor;
+            this.html = html;
+            this.utils = utils;
+            this.selection = selection;
+
+            o.push(action);
+            o.push(cache);
+            o.push(cursor);
+            o.push(html);
+            o.push(utils);
+            o.push(selection);
+
+            //bind everything together
+            for (; i < o.length; i++) {
+                o[i].element = el;
+                o[i].medium = this;
+                o[i].settings = settings;
+
+                o[i].action = action;
+                o[i].cache = cache;
+                o[i].cursor = cursor;
+                o[i].html = html;
+                o[i].intercept = intercept;
+                o[i].utils = utils;
+                o[i].selection = selection;
+            }
+
+            // Initialize editor
+            html.clean();
+            html.placeholders();
+            action.preserveElementFocus();
+
+            // Capture Events
+            action.listen();
 
             if (wild) {
                 this.makeUndoable = function() {};
@@ -829,20 +324,25 @@
                 this.redo = this.undoable.redo;
                 this.makeUndoable = this.undoable.makeUndoable;
             }
+
+            el.medium = this;
+
+            // Set as initialized
+            cache.initialized = true;
         };
 
     Medium.prototype = {
         /**
          *
-         * @param {String|Object} htmlRaw
+         * @param {String|Object} html
          * @param {Function} [callback]
          * @returns {Medium}
          */
-        insertHtml: function(htmlRaw, callback) {
-            var result = (new Medium.Html(this, htmlRaw))
+        insertHtml: function(html, callback) {
+            var result = (new Medium.Html(this, html))
                 .insert(this.settings.beforeInsertHtml);
 
-            this.utils.triggerEvent(this.settings.element, "change");
+            this.utils.triggerEvent(this.element, "change");
 
             if (callback) {
                 callback.apply(result);
@@ -861,7 +361,7 @@
             (new Medium.Element(this, tagName, attributes))
                 .invoke(this.settings.beforeInvokeElement);
 
-            this.utils.triggerEvent(this.settings.element, "change");
+            this.utils.triggerEvent(this.element, "change");
 
             return this;
         },
@@ -880,9 +380,9 @@
          */
         value: function(value) {
             if (typeof value !== 'undefined') {
-                this.settings.element.innerHTML = value;
+                this.element.innerHTML = value;
             } else {
-                return this.settings.element.innerHTML;
+                return this.element.innerHTML;
             }
 
             return this;
@@ -893,7 +393,7 @@
          * @returns {Medium}
          */
         focus: function() {
-            var el = this.settings.element;
+            var el = this.element;
             el.focus();
             return this;
         },
@@ -903,7 +403,7 @@
          * @returns {Medium}
          */
         select: function() {
-            var el = this.settings.element,
+            var el = this.element,
                 range,
                 selection;
 
@@ -922,6 +422,26 @@
             }
 
             return this;
+        },
+
+        isActive: function() {
+            return (Medium.activeElement === this.element);
+        },
+
+        destroy: function(){
+            var el = this.element,
+                intercept = this.intercept;
+            this.utils
+                .removeEvent(el, 'keyup', intercept.up)
+                .removeEvent(el, 'keydown', intercept.down)
+                .removeEvent(el, 'focus', intercept.focus)
+                .removeEvent(el, 'blur', intercept.focus);
+        },
+
+        // Clears the element and restores the placeholder
+        clear: function(){
+            this.element.innerHTML = '';
+            this.html.placeholders();
         }
     };
 
@@ -978,7 +498,7 @@
              * @param {Function} [fn]
              */
             invoke: function(fn) {
-                if (d.activeElement === this.element) {
+                if (Medium.activeElement === this.element) {
                     if (fn) {
                         fn.apply(this);
                     }
@@ -998,7 +518,6 @@
              */
             inject: function(htmlRaw) {
                 this.insertHTML(htmlRaw);
-                //d.execCommand('insertHtml', false, htmlRaw);
                 return null;
             }
         };
@@ -1026,7 +545,7 @@
              * @param {Function} [fn]
              */
             invoke: function(fn) {
-                if (d.activeElement === this.element) {
+                if (Medium.activeElement === this.element) {
                     if (fn) {
                         fn.apply(this);
                     }
@@ -1048,8 +567,8 @@
 
                     if (this.clean) {
                         //cleanup
-                        this.medium.utils.html.clean();
-                        this.medium.utils.html.placeholders();
+                        this.medium.html.clean();
+                        this.medium.html.placeholders();
                     }
 
 
@@ -1085,7 +604,6 @@
                 }
 
                this.insertHTML('<span id="wedge"></span>');
-                //d.execCommand('insertHtml', false, );
 
                 var wedge = d.getElementById('wedge'),
                     parent = wedge.parentNode,
@@ -1149,7 +667,7 @@
                             medium.dirty = stack.dirty();
                         }
 
-                        medium.utils.triggerEvent(medium.settings.element, "change");
+                        utils.triggerEvent(medium.settings.element, "change");
                     }
                 };
 
@@ -1195,9 +713,9 @@
     //Thank you Tim Down (super uber genius): http://stackoverflow.com/questions/6690752/insert-html-at-caret-in-a-contenteditable-div/6691294#6691294
     Medium.Injector.prototype.insertHTML = function(html,selectPastedContent) {
         var sel, range;
-        if (window.getSelection) {
+        if (w.getSelection) {
             // IE9 and non-IE
-            sel = window.getSelection();
+            sel = w.getSelection();
             if (sel.getRangeAt && sel.rangeCount) {
                 range = sel.getRangeAt(0);
                 range.deleteContents();
@@ -1205,9 +723,9 @@
                 // Range.createContextualFragment() would be useful here but is
                 // only relatively recently standardized and is not supported in
                 // some browsers (IE9, for one)
-                var el = document.createElement("div");
+                var el = d.createElement("div");
                 el.innerHTML = html;
-                var frag = document.createDocumentFragment(), node, lastNode;
+                var frag = d.createDocumentFragment(), node, lastNode;
                 while ( (node = el.firstChild) ) {
                     lastNode = frag.appendChild(node);
                 }
@@ -1227,7 +745,7 @@
                     sel.addRange(range);
                 }
             }
-        } else if ( (sel = document.selection) && sel.type != "Control") {
+        } else if ( (sel = d.selection) && sel.type != "Control") {
             // IE < 9
             var originalRange = sel.createRange();
             originalRange.collapse(true);
@@ -1247,7 +765,7 @@
          * @returns {HtmlElement}
          */
         insert: function(fn) {
-            if (d.activeElement === this.element) {
+            if (Medium.activeElement === this.element) {
                 if (fn) {
                     fn.apply(this);
                 }
@@ -1256,8 +774,8 @@
 
                 if (this.clean) {
                     //cleanup
-                    this.medium.utils.html.clean();
-                    this.medium.utils.html.placeholders();
+                    this.medium.html.clean();
+                    this.medium.html.placeholders();
                 }
 
                 this.medium.makeUndoable();
@@ -1284,24 +802,575 @@
         }
     };
 
-    // Exports and modularity
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = Medium;
-    }
+    Medium.Utilities = function() {};
+    Medium.Utilities.prototype = {
+        /*
+         * Keyboard Interface events
+         */
+        isCommand: function(e, fnTrue, fnFalse){
+            var s = this.settings;
+            if((s.modifier==='ctrl' && e.ctrlKey ) ||
+                (s.modifier==='cmd' && e.metaKey ) ||
+                (s.modifier==='auto' && (e.ctrlKey || e.metaKey) )
+                ){
+                return fnTrue.call();
+            } else {
+                return fnFalse.call();
+            }
+        },
+        isShift: function(e, fnTrue, fnFalse){
+            if(e.shiftKey){
+                return fnTrue.call();
+            } else {
+                return fnFalse.call();
+            }
+        },
+        isModifier: function(e, fn){
+            var w = e.keyCode,
+                cmd = this.settings.modifiers[w];
+            if(cmd){
+                return fn.call(null, cmd);
+            }
+            return false;
+        },
+        isSpecial: function(e){
+            var special = {
+                16: 'shift',
+                17: 'ctrl',
+                18: 'alt',
+                91: 'cmd',
+                8: 'backspace',
+                46: 'delete'
+            };
+            if(this.cache.cmd){ return true; }
+            return (e.keyCode in special);
+        },
+        isNavigational: function(e) {
+            var navigational = {
+                37: 'right-arrow',
+                38: 'up-arrow',
+                39: 'left-arrow',
+                40: 'down-arrow'
+            };
+            return (e.keyCode in navigational);
+        },
 
-    if (typeof ender === 'undefined') {
-        this.Medium = Medium;
-    }
+        /*
+         * Handle Events
+         */
+        addEvent: function addEvent(element, eventName, func) {
+            if (element.addEventListener) {
+                element.addEventListener(eventName, func, false);
+            } else if (element.attachEvent) {
+                element.attachEvent("on" + eventName, func);
+            } else {
+                element['on' + eventName] = func;
+            }
 
-    if (typeof define === "function" && define.amd) {
-        define('Medium', [], function () { 
-            return Medium; 
-        });
-    }
+            return this;
+        },
+        removeEvent: function removeEvent(element, eventName, func) {
+            if (element.removeEventListener) {
+                element.removeEventListener(eventName, func, false);
+            } else if (element.detachEvent) {
+                element.detachEvent("on" + eventName, func);
+            } else {
+                element['on' + eventName] = null;
+            }
+
+            return this;
+        },
+        preventDefaultEvent: function (e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            } else {
+                e.returnValue = false;
+            }
+
+            return this;
+        },
+        triggerEvent: function(element, eventName) {
+            var event;
+            if (d.createEvent) {
+                event = d.createEvent("HTMLEvents");
+                event.initEvent(eventName, true, true);
+                event.eventName = eventName;
+                element.dispatchEvent(event);
+            } else {
+                event = d.createEventObject();
+                event.eventType = eventName;
+                event.eventName = eventName;
+                element.fireEvent("on" + event.eventType, event);
+            }
+
+            return this;
+        },
+
+        deepExtend: function (destination, source) {
+            for (var property in source) {
+                if (
+                    source[property]
+                    && source[property].constructor
+                    && source[property].constructor === Object
+                ) {
+                    destination[property] = destination[property] || {};
+                    this.deepExtend(destination[property], source[property]);
+                } else {
+                    destination[property] = source[property];
+                }
+            }
+            return destination;
+        },
+        /*
+         * This is a Paste Hook. When the user pastes
+         * content, this ultimately converts it into
+         * plain text before inserting the data.
+         */
+        pasteHook: function(fn){
+            var textarea = d.createElement('textarea'),
+                el = this.element,
+                existingValue,
+                existingLength,
+                overallLength,
+                s = this.settings,
+                medium = this.medium,
+                html = this.html;
+
+            textarea.className = s.cssClasses.pasteHook;
+
+            el.parentNode.appendChild(textarea);
+
+            textarea.focus();
+
+            if (!wild) {
+                medium.makeUndoable();
+            }
+            setTimeout(function(){
+                el.focus();
+                if (s.maxLength > 0) {
+                    existingValue = html.text(el);
+                    existingLength = existingValue.length;
+                    overallLength = existingLength + textarea.value.length;
+                    if (overallLength > existingLength) {
+                        textarea.value = textarea.value.substring(0, s.maxLength - existingLength);
+                    }
+                }
+                fn(textarea.value);
+                //utils.html.deleteNode( textarea );
+            }, 2);
+        },
+        setupContents: function() {
+            var el = this.element,
+                children = el.children,
+                childNodes = el.childNodes,
+                initialParagraph;
+
+            if (
+                children.length > 0
+                    || this.settings.mode === Medium.inlineMode
+                ) {
+                return;
+            }
+
+            //has content, but no children
+            if (childNodes.length > 0) {
+                initialParagraph = d.createElement(this.settings.tags.paragraph);
+                initialParagraph.innerHTML = el.innerHTML + '&nbsp;';
+                el.innerHTML = '';
+                el.appendChild(initialParagraph);
+            } else {
+                initialParagraph = d.createElement(this.settings.tags.paragraph);
+                initialParagraph.innerHTML = '&nbsp;';
+                el.appendChild(initialParagraph);
+            }
+        }
+    };
+
+    /*
+     * Handle Selection Logic
+     */
+    Medium.Selection = function() {};
+    Medium.Selection.prototype = {
+        saveSelection: function() {
+            if (w.getSelection) {
+                var sel = w.getSelection();
+                if (sel.rangeCount > 0) {
+                    return sel.getRangeAt(0);
+                }
+            } else if (d.selection && d.selection.createRange) { // IE
+                return d.selection.createRange();
+            }
+            return null;
+        },
+
+        restoreSelection: function(range) {
+            if (range) {
+                if (w.getSelection) {
+                    var sel = w.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else if (d.selection && range.select) { // IE
+                    range.select();
+                }
+            }
+        }
+    };
+
+    /*
+     * Handle Cursor Logic
+     */
+    Medium.Cursor = function() {};
+    Medium.Cursor.prototype = {
+        set: function(pos, el) {
+            var range,
+                html = this.html;
+
+            if( d.createRange ){
+                var selection = w.getSelection(),
+                    lastChild = html.lastChild(),
+                    length =  html.text(lastChild).length-1,
+                    toModify = el ? el : lastChild,
+                    theLength = typeof pos !== 'undefined' ? pos : length;
+
+                range = d.createRange();
+                range.setStart(toModify, theLength);
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } else {
+                range = d.body.createTextRange();
+                range.moveToElementText(el);
+                range.collapse(false);
+                range.select();
+            }
+        }
+    };
+
+    /*
+     * HTML Abstractions
+     */
+    Medium.HtmlAssistant = function() {};
+    Medium.HtmlAssistant.prototype = {
+        text: function(node, val){
+            node = node || this.settings.element;
+            if(val){
+                if ((node.textContent) && (typeof (node.textContent) != "undefined")) {
+                    node.textContent = val;
+                } else {
+                    node.innerText = val;
+                }
+            }
+
+            else if (node.innerText) {
+                return trim(node.innerText);
+            }
+            else if (node.textContent) {
+                return trim(node.textContent);
+            }
+            //document fragment
+            else if (node.data) {
+                return trim(node.data);
+            }
+
+            //for good measure
+            return '';
+        },
+        changeTag: function(oldNode, newTag) {
+            var newNode = d.createElement(newTag),
+                node,
+                nextNode;
+
+            node = oldNode.firstChild;
+            while (node) {
+                nextNode = node.nextSibling;
+                newNode.appendChild(node);
+                node = nextNode;
+            }
+
+            oldNode.parentNode.insertBefore(newNode, oldNode);
+            oldNode.parentNode.removeChild(oldNode);
+        },
+        deleteNode: function(el){
+            el.parentNode.removeChild(el);
+        },
+        placeholders: function(){
+            var that = this,
+                s = this.settings,
+                placeholder = this.medium.placeholder || (this.medium.placeholder = d.createElement('div')),
+                el = s.element,
+                style = placeholder.style,
+                elStyle = w.getComputedStyle(el, null),
+                qStyle = function(prop) {
+                    return elStyle.getPropertyValue(prop)
+                },
+                utils = this.utils,
+                text = utils.html.text(el),
+                cursor = this.cursor;
+
+            el.placeholder = placeholder;
+
+            // Empty Editor
+            if( text.length < 1){
+
+                if (!el.innerHTML.match('<' + s.tags.paragraph)) {
+                    el.innerHTML = '';
+                }
+
+                // We need to add placeholders
+                if(s.placeholder.length > 0){
+                    if (!placeholder.setup) {
+                        placeholder.setup = true;
+
+                        //background & background color
+                        style.background = qStyle('background');
+                        style.backgroundColor = qStyle('background-color');
+
+                        //text size & text color
+                        style.fontSize = qStyle('font-size');
+                        style.color = elStyle.color;
+
+                        //begin box-model
+                        //margin
+                        style.marginTop = qStyle('margin-top');
+                        style.marginBottom = qStyle('margin-bottom');
+                        style.marginLeft = qStyle('margin-left');
+                        style.marginRight = qStyle('margin-right');
+
+                        //padding
+                        style.paddingTop = qStyle('padding-top');
+                        style.paddingBottom = qStyle('padding-bottom');
+                        style.paddingLeft = qStyle('padding-left');
+                        style.paddingRight = qStyle('padding-right');
+
+                        //border
+                        style.borderStyle = qStyle('border-top-width');
+                        style.borderTopColor = qStyle('border-top-color');
+                        style.borderTopStyle = qStyle('border-top-style');
+                        style.borderBottomWidth = qStyle('border-bottom-width');
+                        style.borderBottomColor = qStyle('border-bottom-color');
+                        style.borderBottomStyle = qStyle('border-bottom-style');
+                        style.borderLeftWidth = qStyle('border-left-width');
+                        style.borderLeftColor = qStyle('border-left-color');
+                        style.borderLeftStyle = qStyle('border-left-style');
+                        style.borderRightWidth = qStyle('border-right-width');
+                        style.borderRightColor = qStyle('border-right-color');
+                        style.borderRightStyle = qStyle('border-right-style');
+                        //end box model
+
+                        //element setup
+                        placeholder.className = s.cssClasses.placeholder + ' ' + s.cssClasses.placeholder + "-" + s.mode;
+                        placeholder.innerHTML = '<div>' + s.placeholder + '</div>';
+                        el.parentNode.insertBefore(placeholder, el);
+                    }
+                    el.style.background = 'transparent';
+                    el.style.backgroundColor = 'transparent';
+                    el.style.borderColor = 'transparent';
+                    style.display = '';
+                    // Add base P tag and do auto focus, give it a min height if el has one
+                    style.minHeight = el.clientHeight + 'px';
+                    style.minWidth = el.clientWidth + 'px';
+
+                    if (s.mode !== Medium.inlineMode) {
+                        utils.setupContents();
+                        cursor.set( 0, el.firstChild );
+                    }
+                }
+            } else {
+                style.display = 'none';
+                el.style.background = style.background;
+                el.style.backgroundColor = style.backgroundColor;
+                el.style.borderColor = style.borderColor;
+            }
+        },
+        clean: function () {
+
+            /*
+             * Deletes invalid nodes
+             * Removes Attributes
+             */
+            var s = this.settings,
+                attsToRemove = s.attributes.remove,
+                only = s.tags.outerLevel,
+                el = s.element,
+                children = el.children,
+                i,
+                j,
+                k;
+
+            // Go through top level children
+            for(i=0; i<children.length; i++){
+                var child = children[i],
+                    nodeName = child.nodeName,
+                    shouldDelete = true;
+
+                // Remove attributes
+                for(k=0; k<attsToRemove.length; k++){
+                    if( child.hasAttribute( attsToRemove[k] ) ){
+                        if( child.getAttribute( attsToRemove[k] ) !== s.cssClasses.placeholder ){
+                            child.removeAttribute( attsToRemove[k] );
+                        }
+                    }
+                }
+
+                if (only === null) {
+                    return;
+                }
+
+                // Determine if we should modify node
+                for(j=0; j<only.length;j++){
+                    if( only[j] === nodeName.toLowerCase() ){
+                        shouldDelete = false;
+                    }
+                }
+
+                // Convert tags or delete
+                if(shouldDelete){
+                    switch( nodeName.toLowerCase() ){
+                        case 'div':
+                            this.html.changeTag(child, s.tags.paragraph);
+                            break;
+                        case 'br':
+                            if (child === child.parentNode.lastChild) {
+                                if (child === child.parentNode.firstChild) {
+                                    break;
+                                }
+                                var text = document.createTextNode("");
+                                text.innerHTML = '&nbsp';
+                                child.parentNode.insertBefore(text, child);
+                                break;
+                            }
+                        default:
+                            this.html.deleteNode(child);
+                            break;
+                    }
+                }
+            }
+        },
+        lastChild: function () {
+            return this.element.lastChild;
+        },
+        addTag: function (tag, shouldFocus, isEditable, afterElement) {
+            if (!this.settings.beforeAddTag(tag, shouldFocus, isEditable, afterElement)) {
+                var newEl = d.createElement(tag),
+                    toFocus;
+
+                if( typeof isEditable !== "undefined" && isEditable === false ){
+                    newEl.contentEditable = false;
+                }
+                if (newEl.innerHTML.length == 0) {
+                    newEl.innerHTML = ' ';
+                }
+                if( afterElement && afterElement.nextSibling ){
+                    afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
+                    toFocus = afterElement.nextSibling;
+
+                } else {
+                    this.settings.element.appendChild(newEl);
+                    toFocus = this.html.lastChild();
+                }
+
+                if( shouldFocus ){
+                    this.cache.focusedElement = toFocus;
+                    this.cursor.set( 0, toFocus );
+                }
+                return newEl;
+            }
+            return null;
+        },
+        containerAtCaret: function () {
+            if (!this.medium.isActive()) return null;
+
+            var sel = window.getSelection();
+
+            if (sel.rangeCount) {
+                var selRange = sel.getRangeAt(0),
+                    container = selRange.endContainer;
+
+                switch (container.nodeType) {
+                    case 3:
+                        if (container.data && container.data.length != selRange.endOffset) return false;
+                        break;
+                }
+
+                return container;
+            }
+
+            return null;
+        },
+        baseContainerAtCaret: function() {
+            var container = this.containerAtCaret(),
+                el = this.element;
+
+            if (container === false) return null;
+
+            while (container && container.parentNode !== el) {
+                container = container.parentNode;
+            }
+
+            if (container && container.nodeType == 1) {
+                return container;
+            }
+
+            return null;
+        }
+    };
+
+    Medium.Action = function() {};
+    Medium.Action.prototype = {
+        listen: function () {
+            var el = this.element,
+                intercept = this.intercept;
+
+            this.utils
+                .addEvent(el, 'keyup', intercept.up)
+                .addEvent(el, 'keydown', intercept.down)
+                .addEvent(el, 'focus', intercept.focus)
+                .addEvent(el, 'blur', intercept.blur);
+        },
+        preserveElementFocus: function(){
+            // Fetch node that has focus
+            var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
+            if(anchorNode){
+                var cache = this.medium.cache,
+                    s = this.settings,
+                    cur = anchorNode.parentNode,
+                    children = s.element.children,
+                    diff = cur !== cache.focusedElement,
+                    elementIndex = 0,
+                    i;
+
+                // anchorNode is our target if element is empty
+                if (cur===s.element){
+                    cur = anchorNode;
+                }
+
+                // Find our child index
+                for(i=0;i<children.length;i++){
+                    if(cur === children[i]){
+                        elementIndex = i;
+                        break;
+                    }
+                }
+
+                // Focused element is different
+                if( diff ){
+                    cache.focusedElement = cur;
+                    cache.focusedElementIndex = elementIndex;
+                }
+            }
+        }
+    };
+
+    Medium.Cache = function() {
+        this.initialized = false;
+        this.cmd = false;
+        this.focusedElement = null
+    };
 
 	//Modes;
 	Medium.inlineMode = 'inline';
 	Medium.partialMode = 'partial';
 	Medium.richMode = 'rich';
 
-}).call(this, window, document, Math);
+    return Medium;
+}).call(this, window, document);
