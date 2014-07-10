@@ -47,7 +47,7 @@ var Medium = (function(w, d){
                             Medium.activeElement = null;
                         }
 
-                        medium.placeholders();
+                        html.placeholders();
                     },
                     down: function(e){
                         e = e || w.event;
@@ -1180,6 +1180,7 @@ var Medium = (function(w, d){
                 el.style.background = style.background;
                 el.style.backgroundColor = style.backgroundColor;
                 el.style.borderColor = style.borderColor;
+                utils.setupContents();
             }
         },
         clean: function () {
