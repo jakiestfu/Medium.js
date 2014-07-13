@@ -169,13 +169,18 @@ var Medium = (function(w, d){
                                 makeHR,
                                 secondToLast;
 
-                            if( lastChild && settings.autoHR && settings.mode !== 'partial' ){
+                            if(
+                                lastChild
+                                && lastChild !== el.firstChild
+                                && settings.autoHR
+                                && settings.mode !== 'partial'
+                            ){
 
                                 utils.preventDefaultEvent(e);
 
                                 makeHR =
-                                    ( html.text(lastChild) === "" )
-                                        && ( lastChild.nodeName.toLowerCase() === settings.tags.paragraph );
+                                    html.text(lastChild) === ""
+                                    && lastChild.nodeName.toLowerCase() === settings.tags.paragraph;
 
                                 if( makeHR && children.length >=2 ){
                                     secondToLast = children[ children.length-2 ];
@@ -1105,12 +1110,13 @@ var Medium = (function(w, d){
                 },
                 utils = this.utils,
                 text = utils.html.text(el),
-                cursor = this.cursor;
+                cursor = this.cursor,
+                childCount = el.children.length;
 
             el.placeholder = placeholder;
 
             // Empty Editor
-            if( text.length < 1){
+            if( text.length < 1 && childCount < 2){
 
                 if (!el.innerHTML.match('<' + s.tags.paragraph)) {
                     el.innerHTML = '';
@@ -1170,9 +1176,12 @@ var Medium = (function(w, d){
                     style.minHeight = el.clientHeight + 'px';
                     style.minWidth = el.clientWidth + 'px';
 
-                    if (s.mode !== Medium.inlineMode) {
+                    if ( s.mode !== Medium.inlineMode ) {
                         utils.setupContents();
-                        cursor.set( 0, el.firstChild );
+
+                        if (childCount === 0) {
+                            cursor.set( 0, el.firstChild );
+                        }
                     }
                 }
             } else {
