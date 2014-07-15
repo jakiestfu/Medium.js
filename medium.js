@@ -22,6 +22,106 @@ var Medium = (function(w, d){
         undo = w['Undo'] || null,
 	    wild = (!rangy || !undo),
 	    domesticated = (!wild),
+        key = w.Key = {
+            'backspace': 8,
+            'tab': 9,
+            'enter': 13,
+            'shift': 16,
+            'ctrl': 17,
+            'alt': 18,
+            'pause': 19,
+            'capsLock': 20,
+            'escape': 27,
+            'pageUp': 33,
+            'pageDown': 34,
+            'end': 35,
+            'home': 36,
+            'leftArrow': 37,
+            'upArrow': 38,
+            'rightArrow': 39,
+            'downArrow': 40,
+            'insert': 45,
+            'delete': 46,
+            '0': 48,
+            '1': 49,
+            '2': 50,
+            '3': 51,
+            '4': 52,
+            '5': 53,
+            '6': 54,
+            '7': 55,
+            '8': 56,
+            '9': 57,
+            'a': 65,
+            'b': 66,
+            'c': 67,
+            'd': 68,
+            'e': 69,
+            'f': 70,
+            'g': 71,
+            'h': 72,
+            'i': 73,
+            'j': 74,
+            'k': 75,
+            'l': 76,
+            'm': 77,
+            'n': 78,
+            'o': 79,
+            'p': 80,
+            'q': 81,
+            'r': 82,
+            's': 83,
+            't': 84,
+            'u': 85,
+            'v': 86,
+            'w': 87,
+            'x': 88,
+            'y': 89,
+            'z': 90,
+            'leftWindow': 91,
+            'rightWindowKey': 92,
+            'select': 93,
+            'numpad0': 96,
+            'numpad1': 97,
+            'numpad2': 98,
+            'numpad3': 99,
+            'numpad4': 100,
+            'numpad5': 101,
+            'numpad6': 102,
+            'numpad7': 103,
+            'numpad8': 104,
+            'numpad9': 105,
+            'multiply': 106,
+            'add': 107,
+            'subtract': 109,
+            'decimalPoint': 110,
+            'divide': 111,
+            'f1': 112,
+            'f2': 113,
+            'f3': 114,
+            'f4': 115,
+            'f5': 116,
+            'f6': 117,
+            'f7': 118,
+            'f8': 119,
+            'f9': 120,
+            'f10': 121,
+            'f11': 122,
+            'f12': 123,
+            'numLock': 144,
+            'scrollLock': 145,
+            'semiColon': 186,
+            'equalSign': 187,
+            'comma': 188,
+            'dash': 189,
+            'period': 190,
+            'forwardSlash': 191,
+            'graveAccent': 192,
+            'openBracket': 219,
+            'backSlash': 220,
+            'closeBraket': 221,
+            'singleQuote': 222
+        },
 
         /**
          * Medium.js - Taking control of content editable
@@ -99,11 +199,11 @@ var Medium = (function(w, d){
                         }
 
                         switch ( e.keyCode ){
-                            case 13:
+                            case key['enter']:
                                 intercept.enterKey(e);
                                 break;
-                            case 8:
-                            case 46:
+                            case key['backspace']:
+                            case key['delete']:
                                 intercept.backspaceOrDeleteKey(e);
                                 break;
                         }
@@ -245,16 +345,16 @@ var Medium = (function(w, d){
                     beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
                 },
                 settings = utils.deepExtend(defaultSettings, userSettings),
-                key,
                 el,
                 newVal,
-                i = 0;
+                i,
+                bridge = {};
 
-            for(key in defaultSettings){
+            for(i in defaultSettings){
                 // Override defaults with data-attributes
                 if(
-                    typeof defaultSettings[key] !== 'object'
-                        && defaultSettings.hasOwnProperty(key)
+                    typeof defaultSettings[i] !== 'object'
+                        && defaultSettings.hasOwnProperty(i)
                         && settings.element.getAttribute('data-medium-'+key)
                 ){
                     newVal = settings.element.getAttribute('data-medium-'+key);
@@ -262,7 +362,15 @@ var Medium = (function(w, d){
                     if( newVal.toLowerCase()==="false" || newVal.toLowerCase()==="true" ){
                         newVal = newVal.toLowerCase()==="true";
                     }
-                    settings[key] = newVal;
+                    settings[i] = newVal;
+                }
+            }
+
+            if (settings.modifiers) {
+                for(i in settings.modifiers){
+                    if (typeof(key[i]) !== 'undefined') {
+                        settings.modifiers[key[i]] = settings.modifiers[i];
+                    }
                 }
             }
 
@@ -290,27 +398,24 @@ var Medium = (function(w, d){
             this.utils = utils;
             this.selection = selection;
 
-            o.push(action);
-            o.push(cache);
-            o.push(cursor);
-            o.push(html);
-            o.push(utils);
-            o.push(selection);
+            bridge.element = el;
+            bridge.medium = this;
+            bridge.settings = settings;
 
-            //bind everything together
-            for (; i < o.length; i++) {
-                o[i].element = el;
-                o[i].medium = this;
-                o[i].settings = settings;
+            bridge.action = action;
+            bridge.cache = cache;
+            bridge.cursor = cursor;
+            bridge.html = html;
+            bridge.intercept = intercept;
+            bridge.utils = utils;
+            bridge.selection = selection;
 
-                o[i].action = action;
-                o[i].cache = cache;
-                o[i].cursor = cursor;
-                o[i].html = html;
-                o[i].intercept = intercept;
-                o[i].utils = utils;
-                o[i].selection = selection;
-            }
+            action.setBridge(bridge);
+            cache.setBridge(bridge);
+            cursor.setBridge(bridge);
+            html.setBridge(bridge);
+            utils.setBridge(bridge);
+            selection.setBridge(bridge);
 
             // Initialize editor
             html.clean();
@@ -684,7 +789,7 @@ var Medium = (function(w, d){
             this.movingThroughStack = false;
 
             addEvent(element, 'keyup', function(e) {
-                if (e.ctrlKey || e.keyCode === 90) {
+                if (e.ctrlKey || e.keyCode === key.z) {
                     utils.preventDefaultEvent(e);
                     return;
                 }
@@ -697,7 +802,7 @@ var Medium = (function(w, d){
             });
 
             addEvent(element, 'keydown', function(e) {
-                if (!e.ctrlKey || e.keyCode !== 90) {
+                if (!e.ctrlKey || e.keyCode !== key.z) {
                     me.movingThroughStack = false;
                     return true;
                 }
@@ -764,6 +869,11 @@ var Medium = (function(w, d){
     };
 
     Medium.Html.prototype = {
+        setBridge: function(bridge) {
+            for(var i in bridge) {
+                this[i] = bridge[i];
+            }
+        },
         /**
          * @methodOf Medium.Html
          * @param {Function} [fn]
@@ -809,6 +919,11 @@ var Medium = (function(w, d){
 
     Medium.Utilities = function() {};
     Medium.Utilities.prototype = {
+        setBridge: function(bridge) {
+            for(var i in bridge) {
+                this[i] = bridge[i];
+            }
+        },
         /*
          * Keyboard Interface events
          */
@@ -831,33 +946,42 @@ var Medium = (function(w, d){
             }
         },
         isModifier: function(e, fn){
-            var w = e.keyCode,
-                cmd = this.settings.modifiers[w];
+            var cmd = this.settings.modifiers[e.keyCode];
             if(cmd){
                 return fn.call(null, cmd);
             }
             return false;
         },
+        special: (function() {
+            var special = {};
+
+            special[key['backspace']] = true;
+            special[key['shift']] = true;
+            special[key['ctrl']] = true;
+            special[key['alt']] = true;
+            special[key['delete']] = true;
+            special[key['cmd']] = true;
+
+            return special;
+        })(),
         isSpecial: function(e){
-            var special = {
-                16: 'shift',
-                17: 'ctrl',
-                18: 'alt',
-                91: 'cmd',
-                8: 'backspace',
-                46: 'delete'
-            };
+
             if(this.cache.cmd){ return true; }
-            return (e.keyCode in special);
+
+            return typeof this.special[e.keyCode] !== 'undefined';
         },
+        navigational: (function() {
+            var navigational = {};
+
+            navigational[key['upArrow']] = true;
+            navigational[key['downArrow']] = true;
+            navigational[key['leftArrow']] = true;
+            navigational[key['rightArrow']] = true;
+
+            return navigational;
+        })(),
         isNavigational: function(e) {
-            var navigational = {
-                37: 'right-arrow',
-                38: 'up-arrow',
-                39: 'left-arrow',
-                40: 'down-arrow'
-            };
-            return (e.keyCode in navigational);
+            return typeof this.navigational[e.keyCode] !== 'undefined';
         },
 
         /*
@@ -996,6 +1120,11 @@ var Medium = (function(w, d){
      */
     Medium.Selection = function() {};
     Medium.Selection.prototype = {
+        setBridge: function(bridge) {
+            for(var i in bridge) {
+                this[i] = bridge[i];
+            }
+        },
         saveSelection: function() {
             if (w.getSelection) {
                 var sel = w.getSelection();
@@ -1026,6 +1155,11 @@ var Medium = (function(w, d){
      */
     Medium.Cursor = function() {};
     Medium.Cursor.prototype = {
+        setBridge: function(bridge) {
+            for(var i in bridge) {
+                this[i] = bridge[i];
+            }
+        },
         set: function(pos, el) {
             var range,
                 html = this.html;
@@ -1056,6 +1190,11 @@ var Medium = (function(w, d){
      */
     Medium.HtmlAssistant = function() {};
     Medium.HtmlAssistant.prototype = {
+        setBridge: function(bridge) {
+            for(var i in bridge) {
+                this[i] = bridge[i];
+            }
+        },
         text: function(node, val){
             node = node || this.settings.element;
             if(val){
@@ -1069,6 +1208,7 @@ var Medium = (function(w, d){
             else if (node.innerText) {
                 return trim(node.innerText);
             }
+
             else if (node.textContent) {
                 return trim(node.textContent);
             }
@@ -1327,6 +1467,11 @@ var Medium = (function(w, d){
 
     Medium.Action = function() {};
     Medium.Action.prototype = {
+        setBridge: function(bridge) {
+            for(var i in bridge) {
+                this[i] = bridge[i];
+            }
+        },
         listen: function () {
             var el = this.element,
                 intercept = this.intercept;
@@ -1375,6 +1520,13 @@ var Medium = (function(w, d){
         this.initialized = false;
         this.cmd = false;
         this.focusedElement = null
+    };
+    Medium.Cache.prototype = {
+        setBridge: function(bridge) {
+            for(var i in bridge) {
+                this[i] = bridge[i];
+            }
+        }
     };
 
 	//Modes;
