@@ -8,10 +8,10 @@ new Medium({
     mode: Medium.richMode,
     maxLength: -1,
     modifiers: {
-        66: 'bold',
-        73: 'italicize',
-        85: 'underline',
-        86: 'paste'
+        'b': 'bold',
+        'i': 'italicize',
+        'u': 'underline',
+        'p': 'paste'
     },
     tags: {
         paragraph: 'p',
