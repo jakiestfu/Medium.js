@@ -271,7 +271,7 @@ var Medium = (function(w, d){
                         }
                     },
                     enterKey: function (e) {
-                        if( settings.mode === "inline" ){
+                        if( settings.mode === "inline" || settings.mode === Medium.inlineRichMode ){
                             return utils.preventDefaultEvent(e);
                         }
 
@@ -1130,8 +1130,9 @@ var Medium = (function(w, d){
             if (
 	            !this.settings.tags.paragraph
                 || children.length > 0
-                || this.settings.mode === Medium.inlineMode
-            ) {
+				|| this.settings.mode === Medium.inlineMode
+				|| this.settings.mode === Medium.inlineRichMode
+			) {
                 return;
             }
 
@@ -1379,7 +1380,7 @@ var Medium = (function(w, d){
                     style.minHeight = el.clientHeight + 'px';
                     style.minWidth = el.clientWidth + 'px';
 
-                    if ( s.mode !== Medium.inlineMode ) {
+                    if ( s.mode !== Medium.inlineMode && s.mode !== Medium.inlineRichMode ) {
                         utils.setupContents();
 
                         if (childCount === 0 && el.firstChild) {
@@ -1409,6 +1410,10 @@ var Medium = (function(w, d){
                 i,
                 j,
                 k;
+
+            if (s.mode === Medium.inlineRichMode) {
+                only = s.tags.innerLevel;
+            }
 
             // Go through top level children
             for(i=0; i<children.length; i++){
@@ -1596,6 +1601,7 @@ var Medium = (function(w, d){
 	Medium.inlineMode = 'inline';
 	Medium.partialMode = 'partial';
 	Medium.richMode = 'rich';
+    Medium.inlineRichMode = 'inlineRich';
 
     return Medium;
 }).call(this, window, document);
