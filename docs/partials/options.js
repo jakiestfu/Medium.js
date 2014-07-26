@@ -1,33 +1,40 @@
 new Medium({
-    debug: true,
-    element: null,
-    modifier: 'auto',
-    placeholder: "",
-    autofocus: false,
-    autoHR: true,
-    mode: Medium.richMode,
-    maxLength: -1,
-    modifiers: {
-        66: 'bold',
-        73: 'italicize',
-        85: 'underline',
-        86: 'paste'
-    },
-    tags: {
-        paragraph: 'p',
-        outerLevel: ['pre','blockquote', 'figure', 'hr'],
-        innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong']
-    },
-    cssClasses: {
-        editor: 'Medium',
-        pasteHook: 'Medium-paste-hook',
-        placeholder: 'Medium-placeholder'
-    },
-    beforeInvokeElement: function() {
-        //this.tagName
-        //this.attributes
-    },
-    beforeInsertHtml: function() {
-        //this.html
-    }
+	debug: true,
+	element: null,
+	modifier: 'auto',
+	placeholder: "",
+	autofocus: false,
+	autoHR: true,
+	mode: Medium.richMode,
+	maxLength: -1,
+	modifiers: {
+		'b': 'bold',
+		'i': 'italicize',
+		'u': 'underline',
+		'p': 'paste'
+	},
+	tags: {
+		break: 'br',
+		horizontalRule: 'hr',
+		paragraph: 'p',
+		outerLevel: ['pre','blockquote', 'figure'],
+		innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong']
+	},
+	cssClasses: {
+		editor: 'Medium',
+		pasteHook: 'Medium-paste-hook',
+		placeholder: 'Medium-placeholder'
+	},
+	attributes: {
+		remove: ['style','class']
+	},
+	pasteAsText: true,
+	beforeInvokeElement: function() {
+		//this = Medium.Element
+	},
+	beforeInsertHtml: function() {
+		//this = Medium.Html
+	},
+	beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {},
+	keyContext: null
 });
