@@ -1,1 +1,2 @@
+[![Stories in Ready](https://badge.waffle.io/jakiestfu/medium.js.png?label=ready&title=Ready)](https://waffle.io/jakiestfu/medium.js)
 <a href="http://jakiestfu.github.io/Medium.js/"><img src="http://i.imgur.com/U6t8Eq2.png"></a>
