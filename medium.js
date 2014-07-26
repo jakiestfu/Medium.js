@@ -200,7 +200,7 @@ var Medium = (function(w, d){
 
                         switch ( e.keyCode ){
                             case key['enter']:
-                                intercept.enterKey(e);
+	                            intercept.enterKey(e);
                                 break;
                             case key['backspace']:
                             case key['delete']:
@@ -219,6 +219,20 @@ var Medium = (function(w, d){
                         });
                         html.clean();
                         html.placeholders();
+
+	                    //here we have a key context, so if you need to create your own object within a specific context it is doable
+	                    var keyContext;
+	                    if (
+		                    settings.keyContext !== null
+			                    && ( keyContext = settings.keyContext[e.keyCode] )
+		                    ) {
+		                    var el = cursor.parent();
+
+		                    if (el) {
+			                    keyContext.call( medium, e, el );
+		                    }
+	                    }
+
                         action.preserveElementFocus();
                     },
                     command: {
@@ -263,7 +277,7 @@ var Medium = (function(w, d){
 
                         if( !cache.shift ){
 
-                            var focusedElement = html.baseContainerAtCaret(),
+                            var focusedElement = html.atCaret() || {},
                                 children = el.children,
                                 lastChild = focusedElement === el.lastChild ? el.lastChild : null,
                                 makeHR,
@@ -274,6 +288,7 @@ var Medium = (function(w, d){
                                 && lastChild !== el.firstChild
                                 && settings.autoHR
                                 && settings.mode !== 'partial'
+                                && settings.tags.horizontalRule
                             ){
 
                                 utils.preventDefaultEvent(e);
@@ -303,47 +318,56 @@ var Medium = (function(w, d){
                     },
                     backspaceOrDeleteKey: function(e) {
                         var lastChild = el.lastChild;
-                        if (lastChild && lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule) {
+                        if (
+	                        lastChild
+	                        && settings.tags.horizontalRule
+	                        && lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule
+                        ) {
                             el.removeChild(lastChild);
                         }
                     }
                 },
                 o = [],
-                defaultSettings = {
-                    debug: true,
-                    element: null,
-                    modifier: 'auto',
-                    placeholder: "",
-                    autofocus: false,
-                    autoHR: true,
-                    mode: Medium.richMode,
-                    maxLength: -1,
-                    modifiers: {
-                        66: 'bold',
-                        73: 'italicize',
-                        85: 'underline',
-                        86: 'paste'
-                    },
-                    tags: {
-                        break: 'br',
-                        horizontalRule: 'hr',
-                        paragraph: 'p',
-                        outerLevel: ['pre','blockquote', 'figure'],
-                        innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong'] // Todo: Convert strong to b (IE)
-                    },
-                    cssClasses: {
-                        editor: 'Medium',
-                        pasteHook: 'Medium-paste-hook',
-                        placeholder: 'Medium-placeholder'
-                    },
-                    attributes: {
-                        remove: ['style','class']
-                    },
-                    pasteAsText: true,
-                    beforeInvokeElement: function() {},
-                    beforeInsertHtml: function() {},
-                    beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
-                },
+	            defaultSettings = {
+		            debug: true,
+		            element: null,
+		            modifier: 'auto',
+		            placeholder: "",
+		            autofocus: false,
+		            autoHR: true,
+		            mode: Medium.richMode,
+		            maxLength: -1,
+		            modifiers: {
+			            'b': 'bold',
+			            'i': 'italicize',
+			            'u': 'underline',
+			            'p': 'paste'
+		            },
+		            tags: {
+			            break: 'br',
+			            horizontalRule: 'hr',
+			            paragraph: 'p',
+			            outerLevel: ['pre','blockquote', 'figure'],
+			            innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong']
+		            },
+		            cssClasses: {
+			            editor: 'Medium',
+			            pasteHook: 'Medium-paste-hook',
+			            placeholder: 'Medium-placeholder'
+		            },
+		            attributes: {
+			            remove: ['style','class']
+		            },
+		            pasteAsText: true,
+		            beforeInvokeElement: function() {
+			            //this = Medium.Element
+		            },
+		            beforeInsertHtml: function() {
+			            //this = Medium.Html
+		            },
+		            beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {},
+		            keyContext: null
+	            },
                 settings = utils.deepExtend(defaultSettings, userSettings),
                 el,
                 newVal,
@@ -354,8 +378,8 @@ var Medium = (function(w, d){
                 // Override defaults with data-attributes
                 if(
                     typeof defaultSettings[i] !== 'object'
-                        && defaultSettings.hasOwnProperty(i)
-                        && settings.element.getAttribute('data-medium-'+key)
+                    && defaultSettings.hasOwnProperty(i)
+                    && settings.element.getAttribute('data-medium-'+key)
                 ){
                     newVal = settings.element.getAttribute('data-medium-'+key);
 
@@ -374,6 +398,14 @@ var Medium = (function(w, d){
                 }
             }
 
+	        if (settings.keyContext) {
+		        for(i in settings.keyContext){
+			        if (typeof(key[i]) !== 'undefined') {
+				        settings.keyContext[key[i]] = settings.keyContext[i];
+			        }
+		        }
+	        }
+
             // Extend Settings
             el = settings.element;
 
@@ -383,8 +415,9 @@ var Medium = (function(w, d){
                 += (" " + settings.cssClasses.editor)
                 + (" " + settings.cssClasses.editor + "-" + settings.mode);
 
-            if (settings.tags.outerLevel !== null) {
-                settings.tags.outerLevel = (settings.tags.outerLevel).concat([settings.tags.paragraph, settings.tags.horizontalRule]);
+	        settings.tags = (settings.tags || {});
+            if ( settings.tags.outerLevel ) {
+                settings.tags.outerLevel = settings.tags.outerLevel.concat([settings.tags.paragraph, settings.tags.horizontalRule]);
             }
 
             this.settings = settings;
@@ -1095,9 +1128,10 @@ var Medium = (function(w, d){
                 initialParagraph;
 
             if (
-                children.length > 0
-                    || this.settings.mode === Medium.inlineMode
-                ) {
+	            !this.settings.tags.paragraph
+                || children.length > 0
+                || this.settings.mode === Medium.inlineMode
+            ) {
                 return;
             }
 
@@ -1182,7 +1216,36 @@ var Medium = (function(w, d){
                 range.collapse(false);
                 range.select();
             }
-        }
+        },
+	    parent: function() {
+		    var target = null, range;
+
+		    if(w.getSelection) {
+			    range = w.getSelection().getRangeAt(0);
+			    target = range.commonAncestorContainer;
+
+			    target = (target.nodeType === 1
+				    ? target
+				    : target.parentNode
+			    );
+		    }
+
+		    else if(d.selection) {
+			    target = d.selection.createRange().parentElement();
+		    }
+
+		    if (target.tagName == 'SPAN') {
+			    target = target.parentNode;
+		    }
+
+		    return target;
+	    },
+	    caretToBeginning: function(el) {
+		    this.set( 0, el );
+	    },
+	    caretToEnd: function(el) {
+		    this.set( this.html.text(el).length, el );
+	    }
     };
 
     /*
@@ -1319,7 +1382,7 @@ var Medium = (function(w, d){
                     if ( s.mode !== Medium.inlineMode ) {
                         utils.setupContents();
 
-                        if (childCount === 0) {
+                        if (childCount === 0 && el.firstChild) {
                             cursor.set( 0, el.firstChild );
                         }
                     }
@@ -1340,7 +1403,7 @@ var Medium = (function(w, d){
              */
             var s = this.settings,
                 attsToRemove = s.attributes.remove,
-                only = s.tags.outerLevel,
+                only = s.tags.outerLevel || null,
                 el = s.element,
                 children = el.children,
                 i,
@@ -1427,7 +1490,7 @@ var Medium = (function(w, d){
             }
             return null;
         },
-        containerAtCaret: function () {
+        baseAtCaret: function () {
             if (!this.medium.isActive()) return null;
 
             var sel = window.getSelection();
@@ -1447,8 +1510,8 @@ var Medium = (function(w, d){
 
             return null;
         },
-        baseContainerAtCaret: function() {
-            var container = this.containerAtCaret(),
+        atCaret: function() {
+            var container = this.baseAtCaret() || {},
                 el = this.element;
 
             if (container === false) return null;

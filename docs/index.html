@@ -112,7 +112,7 @@
                     <div> <code class="ref">debug</code>: Log properties to the console </div>
                 </li>
                 <li>
-                    <div> <code class="ref">element</code>: The element in which you want to apply the Medium.js' editor to.</div>
+                    <div> <code class="ref">element</code>: The element in which you want to apply Medium.js to.</div>
                 </li>
                 <li>
                     <div> <code class="ref">modifier</code>: The modifier you want for making things bold/italic etc. May be set to <code>'auto'</code>, <code>'cmd'</code>, or <code>'ctrl'</code>. </div>
@@ -139,7 +139,11 @@
                     <div> <code class="ref">maxLength</code>: The max size you want to allow for the editor </div>
                 </li>
                 <li>
-                    <div> <code class="ref">modifiers</code>: Key modifiers from <code>e.which</code> that will be used to apply the respective styling changes or hook into events. </div>
+                    <div>
+                        <code class="ref">modifiers[{Number}|{String}] = function(event, element) {};</code>:
+                        Key modifiers from <code>event.keyCode</code> that will be used to apply the respective styling changes or hook into events.
+
+                    </div>
                 </li>
                 <li>
                     <div> <code class="ref">tags</code>: Dictates the base tags allowed. <code>tags.paragraph</code> is the element that will be created for paragraphs. <code>tags.outerLevel</code> are the only elements allowed to replace a top-level <code>p</code> tag. <code>tags.innerLevel</code> are the only tags allowed within the parent tags. No additional tags are allowed unless included here.</div>
@@ -148,13 +152,31 @@
                     <div> <code class="ref">cssClasses</code>: Various classes used within Medium.js, customizable to your liking. </div>
                 </li>
                 <li>
-                    <div> <code class="ref">beforeInvokeElement()</code>: Triggered just before an element is invoked.  An element is invoked over a highlighted area.</div>
+                    <div>
+                        <code class="ref">beforeInvokeElement()</code>:
+                        Triggered just before an element is invoked.
+                        An element is invoked over a highlighted area.
+                        The <code>this</code> within the context of this function is <code>Medium.Element</code> that is about to be invoked.</div>
                 </li>
                 <li>
-                    <div> <code class="ref">beforeInsertHtml()</code>: Triggered just before html is added.  Inserted at cursor, but only if medium's element has focus. </div>
+                    <div>
+                        <code class="ref">beforeInsertHtml()</code>:
+                        Triggered just before html is added.
+                        Inserted at cursor, but only if medium's element has focus.
+                        The <code>this</code> within the context of this function is <code>Medium.Html</code> that is about to be inserted.</div>
                 </li>
                 <li>
-                    <div> <code class="ref">beforeAddTag()</code>: Triggered just before a tag is told to be created from a keyboard action. </div>
+                    <div>
+                        <code class="ref">beforeAddTag(tag, shouldFocus, isEditable, afterElement)</code>:
+                        Triggered just before a tag is told to be created from a keyboard action.
+                </li>
+                <li>
+                    <div>
+                        <code class="ref">keyContext[{Number}|{String}] = function(event, element) {};</code>:
+                        Triggered just before a keydown event.
+                        Can return false or true to override existing functionality, or null to continue.
+                        The <code>element</code> is the element where the caret currently resides.
+                    </div>
                 </li>
             </ul>
 
@@ -281,7 +303,8 @@
                 <h4>Rich with Insert Html Object (domesticated only)</h4>
                 <pre data-src="rich3.js"></pre>
                 <input id="article3Button" type="button" value="Insert"/>
-                <div id="article3" class="article demo"></div>
+                <div id="article3" class="article demo">
+                </div>
             </div>
 
             <div class="domesticated">
