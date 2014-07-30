@@ -4,9 +4,8 @@ var article4 = document.getElementById('article4'),
         element: article4,
         mode: Medium.richMode,
         placeholder: 'Your Article 4',
-        attributes: {
-            remove: []
-        }
+        attributes: null,
+        tags: null
     });
 
 article4Button.onmousedown = function() {

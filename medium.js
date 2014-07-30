@@ -755,12 +755,12 @@ var Medium = (function (w, d) {
              * @returns {HtmlElement}
              */
             inject: function (htmlRaw) {
-                var html;
+                var html, isConverted = false;
                 if (typeof htmlRaw === 'string') {
                     var htmlConverter = d.createElement('div');
                     htmlConverter.innerHTML = htmlRaw;
                     html = htmlConverter.childNodes;
-                    html.isConverted = true;
+                    isConverted = true;
                 } else {
                     html = htmlRaw;
                 }
@@ -772,7 +772,7 @@ var Medium = (function (w, d) {
                     i = 0;
                 wedge.removeAttribute('id');
 
-                if (html.isConverted) {
+                if (isConverted) {
                     while (i < html.length) {
                         parent.insertBefore(html[i], wedge);
                     }
@@ -1429,7 +1429,7 @@ var Medium = (function (w, d) {
              * Removes Attributes
              */
             var s = this.settings,
-                attsToRemove = s.attributes.remove,
+                attsToRemove = (s.attributes ? s.attributes.remove : []),
                 only = s.tags.outerLevel || null,
                 el = s.element,
                 children = el.children,
@@ -1520,7 +1520,7 @@ var Medium = (function (w, d) {
         baseAtCaret: function () {
             if (!this.medium.isActive()) return null;
 
-            var sel = window.getSelection();
+            var sel = w.getSelection ? w.getSelection() : document.selection;
 
             if (sel.rangeCount) {
                 var selRange = sel.getRangeAt(0),
