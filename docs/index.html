@@ -319,7 +319,7 @@
 
 
             <h4 id="Support">Support</h4>
-            <p>Need commercial support for Medium.js? Currently provided by <a href="//visop-dev.com/Contact%20Us">Visual Interop Development llc.</a>, drop us a line, we can't wait to see what we can do together.</p>
+            <p>Need commercial support for Medium.js? Currently provided by <a href="//visop-dev.com/Contact+Us">Visual Interop Development llc.</a>, drop us a line, we can't wait to see what we can do together.</p>
 
 
             <h4 id="Licensing">Licensing</h4>
@@ -366,5 +366,14 @@
         <script src="partials/rich3.js"></script>
         <script src="partials/rich4.js"></script>
         <script src="docs.js"></script>
+        <script>
+            //make the docs work with IE8
+            if (document.all && document.querySelector && !document.addEventListener) {
+                Medium.Utilities.prototype.triggerEvent = function(element, eventName) {
+                    $(element).trigger(eventName);
+                };
+            }
+        </script>
+
     </body>
 </html>
