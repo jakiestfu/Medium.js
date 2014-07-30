@@ -4,20 +4,38 @@ var article3 = document.getElementById('article3'),
         element: article3,
         mode: Medium.richMode,
         placeholder: 'Your Article 3',
+	    tags: null,
         attributes: {
             remove: []
-        }
+        },
+	    keyContext: {
+		    'enter': function(e, element) {
+			    var sib = element.previousSibling;
+
+			    if (sib && sib.tagName == 'LI') {
+				    element.style.color = sib.style.color;
+				    element.className = sib.className;
+				    this.cursor.caretToBeginning(element);
+			    }
+		    }
+	    }
     });
 
-article3Button.onmousedown = function(e) {
-	e.preventDefault();
+article3Button.onmousedown = function() {
+	var ul = document.createElement('ul'),
+		li = document.createElement('li');
 
-	var p = document.createElement('p');
+	ul.style.border = 'dashed 5px #F92672';
+	ul.className = 'ul-special';
+	ul.appendChild(li);
 
-	p.style.border = 'dashed 5px #F92672';
-	p.className = 'insertedElement';
-	p.innerHTML = 'I came from an Object!';
+	li.innerHTML = 'I came from an Object!';
+	li.style.color = 'blue';
+	li.className = 'li-special';
 
     article3Medium.focus();
-    article3Medium.insertHtml(p);
+    article3Medium.insertHtml(ul);
+	article3Medium.cursor.caretToBeginning(li);
+
+    return false;
 };

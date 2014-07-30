@@ -10,18 +10,18 @@
  */
 
 
-var Medium = (function(w, d){
+var Medium = (function (w, d) {
 
     'use strict';
 
-    var trim = function(string) {
+    var trim = function (string) {
             return string.replace(/^\s+|\s+$/g, '');
         },
-        //two modes, wild (native) or domesticated (rangy + undo.js)
+    //two modes, wild (native) or domesticated (rangy + undo.js)
         rangy = w['rangy'] || null,
         undo = w['Undo'] || null,
-	    wild = (!rangy || !undo),
-	    domesticated = (!wild),
+        wild = (!rangy || !undo),
+        domesticated = (!wild),
         key = w.Key = {
             'backspace': 8,
             'tab': 9,
@@ -128,7 +128,7 @@ var Medium = (function(w, d){
          * @constructor
          * @param {Object} [userSettings] user options
          */
-	    Medium = function (userSettings) {
+         Medium = function (userSettings) {
             var medium = this,
                 action = new Medium.Action(),
                 cache = new Medium.Cache(),
@@ -137,11 +137,11 @@ var Medium = (function(w, d){
                 utils = new Medium.Utilities(),
                 selection = new Medium.Selection(),
                 intercept = {
-                    focus: function(e){
+                    focus: function (e) {
                         e = e || w.event;
                         Medium.activeElement = el;
                     },
-                    blur: function(e) {
+                    blur: function (e) {
                         e = e || w.event;
                         if (Medium.activeElement === el) {
                             Medium.activeElement = null;
@@ -149,25 +149,25 @@ var Medium = (function(w, d){
 
                         html.placeholders();
                     },
-                    down: function(e){
+                    down: function (e) {
                         e = e || w.event;
 
-                        utils.isCommand(e, function(){
+                        utils.isCommand(e, function () {
                             cache.cmd = true;
-                        }, function(){
+                        }, function () {
                             cache.cmd = false;
                         });
 
-                        utils.isShift(e, function(){
+                        utils.isShift(e, function () {
                             cache.shift = true;
-                        }, function(){
+                        }, function () {
                             cache.shift = false;
                         });
 
-                        utils.isModifier(e, function(cmd){
-                            if( cache.cmd ){
+                        utils.isModifier(e, function (cmd) {
+                            if (cache.cmd) {
 
-                                if( ( (settings.mode === "inline") || (settings.mode === "partial") ) && cmd !== "paste" ){
+                                if (( (settings.mode === "inline") || (settings.mode === "partial") ) && cmd !== "paste") {
                                     utils.preventDefaultEvent(e);
                                     return;
                                 }
@@ -184,21 +184,21 @@ var Medium = (function(w, d){
                             }
                         });
 
-                        if( settings.maxLength !== -1 ){
+                        if (settings.maxLength !== -1) {
                             var len = html.text().length,
                                 hasSelection = false,
                                 selection = w.getSelection();
 
-                            if(selection) {
+                            if (selection) {
                                 hasSelection = !selection.isCollapsed;
                             }
 
-                            if( len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection ){
+                            if (len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection) {
                                 return utils.preventDefaultEvent(e);
                             }
                         }
 
-                        switch ( e.keyCode ){
+                        switch (e.keyCode) {
                             case key['enter']:
                                 intercept.enterKey(e);
                                 break;
@@ -210,43 +210,58 @@ var Medium = (function(w, d){
 
                         return true;
                     },
-                    up: function(e){
+                    up: function (e) {
                         e = e || w.event;
-                        utils.isCommand(e, function(){
+                        utils.isCommand(e, function () {
                             cache.cmd = false;
-                        }, function(){
+                        }, function () {
                             cache.cmd = true;
                         });
                         html.clean();
                         html.placeholders();
+
+                        //here we have a key context, so if you need to create your own object within a specific context it is doable
+                        var keyContext;
+                        if (
+                            settings.keyContext !== null
+                                && ( keyContext = settings.keyContext[e.keyCode] )
+                            ) {
+                            var el = cursor.parent();
+
+                            if (el) {
+                                keyContext.call(medium, e, el);
+                            }
+                        }
+
                         action.preserveElementFocus();
                     },
                     command: {
-                        bold: function(e){
+                        bold: function (e) {
                             utils.preventDefaultEvent(e);
                             // IE uses strong instead of b
                             (new Medium.Element(medium, 'bold'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
                         },
-                        underline: function(e){
+                        underline: function (e) {
                             utils.preventDefaultEvent(e);
                             (new Medium.Element(medium, 'underline'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
                         },
-                        italicize: function(e){
+                        italicize: function (e) {
                             utils.preventDefaultEvent(e);
                             (new Medium.Element(medium, 'italic'))
                                 .setClean(false)
                                 .invoke(settings.beforeInvokeElement);
                         },
-                        quote: function(e){},
-                        paste: function(e){
+                        quote: function (e) {
+                        },
+                        paste: function (e) {
                             if (settings.pasteAsText) {
                                 var sel = utils.selection.saveSelection();
-                                utils.pasteHook(function(text){
-                                    utils.selection.restoreSelection( sel );
+                                utils.pasteHook(function (text) {
+                                    utils.selection.restoreSelection(sel);
 
                                     (new Medium.Html(medium, text.replace(/\n/g, '<br>')))
                                         .setClean(false)
@@ -257,41 +272,42 @@ var Medium = (function(w, d){
                         }
                     },
                     enterKey: function (e) {
-                        if( settings.mode === "inline" ){
+                        if (settings.mode === "inline") {
                             return utils.preventDefaultEvent(e);
                         }
 
-                        if( !cache.shift ){
+                        if (!cache.shift) {
 
-                            var focusedElement = html.baseContainerAtCaret(),
+                            var focusedElement = html.atCaret() || {},
                                 children = el.children,
                                 lastChild = focusedElement === el.lastChild ? el.lastChild : null,
                                 makeHR,
                                 secondToLast;
 
-                            if(
+                            if (
                                 lastChild
-                                && lastChild !== el.firstChild
-                                && settings.autoHR
-                                && settings.mode !== 'partial'
-                            ){
+                                    && lastChild !== el.firstChild
+                                    && settings.autoHR
+                                    && settings.mode !== 'partial'
+                                    && settings.tags.horizontalRule
+                                ) {
 
                                 utils.preventDefaultEvent(e);
 
                                 makeHR =
                                     html.text(lastChild) === ""
-                                    && lastChild.nodeName.toLowerCase() === settings.tags.paragraph;
+                                        && lastChild.nodeName.toLowerCase() === settings.tags.paragraph;
 
-                                if( makeHR && children.length >=2 ){
-                                    secondToLast = children[ children.length-2 ];
+                                if (makeHR && children.length >= 2) {
+                                    secondToLast = children[ children.length - 2 ];
 
-                                    if( secondToLast.nodeName.toLowerCase() === settings.tags.horizontalRule ){
+                                    if (secondToLast.nodeName.toLowerCase() === settings.tags.horizontalRule) {
                                         makeHR = false;
                                     }
                                 }
 
-                                if( makeHR ){
-                                    html.deleteNode( lastChild );
+                                if (makeHR) {
+                                    html.deleteNode(lastChild);
                                     html.addTag(settings.tags.horizontalRule, false, false, focusedElement);
                                     focusedElement = focusedElement.nextSibling;
                                 }
@@ -301,14 +317,29 @@ var Medium = (function(w, d){
 
                         return true;
                     },
-                    backspaceOrDeleteKey: function(e) {
-                        var lastChild = el.lastChild;
-                        if (lastChild && lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule) {
+                    backspaceOrDeleteKey: function (e) {
+                        var lastChild = el.lastChild,
+                            beforeLastChild = lastChild.previousSibling;
+
+                        if (
+                            lastChild
+                                && settings.tags.horizontalRule
+                                && lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule
+                            ) {
                             el.removeChild(lastChild);
+                        } else if (
+                            lastChild
+                                && beforeLastChild
+                                && utils.html.text(lastChild).length < 1
+
+                                && beforeLastChild.nodeName.toLowerCase() === settings.tags.horizontalRule
+                                && lastChild.nodeName.toLowerCase() === settings.tags.paragraph
+                            ) {
+                            el.removeChild(lastChild);
+                            el.removeChild(beforeLastChild);
                         }
                     }
                 },
-                o = [],
                 defaultSettings = {
                     debug: true,
                     element: null,
@@ -319,17 +350,17 @@ var Medium = (function(w, d){
                     mode: Medium.richMode,
                     maxLength: -1,
                     modifiers: {
-                        66: 'bold',
-                        73: 'italicize',
-                        85: 'underline',
-                        86: 'paste'
+                        'b': 'bold',
+                        'i': 'italicize',
+                        'u': 'underline',
+                        'p': 'paste'
                     },
                     tags: {
-                        break: 'br',
-                        horizontalRule: 'hr',
-                        paragraph: 'p',
-                        outerLevel: ['pre','blockquote', 'figure'],
-                        innerLevel: ['a', 'b', 'u', 'i', 'img', 'strong'] // Todo: Convert strong to b (IE)
+                        'break': 'br',
+                        'horizontalRule': 'hr',
+                        'paragraph': 'p',
+                        'outerLevel': ['pre', 'blockquote', 'figure'],
+                        'innerLevel': ['a', 'b', 'u', 'i', 'img', 'strong']
                     },
                     cssClasses: {
                         editor: 'Medium',
@@ -337,12 +368,18 @@ var Medium = (function(w, d){
                         placeholder: 'Medium-placeholder'
                     },
                     attributes: {
-                        remove: ['style','class']
+                        remove: ['style', 'class']
                     },
                     pasteAsText: true,
-                    beforeInvokeElement: function() {},
-                    beforeInsertHtml: function() {},
-                    beforeAddTag: function(tag, shouldFocus, isEditable, afterElement) {}
+                    beforeInvokeElement: function () {
+                        //this = Medium.Element
+                    },
+                    beforeInsertHtml: function () {
+                        //this = Medium.Html
+                    },
+                    beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
+                    },
+                    keyContext: null
                 },
                 settings = utils.deepExtend(defaultSettings, userSettings),
                 el,
@@ -350,26 +387,34 @@ var Medium = (function(w, d){
                 i,
                 bridge = {};
 
-            for(i in defaultSettings){
+            for (i in defaultSettings) {
                 // Override defaults with data-attributes
-                if(
+                if (
                     typeof defaultSettings[i] !== 'object'
                         && defaultSettings.hasOwnProperty(i)
-                        && settings.element.getAttribute('data-medium-'+key)
-                ){
-                    newVal = settings.element.getAttribute('data-medium-'+key);
+                        && settings.element.getAttribute('data-medium-' + key)
+                    ) {
+                    newVal = settings.element.getAttribute('data-medium-' + key);
 
-                    if( newVal.toLowerCase()==="false" || newVal.toLowerCase()==="true" ){
-                        newVal = newVal.toLowerCase()==="true";
+                    if (newVal.toLowerCase() === "false" || newVal.toLowerCase() === "true") {
+                        newVal = newVal.toLowerCase() === "true";
                     }
                     settings[i] = newVal;
                 }
             }
 
             if (settings.modifiers) {
-                for(i in settings.modifiers){
+                for (i in settings.modifiers) {
                     if (typeof(key[i]) !== 'undefined') {
                         settings.modifiers[key[i]] = settings.modifiers[i];
+                    }
+                }
+            }
+
+            if (settings.keyContext) {
+                for (i in settings.keyContext) {
+                    if (typeof(key[i]) !== 'undefined') {
+                        settings.keyContext[key[i]] = settings.keyContext[i];
                     }
                 }
             }
@@ -383,8 +428,9 @@ var Medium = (function(w, d){
                 += (" " + settings.cssClasses.editor)
                 + (" " + settings.cssClasses.editor + "-" + settings.mode);
 
-            if (settings.tags.outerLevel !== null) {
-                settings.tags.outerLevel = (settings.tags.outerLevel).concat([settings.tags.paragraph, settings.tags.horizontalRule]);
+            settings.tags = (settings.tags || {});
+            if (settings.tags.outerLevel) {
+                settings.tags.outerLevel = settings.tags.outerLevel.concat([settings.tags.paragraph, settings.tags.horizontalRule]);
             }
 
             this.settings = settings;
@@ -426,7 +472,8 @@ var Medium = (function(w, d){
             action.listen();
 
             if (wild) {
-                this.makeUndoable = function() {};
+                this.makeUndoable = function () {
+                };
             } else {
                 this.dirty = false;
                 this.undoable = new Medium.Undoable(this);
@@ -448,7 +495,7 @@ var Medium = (function(w, d){
          * @param {Function} [callback]
          * @returns {Medium}
          */
-        insertHtml: function(html, callback) {
+        insertHtml: function (html, callback) {
             var result = (new Medium.Html(this, html))
                 .insert(this.settings.beforeInsertHtml);
 
@@ -467,7 +514,7 @@ var Medium = (function(w, d){
          * @param {Object} [attributes]
          * @returns {Medium}
          */
-        invokeElement: function(tagName, attributes) {
+        invokeElement: function (tagName, attributes) {
             (new Medium.Element(this, tagName, attributes))
                 .invoke(this.settings.beforeInvokeElement);
 
@@ -479,7 +526,7 @@ var Medium = (function(w, d){
         /**
          * @returns {string}
          */
-        behavior: function() {
+        behavior: function () {
             return (wild ? 'wild' : 'domesticated');
         },
 
@@ -488,7 +535,7 @@ var Medium = (function(w, d){
          * @param value
          * @returns {Medium}
          */
-        value: function(value) {
+        value: function (value) {
             if (typeof value !== 'undefined') {
                 this.element.innerHTML = value;
             } else {
@@ -502,7 +549,7 @@ var Medium = (function(w, d){
          * Focus on element
          * @returns {Medium}
          */
-        focus: function() {
+        focus: function () {
             var el = this.element;
             el.focus();
             return this;
@@ -512,7 +559,7 @@ var Medium = (function(w, d){
          * Select all text
          * @returns {Medium}
          */
-        select: function() {
+        select: function () {
             var el = this.element,
                 range,
                 selection;
@@ -534,11 +581,11 @@ var Medium = (function(w, d){
             return this;
         },
 
-        isActive: function() {
+        isActive: function () {
             return (Medium.activeElement === this.element);
         },
 
-        destroy: function(){
+        destroy: function () {
             var el = this.element,
                 intercept = this.intercept;
             this.utils
@@ -549,7 +596,7 @@ var Medium = (function(w, d){
         },
 
         // Clears the element and restores the placeholder
-        clear: function(){
+        clear: function () {
             this.element.innerHTML = '';
             this.html.placeholders();
         }
@@ -561,18 +608,21 @@ var Medium = (function(w, d){
      * @param {Object} [attributes]
      * @constructor
      */
-    Medium.Element = function(medium, tagName, attributes) {
+    Medium.Element = function (medium, tagName, attributes) {
         this.medium = medium;
         this.element = medium.settings.element;
         if (wild) {
             this.tagName = tagName;
         } else {
             switch (tagName.toLowerCase()) {
-                case 'bold': this.tagName = 'b';
+                case 'bold':
+                    this.tagName = 'b';
                     break;
-                case 'italic': this.tagName = 'i';
+                case 'italic':
+                    this.tagName = 'i';
                     break;
-                case 'underline': this.tagName = 'u';
+                case 'underline':
+                    this.tagName = 'u';
                     break;
                 default:
                     this.tagName = tagName;
@@ -588,7 +638,7 @@ var Medium = (function(w, d){
      * @param {Medium} medium
      * @param {String|HtmlElement} html
      */
-    Medium.Html = function(medium, html) {
+    Medium.Html = function (medium, html) {
         this.medium = medium;
         this.element = medium.settings.element;
         this.html = html;
@@ -599,7 +649,8 @@ var Medium = (function(w, d){
      *
      * @constructor
      */
-    Medium.Injector = function() {};
+    Medium.Injector = function () {
+    };
 
     if (wild) {
         Medium.Element.prototype = {
@@ -607,7 +658,7 @@ var Medium = (function(w, d){
              * @methodOf Medium.Element
              * @param {Function} [fn]
              */
-            invoke: function(fn) {
+            invoke: function (fn) {
                 if (Medium.activeElement === this.element) {
                     if (fn) {
                         fn.apply(this);
@@ -615,7 +666,7 @@ var Medium = (function(w, d){
                     d.execCommand(this.tagName, false);
                 }
             },
-            setClean: function() {
+            setClean: function () {
                 return this;
             }
         };
@@ -626,7 +677,7 @@ var Medium = (function(w, d){
              * @param {String|HtmlElement} htmlRaw
              * @returns {null}
              */
-            inject: function(htmlRaw) {
+            inject: function (htmlRaw) {
                 this.insertHTML(htmlRaw);
                 return null;
             }
@@ -636,12 +687,13 @@ var Medium = (function(w, d){
          *
          * @constructor
          */
-        Medium.Undoable = function() {};
+        Medium.Undoable = function () {
+        };
     }
 
     //if medium is domesticated (ie, not wild)
     else {
-        rangy.rangePrototype.insertNodeAtEnd = function(node) {
+        rangy.rangePrototype.insertNodeAtEnd = function (node) {
             var range = this.cloneRange();
             range.collapse(false);
             range.insertNode(node);
@@ -654,7 +706,7 @@ var Medium = (function(w, d){
              * @methodOf Medium.Element
              * @param {Function} [fn]
              */
-            invoke: function(fn) {
+            invoke: function (fn) {
                 if (Medium.activeElement === this.element) {
                     if (fn) {
                         fn.apply(this);
@@ -690,7 +742,7 @@ var Medium = (function(w, d){
              * @param {Boolean} clean
              * @returns {Medium.Element}
              */
-            setClean: function(clean) {
+            setClean: function (clean) {
                 this.clean = clean;
                 return this;
             }
@@ -702,7 +754,7 @@ var Medium = (function(w, d){
              * @param {String|HtmlElement} htmlRaw
              * @returns {HtmlElement}
              */
-            inject: function(htmlRaw) {
+            inject: function (htmlRaw) {
                 var html;
                 if (typeof htmlRaw === 'string') {
                     var htmlConverter = d.createElement('div');
@@ -713,7 +765,7 @@ var Medium = (function(w, d){
                     html = htmlRaw;
                 }
 
-               this.insertHTML('<span id="wedge"></span>');
+                this.insertHTML('<span id="wedge"></span>');
 
                 var wedge = d.getElementById('wedge'),
                     parent = wedge.parentNode,
@@ -738,7 +790,7 @@ var Medium = (function(w, d){
          * @param {Medium} medium
          * @constructor
          */
-        Medium.Undoable = function(medium) {
+        Medium.Undoable = function (medium) {
             var me = this,
                 element = medium.settings.element,
                 utils = medium.utils,
@@ -747,25 +799,26 @@ var Medium = (function(w, d){
                 timer,
                 stack = new Undo.Stack(),
                 EditCommand = Undo.Command.extend({
-                    constructor: function(oldValue, newValue) {
+                    constructor: function (oldValue, newValue) {
                         this.oldValue = oldValue;
                         this.newValue = newValue;
                     },
-                    execute: function() {},
-                    undo: function() {
+                    execute: function () {
+                    },
+                    undo: function () {
                         element.innerHTML = this.oldValue;
                         medium.canUndo = stack.canUndo();
                         medium.canRedo = stack.canRedo();
                         medium.dirty = stack.dirty();
                     },
-                    redo: function() {
+                    redo: function () {
                         element.innerHTML = this.newValue;
                         medium.canUndo = stack.canUndo();
                         medium.canRedo = stack.canRedo();
                         medium.dirty = stack.dirty();
                     }
                 }),
-                makeUndoable = function() {
+                makeUndoable = function () {
                     var newValue = element.innerHTML;
                     // ignore meta key presses
                     if (newValue != startValue) {
@@ -788,7 +841,7 @@ var Medium = (function(w, d){
             this.EditCommand = EditCommand;
             this.movingThroughStack = false;
 
-            addEvent(element, 'keyup', function(e) {
+            addEvent(element, 'keyup', function (e) {
                 if (e.ctrlKey || e.keyCode === key.z) {
                     utils.preventDefaultEvent(e);
                     return;
@@ -796,12 +849,12 @@ var Medium = (function(w, d){
 
                 // a way too simple algorithm in place of single-character undo
                 clearTimeout(timer);
-                timer = setTimeout(function() {
+                timer = setTimeout(function () {
                     makeUndoable();
                 }, 250);
             });
 
-            addEvent(element, 'keydown', function(e) {
+            addEvent(element, 'keydown', function (e) {
                 if (!e.ctrlKey || e.keyCode !== key.z) {
                     me.movingThroughStack = false;
                     return true;
@@ -821,7 +874,7 @@ var Medium = (function(w, d){
     }
 
     //Thank you Tim Down (super uber genius): http://stackoverflow.com/questions/6690752/insert-html-at-caret-in-a-contenteditable-div/6691294#6691294
-    Medium.Injector.prototype.insertHTML = function(html,selectPastedContent) {
+    Medium.Injector.prototype.insertHTML = function (html, selectPastedContent) {
         var sel, range;
         if (w.getSelection) {
             // IE9 and non-IE
@@ -836,7 +889,7 @@ var Medium = (function(w, d){
                 var el = d.createElement("div");
                 el.innerHTML = html;
                 var frag = d.createDocumentFragment(), node, lastNode;
-                while ( (node = el.firstChild) ) {
+                while ((node = el.firstChild)) {
                     lastNode = frag.appendChild(node);
                 }
                 var firstNode = frag.firstChild;
@@ -855,7 +908,7 @@ var Medium = (function(w, d){
                     sel.addRange(range);
                 }
             }
-        } else if ( (sel = d.selection) && sel.type != "Control") {
+        } else if ((sel = d.selection) && sel.type != "Control") {
             // IE < 9
             var originalRange = sel.createRange();
             originalRange.collapse(true);
@@ -869,8 +922,8 @@ var Medium = (function(w, d){
     };
 
     Medium.Html.prototype = {
-        setBridge: function(bridge) {
-            for(var i in bridge) {
+        setBridge: function (bridge) {
+            for (var i in bridge) {
                 this[i] = bridge[i];
             }
         },
@@ -879,7 +932,7 @@ var Medium = (function(w, d){
          * @param {Function} [fn]
          * @returns {HtmlElement}
          */
-        insert: function(fn) {
+        insert: function (fn) {
             if (Medium.activeElement === this.element) {
                 if (fn) {
                     fn.apply(this);
@@ -911,48 +964,49 @@ var Medium = (function(w, d){
          * @param clean
          * @returns {Medium.Html}
          */
-        setClean: function(clean) {
+        setClean: function (clean) {
             this.clean = clean;
             return this;
         }
     };
 
-    Medium.Utilities = function() {};
+    Medium.Utilities = function () {
+    };
     Medium.Utilities.prototype = {
-        setBridge: function(bridge) {
-            for(var i in bridge) {
+        setBridge: function (bridge) {
+            for (var i in bridge) {
                 this[i] = bridge[i];
             }
         },
         /*
          * Keyboard Interface events
          */
-        isCommand: function(e, fnTrue, fnFalse){
+        isCommand: function (e, fnTrue, fnFalse) {
             var s = this.settings;
-            if((s.modifier==='ctrl' && e.ctrlKey ) ||
-                (s.modifier==='cmd' && e.metaKey ) ||
-                (s.modifier==='auto' && (e.ctrlKey || e.metaKey) )
-                ){
+            if ((s.modifier === 'ctrl' && e.ctrlKey ) ||
+                (s.modifier === 'cmd' && e.metaKey ) ||
+                (s.modifier === 'auto' && (e.ctrlKey || e.metaKey) )
+                ) {
                 return fnTrue.call();
             } else {
                 return fnFalse.call();
             }
         },
-        isShift: function(e, fnTrue, fnFalse){
-            if(e.shiftKey){
+        isShift: function (e, fnTrue, fnFalse) {
+            if (e.shiftKey) {
                 return fnTrue.call();
             } else {
                 return fnFalse.call();
             }
         },
-        isModifier: function(e, fn){
+        isModifier: function (e, fn) {
             var cmd = this.settings.modifiers[e.keyCode];
-            if(cmd){
+            if (cmd) {
                 return fn.call(null, cmd);
             }
             return false;
         },
-        special: (function() {
+        special: (function () {
             var special = {};
 
             special[key['backspace']] = true;
@@ -964,13 +1018,15 @@ var Medium = (function(w, d){
 
             return special;
         })(),
-        isSpecial: function(e){
+        isSpecial: function (e) {
 
-            if(this.cache.cmd){ return true; }
+            if (this.cache.cmd) {
+                return true;
+            }
 
             return typeof this.special[e.keyCode] !== 'undefined';
         },
-        navigational: (function() {
+        navigational: (function () {
             var navigational = {};
 
             navigational[key['upArrow']] = true;
@@ -980,7 +1036,7 @@ var Medium = (function(w, d){
 
             return navigational;
         })(),
-        isNavigational: function(e) {
+        isNavigational: function (e) {
             return typeof this.navigational[e.keyCode] !== 'undefined';
         },
 
@@ -1018,18 +1074,16 @@ var Medium = (function(w, d){
 
             return this;
         },
-        triggerEvent: function(element, eventName) {
-            var event;
+        triggerEvent: function (element, eventName) {
+            var e;
             if (d.createEvent) {
-                event = d.createEvent("HTMLEvents");
-                event.initEvent(eventName, true, true);
-                event.eventName = eventName;
-                element.dispatchEvent(event);
+                e = d.createEvent("HTMLEvents");
+                e.initEvent(eventName, true, true);
+                e.eventName = eventName;
+                element.dispatchEvent(e);
             } else {
-                event = d.createEventObject();
-                event.eventType = eventName;
-                event.eventName = eventName;
-                element.fireEvent("on" + event.eventType, event);
+                e = d.createEventObject();
+                element.fireEvent("on" + eventName, e);
             }
 
             return this;
@@ -1039,9 +1093,9 @@ var Medium = (function(w, d){
             for (var property in source) {
                 if (
                     source[property]
-                    && source[property].constructor
-                    && source[property].constructor === Object
-                ) {
+                        && source[property].constructor
+                        && source[property].constructor === Object
+                    ) {
                     destination[property] = destination[property] || {};
                     this.deepExtend(destination[property], source[property]);
                 } else {
@@ -1055,7 +1109,7 @@ var Medium = (function(w, d){
          * content, this ultimately converts it into
          * plain text before inserting the data.
          */
-        pasteHook: function(fn){
+        pasteHook: function (fn) {
             var textarea = d.createElement('textarea'),
                 el = this.element,
                 existingValue,
@@ -1074,7 +1128,7 @@ var Medium = (function(w, d){
             if (!wild) {
                 medium.makeUndoable();
             }
-            setTimeout(function(){
+            setTimeout(function () {
                 el.focus();
                 if (s.maxLength > 0) {
                     existingValue = html.text(el);
@@ -1088,14 +1142,15 @@ var Medium = (function(w, d){
                 //utils.html.deleteNode( textarea );
             }, 2);
         },
-        setupContents: function() {
+        setupContents: function () {
             var el = this.element,
                 children = el.children,
                 childNodes = el.childNodes,
                 initialParagraph;
 
             if (
-                children.length > 0
+                !this.settings.tags.paragraph
+                    || children.length > 0
                     || this.settings.mode === Medium.inlineMode
                 ) {
                 return;
@@ -1118,14 +1173,15 @@ var Medium = (function(w, d){
     /*
      * Handle Selection Logic
      */
-    Medium.Selection = function() {};
+    Medium.Selection = function () {
+    };
     Medium.Selection.prototype = {
-        setBridge: function(bridge) {
-            for(var i in bridge) {
+        setBridge: function (bridge) {
+            for (var i in bridge) {
                 this[i] = bridge[i];
             }
         },
-        saveSelection: function() {
+        saveSelection: function () {
             if (w.getSelection) {
                 var sel = w.getSelection();
                 if (sel.rangeCount > 0) {
@@ -1137,7 +1193,7 @@ var Medium = (function(w, d){
             return null;
         },
 
-        restoreSelection: function(range) {
+        restoreSelection: function (range) {
             if (range) {
                 if (w.getSelection) {
                     var sel = w.getSelection();
@@ -1153,21 +1209,22 @@ var Medium = (function(w, d){
     /*
      * Handle Cursor Logic
      */
-    Medium.Cursor = function() {};
+    Medium.Cursor = function () {
+    };
     Medium.Cursor.prototype = {
-        setBridge: function(bridge) {
-            for(var i in bridge) {
+        setBridge: function (bridge) {
+            for (var i in bridge) {
                 this[i] = bridge[i];
             }
         },
-        set: function(pos, el) {
+        set: function (pos, el) {
             var range,
                 html = this.html;
 
-            if( d.createRange ){
+            if (d.createRange) {
                 var selection = w.getSelection(),
                     lastChild = html.lastChild(),
-                    length =  html.text(lastChild).length-1,
+                    length = html.text(lastChild).length - 1,
                     toModify = el ? el : lastChild,
                     theLength = typeof pos !== 'undefined' ? pos : length;
 
@@ -1182,22 +1239,52 @@ var Medium = (function(w, d){
                 range.collapse(false);
                 range.select();
             }
+        },
+        parent: function () {
+            var target = null, range;
+
+            if (w.getSelection) {
+                range = w.getSelection().getRangeAt(0);
+                target = range.commonAncestorContainer;
+
+                target = (target.nodeType === 1
+                    ? target
+                    : target.parentNode
+                    );
+            }
+
+            else if (d.selection) {
+                target = d.selection.createRange().parentElement();
+            }
+
+            if (target.tagName == 'SPAN') {
+                target = target.parentNode;
+            }
+
+            return target;
+        },
+        caretToBeginning: function (el) {
+            this.set(0, el);
+        },
+        caretToEnd: function (el) {
+            this.set(this.html.text(el).length, el);
         }
     };
 
     /*
      * HTML Abstractions
      */
-    Medium.HtmlAssistant = function() {};
+    Medium.HtmlAssistant = function () {
+    };
     Medium.HtmlAssistant.prototype = {
-        setBridge: function(bridge) {
-            for(var i in bridge) {
+        setBridge: function (bridge) {
+            for (var i in bridge) {
                 this[i] = bridge[i];
             }
         },
-        text: function(node, val){
+        text: function (node, val) {
             node = node || this.settings.element;
-            if(val){
+            if (val) {
                 if ((node.textContent) && (typeof (node.textContent) != "undefined")) {
                     node.textContent = val;
                 } else {
@@ -1220,7 +1307,7 @@ var Medium = (function(w, d){
             //for good measure
             return '';
         },
-        changeTag: function(oldNode, newTag) {
+        changeTag: function (oldNode, newTag) {
             var newNode = d.createElement(newTag),
                 node,
                 nextNode;
@@ -1235,17 +1322,20 @@ var Medium = (function(w, d){
             oldNode.parentNode.insertBefore(newNode, oldNode);
             oldNode.parentNode.removeChild(oldNode);
         },
-        deleteNode: function(el){
+        deleteNode: function (el) {
             el.parentNode.removeChild(el);
         },
-        placeholders: function(){
+        placeholders: function () {
+            //in IE8, just gracefully degrade to no placeholders
+            if (!w.getComputedStyle) return;
+
             var that = this,
                 s = this.settings,
                 placeholder = this.medium.placeholder || (this.medium.placeholder = d.createElement('div')),
                 el = s.element,
                 style = placeholder.style,
                 elStyle = w.getComputedStyle(el, null),
-                qStyle = function(prop) {
+                qStyle = function (prop) {
                     return elStyle.getPropertyValue(prop)
                 },
                 utils = this.utils,
@@ -1256,14 +1346,14 @@ var Medium = (function(w, d){
             el.placeholder = placeholder;
 
             // Empty Editor
-            if( text.length < 1 && childCount < 2){
+            if (text.length < 1 && childCount < 2) {
 
                 if (!el.innerHTML.match('<' + s.tags.paragraph)) {
                     el.innerHTML = '';
                 }
 
                 // We need to add placeholders
-                if(s.placeholder.length > 0){
+                if (s.placeholder.length > 0) {
                     if (!placeholder.setup) {
                         placeholder.setup = true;
 
@@ -1316,11 +1406,11 @@ var Medium = (function(w, d){
                     style.minHeight = el.clientHeight + 'px';
                     style.minWidth = el.clientWidth + 'px';
 
-                    if ( s.mode !== Medium.inlineMode ) {
+                    if (s.mode !== Medium.inlineMode) {
                         utils.setupContents();
 
-                        if (childCount === 0) {
-                            cursor.set( 0, el.firstChild );
+                        if (childCount === 0 && el.firstChild) {
+                            cursor.set(0, el.firstChild);
                         }
                     }
                 }
@@ -1340,7 +1430,7 @@ var Medium = (function(w, d){
              */
             var s = this.settings,
                 attsToRemove = s.attributes.remove,
-                only = s.tags.outerLevel,
+                only = s.tags.outerLevel || null,
                 el = s.element,
                 children = el.children,
                 i,
@@ -1348,16 +1438,16 @@ var Medium = (function(w, d){
                 k;
 
             // Go through top level children
-            for(i=0; i<children.length; i++){
+            for (i = 0; i < children.length; i++) {
                 var child = children[i],
                     nodeName = child.nodeName,
                     shouldDelete = true;
 
                 // Remove attributes
-                for(k=0; k<attsToRemove.length; k++){
-                    if( child.hasAttribute( attsToRemove[k] ) ){
-                        if( child.getAttribute( attsToRemove[k] ) !== s.cssClasses.placeholder ){
-                            child.removeAttribute( attsToRemove[k] );
+                for (k = 0; k < attsToRemove.length; k++) {
+                    if (child.hasAttribute(attsToRemove[k])) {
+                        if (child.getAttribute(attsToRemove[k]) !== s.cssClasses.placeholder) {
+                            child.removeAttribute(attsToRemove[k]);
                         }
                     }
                 }
@@ -1367,15 +1457,15 @@ var Medium = (function(w, d){
                 }
 
                 // Determine if we should modify node
-                for(j=0; j<only.length;j++){
-                    if( only[j] === nodeName.toLowerCase() ){
+                for (j = 0; j < only.length; j++) {
+                    if (only[j] === nodeName.toLowerCase()) {
                         shouldDelete = false;
                     }
                 }
 
                 // Convert tags or delete
-                if(shouldDelete){
-                    switch( nodeName.toLowerCase() ){
+                if (shouldDelete) {
+                    switch (nodeName.toLowerCase()) {
                         case 'div':
                             this.html.changeTag(child, s.tags.paragraph);
                             break;
@@ -1404,14 +1494,14 @@ var Medium = (function(w, d){
                 var newEl = d.createElement(tag),
                     toFocus;
 
-                if( typeof isEditable !== "undefined" && isEditable === false ){
+                if (typeof isEditable !== "undefined" && isEditable === false) {
                     newEl.contentEditable = false;
                 }
                 if (newEl.innerHTML.length == 0) {
                     newEl.innerHTML = ' ';
                 }
-                if( afterElement && afterElement.nextSibling ){
-                    afterElement.parentNode.insertBefore( newEl, afterElement.nextSibling );
+                if (afterElement && afterElement.nextSibling) {
+                    afterElement.parentNode.insertBefore(newEl, afterElement.nextSibling);
                     toFocus = afterElement.nextSibling;
 
                 } else {
@@ -1419,15 +1509,15 @@ var Medium = (function(w, d){
                     toFocus = this.html.lastChild();
                 }
 
-                if( shouldFocus ){
+                if (shouldFocus) {
                     this.cache.focusedElement = toFocus;
-                    this.cursor.set( 0, toFocus );
+                    this.cursor.set(0, toFocus);
                 }
                 return newEl;
             }
             return null;
         },
-        containerAtCaret: function () {
+        baseAtCaret: function () {
             if (!this.medium.isActive()) return null;
 
             var sel = window.getSelection();
@@ -1447,8 +1537,8 @@ var Medium = (function(w, d){
 
             return null;
         },
-        baseContainerAtCaret: function() {
-            var container = this.containerAtCaret(),
+        atCaret: function () {
+            var container = this.baseAtCaret() || {},
                 el = this.element;
 
             if (container === false) return null;
@@ -1465,10 +1555,11 @@ var Medium = (function(w, d){
         }
     };
 
-    Medium.Action = function() {};
+    Medium.Action = function () {
+    };
     Medium.Action.prototype = {
-        setBridge: function(bridge) {
-            for(var i in bridge) {
+        setBridge: function (bridge) {
+            for (var i in bridge) {
                 this[i] = bridge[i];
             }
         },
@@ -1482,10 +1573,10 @@ var Medium = (function(w, d){
                 .addEvent(el, 'focus', intercept.focus)
                 .addEvent(el, 'blur', intercept.blur);
         },
-        preserveElementFocus: function(){
+        preserveElementFocus: function () {
             // Fetch node that has focus
             var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
-            if(anchorNode){
+            if (anchorNode) {
                 var cache = this.medium.cache,
                     s = this.settings,
                     cur = anchorNode.parentNode,
@@ -1495,20 +1586,20 @@ var Medium = (function(w, d){
                     i;
 
                 // anchorNode is our target if element is empty
-                if (cur===s.element){
+                if (cur === s.element) {
                     cur = anchorNode;
                 }
 
                 // Find our child index
-                for(i=0;i<children.length;i++){
-                    if(cur === children[i]){
+                for (i = 0; i < children.length; i++) {
+                    if (cur === children[i]) {
                         elementIndex = i;
                         break;
                     }
                 }
 
                 // Focused element is different
-                if( diff ){
+                if (diff) {
                     cache.focusedElement = cur;
                     cache.focusedElementIndex = elementIndex;
                 }
@@ -1516,23 +1607,23 @@ var Medium = (function(w, d){
         }
     };
 
-    Medium.Cache = function() {
+    Medium.Cache = function () {
         this.initialized = false;
         this.cmd = false;
         this.focusedElement = null
     };
     Medium.Cache.prototype = {
-        setBridge: function(bridge) {
-            for(var i in bridge) {
+        setBridge: function (bridge) {
+            for (var i in bridge) {
                 this[i] = bridge[i];
             }
         }
     };
 
-	//Modes;
-	Medium.inlineMode = 'inline';
-	Medium.partialMode = 'partial';
-	Medium.richMode = 'rich';
+    //Modes;
+    Medium.inlineMode = 'inline';
+    Medium.partialMode = 'partial';
+    Medium.richMode = 'rich';
 
     return Medium;
 }).call(this, window, document);
