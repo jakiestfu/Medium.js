@@ -1,22 +1,9 @@
 .Medium{
     position: relative;
+    min-height: 10px;
     }
 .Medium,
-.Medium *{
-    min-height: 1px;
-    outline: none;
-    resize: none;
-    zoom: 1;
-    -moz-box-sizing: border-box;
-	box-sizing: border-box;
-    }
-    
-.Medium p{
-	position: relative;
-    min-height: 12px;
-	}
-    .Medium p:first-child,
-    .Medium .Medium-placeholder + p{
+    .Medium p:first-child{
         margin-top:0;
         }
     .Medium p:last-child{
@@ -29,12 +16,12 @@
 .Medium-placeholder{
 	position: absolute;
 	}
-.Medium-placeholder div {
+.Medium-placeholder div{
 	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
 	filter: alpha(opacity=50);
 	opacity: 0.5;
 	position: absolute;
 	}
-.Medium-placeholder-rich div {
+.Medium-placeholder-rich div{
 	font-style: italic;
 	}

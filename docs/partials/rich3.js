@@ -21,9 +21,7 @@ var article3 = document.getElementById('article3'),
 	    }
     });
 
-article3Button.onmousedown = function(e) {
-	e.preventDefault();
-
+article3Button.onmousedown = function() {
 	var ul = document.createElement('ul'),
 		li = document.createElement('li');
 
@@ -38,4 +36,6 @@ article3Button.onmousedown = function(e) {
     article3Medium.focus();
     article3Medium.insertHtml(ul);
 	article3Medium.cursor.caretToBeginning(li);
+
+    return false;
 };
