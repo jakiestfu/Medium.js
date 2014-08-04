@@ -1380,7 +1380,7 @@ var Medium = (function (w, d) {
                         style.paddingRight = qStyle('padding-right');
 
                         //border
-                        style.borderStyle = qStyle('border-top-width');
+                        style.borderTopWidth = qStyle('border-top-width');
                         style.borderTopColor = qStyle('border-top-color');
                         style.borderTopStyle = qStyle('border-top-style');
                         style.borderBottomWidth = qStyle('border-bottom-width');
