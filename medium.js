@@ -602,9 +602,10 @@ var Medium = (function (w, d) {
                 settings = this.settings,
                 placeholder = this.placeholder || null;
 
-            if (placeholder !== null) {
+            if (placeholder !== null && placeholder.setup) {
                 //remove placeholder
                 placeholder.parentNode.removeChild(placeholder);
+                delete el.placeHolderActive;
             }
 
             //remove contenteditable
