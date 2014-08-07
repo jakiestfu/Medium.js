@@ -318,6 +318,14 @@ var Medium = (function (w, d) {
                         return true;
                     },
                     backspaceOrDeleteKey: function (e) {
+                        if (settings.onBackspaceOrDelete !== undefined) {
+                            var result = settings.onBackspaceOrDelete.call(medium, e, el);
+
+                            if (result) {
+                                return;
+                            }
+                        }
+
                         if (el.lastChild === null) return;
 
                         var lastChild = el.lastChild,
