@@ -365,7 +365,8 @@ var Medium = (function (w, d) {
                     cssClasses: {
                         editor: 'Medium',
                         pasteHook: 'Medium-paste-hook',
-                        placeholder: 'Medium-placeholder'
+                        placeholder: 'Medium-placeholder',
+                        clear: 'Medium-clear'
                     },
                     attributes: {
                         remove: ['style', 'class']
@@ -425,8 +426,8 @@ var Medium = (function (w, d) {
             // Editable
             el.contentEditable = true;
             el.className
-                += (" " + settings.cssClasses.editor)
-                + (" " + settings.cssClasses.editor + "-" + settings.mode);
+                += (' ' + settings.cssClasses.editor)
+                + (' ' + settings.cssClasses.editor + '-' + settings.mode);
 
             settings.tags = (settings.tags || {});
             if (settings.tags.outerLevel) {
@@ -587,7 +588,25 @@ var Medium = (function (w, d) {
 
         destroy: function () {
             var el = this.element,
-                intercept = this.intercept;
+                intercept = this.intercept,
+                settings = this.settings,
+                placeholder = this.placeholder || null;
+
+            if (placeholder !== null) {
+                //remove placeholder
+                placeholder.parentNode.removeChild(placeholder);
+            }
+
+            //remove contenteditable
+            el.removeAttribute('contenteditable');
+
+            //remove classes
+            el.className = trim(el.className
+                .replace(settings.cssClasses.editor, '')
+                .replace(settings.cssClasses.clear, '')
+                .replace(settings.cssClasses.editor + '-' + settings.mode, ''));
+
+            //remove events
             this.utils
                 .removeEvent(el, 'keyup', intercept.up)
                 .removeEvent(el, 'keydown', intercept.down)
@@ -1395,13 +1414,13 @@ var Medium = (function (w, d) {
                         //end box model
 
                         //element setup
-                        placeholder.className = s.cssClasses.placeholder + ' ' + s.cssClasses.placeholder + "-" + s.mode;
+                        placeholder.className = s.cssClasses.placeholder + ' ' + s.cssClasses.placeholder + '-' + s.mode;
                         placeholder.innerHTML = '<div>' + s.placeholder + '</div>';
                         el.parentNode.insertBefore(placeholder, el);
                     }
-                    el.style.background = 'transparent';
-                    el.style.backgroundColor = 'transparent';
-                    el.style.borderColor = 'transparent';
+
+                    el.className += ' ' + s.cssClasses.clear;
+
                     style.display = '';
                     // Add base P tag and do auto focus, give it a min height if el has one
                     style.minHeight = el.clientHeight + 'px';
@@ -1415,11 +1434,11 @@ var Medium = (function (w, d) {
                         }
                     }
                 }
-            } else {
+                el.placeHolderActive = true;
+            } else if (el.placeHolderActive) {
+                el.placeHolderActive = false;
                 style.display = 'none';
-                el.style.background = style.background;
-                el.style.backgroundColor = style.backgroundColor;
-                el.style.borderColor = style.borderColor;
+                el.className = trim(el.className.replace(s.cssClasses.clear, ''));
                 utils.setupContents();
             }
         },

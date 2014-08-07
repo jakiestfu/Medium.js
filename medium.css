@@ -2,6 +2,11 @@
     position: relative;
     min-height: 10px;
     }
+.Medium-clear{
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
 .Medium,
     .Medium p:first-child{
         margin-top:0;
