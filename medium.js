@@ -318,6 +318,8 @@ var Medium = (function (w, d) {
                         return true;
                     },
                     backspaceOrDeleteKey: function (e) {
+                        if (el.lastChild === null) return;
+
                         var lastChild = el.lastChild,
                             beforeLastChild = lastChild.previousSibling;
 
@@ -1367,6 +1369,7 @@ var Medium = (function (w, d) {
 
             // Empty Editor
             if (text.length < 1 && childCount < 2) {
+                if (el.placeHolderActive) return;
 
                 if (!el.innerHTML.match('<' + s.tags.paragraph)) {
                     el.innerHTML = '';
