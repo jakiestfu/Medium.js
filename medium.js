@@ -549,6 +549,9 @@ var Medium = (function (w, d) {
         value: function (value) {
             if (typeof value !== 'undefined') {
                 this.element.innerHTML = value;
+
+	            this.html.clean();
+	            this.html.placeholders();
             } else {
                 return this.element.innerHTML;
             }
