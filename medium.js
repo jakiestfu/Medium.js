@@ -261,17 +261,22 @@ var Medium = (function (w, d) {
                         quote: function (e) {
                         },
                         paste: function (e) {
+	                        medium.makeUndoable();
                             if (settings.pasteAsText) {
                                 var sel = utils.selection.saveSelection();
                                 utils.pasteHook(function (text) {
                                     utils.selection.restoreSelection(sel);
 
-                                    (new Medium.Html(medium, text.replace(/\n/g, '<br>')))
-                                        .setClean(false)
-                                        .insert(settings.beforeInsertHtml);
+	                                text = text.replace(/\n/g, '<br>');
 
+                                    (new Medium.Html(medium, text))
+                                        .setClean(false)
+                                        .insert(settings.beforeInsertHtml, true);
                                 });
+                            } else {
+	                            html.clean();
                             }
+	                        html.placeholders();
                         }
                     },
                     enterKey: function (e) {
@@ -358,7 +363,7 @@ var Medium = (function (w, d) {
                         'b': 'bold',
                         'i': 'italicize',
                         'u': 'underline',
-                        'p': 'paste'
+                        'v': 'paste'
                     },
                     tags: {
                         'break': 'br',
@@ -703,10 +708,11 @@ var Medium = (function (w, d) {
             /**
              * @methodOf Medium.Injector
              * @param {String|HtmlElement} htmlRaw
+             * @param {Boolean} [selectInserted]
              * @returns {null}
              */
-            inject: function (htmlRaw) {
-                this.insertHTML(htmlRaw);
+            inject: function (htmlRaw, selectInserted) {
+                this.insertHTML(htmlRaw, selectInserted);
                 return null;
             }
         };
@@ -958,15 +964,16 @@ var Medium = (function (w, d) {
         /**
          * @methodOf Medium.Html
          * @param {Function} [fn]
+         * @param {Boolean} [selectInserted]
          * @returns {HtmlElement}
          */
-        insert: function (fn) {
+        insert: function (fn, selectInserted) {
             if (Medium.activeElement === this.element) {
                 if (fn) {
                     fn.apply(this);
                 }
 
-                var inserted = this.injector.inject(this.html);
+                var inserted = this.injector.inject(this.html, selectInserted);
 
                 if (this.clean) {
                     //cleanup
@@ -1167,7 +1174,7 @@ var Medium = (function (w, d) {
                     }
                 }
                 fn(textarea.value);
-                //utils.html.deleteNode( textarea );
+                html.deleteNode( textarea );
             }, 2);
         },
         setupContents: function () {
