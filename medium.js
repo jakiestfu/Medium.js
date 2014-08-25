@@ -152,6 +152,9 @@ var Medium = (function (w, d) {
                     down: function (e) {
                         e = e || w.event;
 
+	                    //in Chrome it sends out this event before every regular event, not sure why
+	                    if (e.keyCode === 229) return;
+
                         utils.isCommand(e, function () {
                             cache.cmd = true;
                         }, function () {
