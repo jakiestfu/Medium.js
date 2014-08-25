@@ -152,7 +152,7 @@ var Medium = (function (w, d) {
                     down: function (e) {
                         e = e || w.event;
 
-	                    //in Chrome it sends out this event before every regular event, not sure why
+	                    //Chrome sends this event before every regular event, not sure why
 	                    if (e.keyCode === 229) return;
 
                         utils.isCommand(e, function () {
@@ -272,11 +272,14 @@ var Medium = (function (w, d) {
                                     (new Medium.Html(medium, text))
                                         .setClean(false)
                                         .insert(settings.beforeInsertHtml, true);
+
+	                                html.clean();
+	                                html.placeholders();
                                 });
                             } else {
 	                            html.clean();
+	                            html.placeholders();
                             }
-	                        html.placeholders();
                         }
                     },
                     enterKey: function (e) {
@@ -290,7 +293,8 @@ var Medium = (function (w, d) {
                                 children = el.children,
                                 lastChild = focusedElement === el.lastChild ? el.lastChild : null,
                                 makeHR,
-                                secondToLast;
+                                secondToLast,
+	                            paragraph;
 
                             if (
                                 lastChild
@@ -315,11 +319,14 @@ var Medium = (function (w, d) {
                                 }
 
                                 if (makeHR) {
-                                    html.deleteNode(lastChild);
-                                    html.addTag(settings.tags.horizontalRule, false, false, focusedElement);
+                                    html.addTag(settings.tags.horizontalRule, false, true, focusedElement);
                                     focusedElement = focusedElement.nextSibling;
                                 }
-                                html.addTag(settings.tags.paragraph, true, null, focusedElement);
+
+	                            if ((paragraph = html.addTag(settings.tags.paragraph, true, null, focusedElement)) !== null) {
+		                            paragraph.innerHTML = '';
+		                            cursor.set(0, paragraph);
+	                            }
                             }
                         }
 
@@ -390,7 +397,53 @@ var Medium = (function (w, d) {
                     },
                     beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
                     },
-                    keyContext: null
+                    keyContext: null,
+	                pasteEventHandler: function(e) {
+		                e = e || w.event;
+		                medium.makeUndoable();
+		                var length = medium.value().length,
+			                totalLength;
+
+		                if (settings.pasteAsText) {
+			                utils.preventDefaultEvent(e);
+			                var
+				                sel = utils.selection.saveSelection(),
+				                text = prompt(Medium.Messages.pastHere) || '';
+
+			                if (text.length > 0) {
+				                el.focus();
+				                Medium.activeElement = el;
+				                utils.selection.restoreSelection(sel);
+
+				                //encode the text first
+				                text = html.encodeHtml(text);
+
+				                //cut down it's length
+				                totalLength = text.length + length;
+				                if (settings.maxLength > 0 && totalLength > settings.maxLength) {
+					                text = text.substring(0, settings.maxLength - length);
+				                }
+
+				                if (settings.mode !== Medium.inlineMode) {
+			                        text = text.replace(/\n/g, '<br>');
+				                }
+
+				                (new Medium.Html(medium, text))
+					                .setClean(false)
+					                .insert(settings.beforeInsertHtml, true);
+
+				                html.clean();
+			                    html.placeholders();
+
+				                return false;
+			                }
+		                } else {
+			                setTimeout(function() {
+				                html.clean();
+				                html.placeholders();
+			                }, 20);
+		                }
+	                }
                 },
                 settings = utils.deepExtend(defaultSettings, userSettings),
                 el,
@@ -625,7 +678,8 @@ var Medium = (function (w, d) {
                 .removeEvent(el, 'keyup', intercept.up)
                 .removeEvent(el, 'keydown', intercept.down)
                 .removeEvent(el, 'focus', intercept.focus)
-                .removeEvent(el, 'blur', intercept.focus);
+                .removeEvent(el, 'blur', intercept.focus)
+                .removeEvent(el, 'paste', settings.pasteEventHandler);
         },
 
         // Clears the element and restores the placeholder
@@ -1194,9 +1248,13 @@ var Medium = (function (w, d) {
             //has content, but no children
             if (childNodes.length > 0) {
                 initialParagraph = d.createElement(this.settings.tags.paragraph);
-                initialParagraph.innerHTML = el.innerHTML + '&nbsp;';
+	            if (el.innerHTML.match('^[&]nbsp[;]')) {
+		            el.innerHTML = el.innerHTML.substring(6, el.innerHTML.length - 1);
+	            }
+                initialParagraph.innerHTML = el.innerHTML;
                 el.innerHTML = '';
                 el.appendChild(initialParagraph);
+	            this.cursor.set(initialParagraph.innerHTML.length, initialParagraph);
             } else {
                 initialParagraph = d.createElement(this.settings.tags.paragraph);
                 initialParagraph.innerHTML = '&nbsp;';
@@ -1261,7 +1319,7 @@ var Medium = (function (w, d) {
                     lastChild = html.lastChild(),
                     length = html.text(lastChild).length - 1,
                     toModify = el ? el : lastChild,
-                    theLength = typeof pos !== 'undefined' ? pos : length;
+	                theLength = ((typeof pos !== 'undefined') && (pos !== null) ? pos : length);
 
                 range = d.createRange();
                 range.setStart(toModify, theLength);
@@ -1317,6 +1375,10 @@ var Medium = (function (w, d) {
                 this[i] = bridge[i];
             }
         },
+	    encodeHtml: function ( html ) {
+		    return d.createElement( 'a' ).appendChild(
+			    d.createTextNode( html ) ).parentNode.innerHTML;
+	    },
         text: function (node, val) {
             node = node || this.settings.element;
             if (val) {
@@ -1607,7 +1669,8 @@ var Medium = (function (w, d) {
                 .addEvent(el, 'keyup', intercept.up)
                 .addEvent(el, 'keydown', intercept.down)
                 .addEvent(el, 'focus', intercept.focus)
-                .addEvent(el, 'blur', intercept.blur);
+                .addEvent(el, 'blur', intercept.blur)
+	            .addEvent(el, 'paste', this.settings.pasteEventHandler);
         },
         preserveElementFocus: function () {
             // Fetch node that has focus
@@ -1660,6 +1723,9 @@ var Medium = (function (w, d) {
     Medium.inlineMode = 'inline';
     Medium.partialMode = 'partial';
     Medium.richMode = 'rich';
+	Medium.Messages = {
+		pastHere: 'Paste Here'
+	};
 
     return Medium;
 }).call(this, window, document);
