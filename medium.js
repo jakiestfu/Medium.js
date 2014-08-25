@@ -152,6 +152,9 @@ var Medium = (function (w, d) {
                     down: function (e) {
                         e = e || w.event;
 
+	                    //in Chrome it sends out this event before every regular event, not sure why
+	                    if (e.keyCode === 229) return;
+
                         utils.isCommand(e, function () {
                             cache.cmd = true;
                         }, function () {
@@ -258,17 +261,26 @@ var Medium = (function (w, d) {
                         quote: function (e) {
                         },
                         paste: function (e) {
+	                        medium.makeUndoable();
                             if (settings.pasteAsText) {
                                 var sel = utils.selection.saveSelection();
                                 utils.pasteHook(function (text) {
                                     utils.selection.restoreSelection(sel);
 
-                                    (new Medium.Html(medium, text.replace(/\n/g, '<br>')))
-                                        .setClean(false)
-                                        .insert(settings.beforeInsertHtml);
+	                                text = text.replace(/\n/g, '<br>');
 
+                                    (new Medium.Html(medium, text))
+                                        .setClean(false)
+                                        .insert(settings.beforeInsertHtml, true);
+
+	                                html.clean();
+	                                html.placeholders();
                                 });
+                            } else {
+	                            html.clean();
+	                            html.placeholders();
                             }
+	                        html.placeholders();
                         }
                     },
                     enterKey: function (e) {
@@ -282,7 +294,8 @@ var Medium = (function (w, d) {
                                 children = el.children,
                                 lastChild = focusedElement === el.lastChild ? el.lastChild : null,
                                 makeHR,
-                                secondToLast;
+                                secondToLast,
+	                            paragraph;
 
                             if (
                                 lastChild
@@ -307,11 +320,14 @@ var Medium = (function (w, d) {
                                 }
 
                                 if (makeHR) {
-                                    html.deleteNode(lastChild);
-                                    html.addTag(settings.tags.horizontalRule, false, false, focusedElement);
+                                    html.addTag(settings.tags.horizontalRule, false, true, focusedElement);
                                     focusedElement = focusedElement.nextSibling;
                                 }
-                                html.addTag(settings.tags.paragraph, true, null, focusedElement);
+
+	                            if ((paragraph = html.addTag(settings.tags.paragraph, true, null, focusedElement)) !== null) {
+		                            paragraph.innerHTML = '';
+		                            cursor.set(0, paragraph);
+	                            }
                             }
                         }
 
@@ -363,7 +379,7 @@ var Medium = (function (w, d) {
                         'b': 'bold',
                         'i': 'italicize',
                         'u': 'underline',
-                        'p': 'paste'
+                        'v': 'paste'
                     },
                     tags: {
                         'break': 'br',
@@ -390,7 +406,53 @@ var Medium = (function (w, d) {
                     },
                     beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
                     },
-                    keyContext: null
+                    keyContext: null,
+	                pasteEventHandler: function(e) {
+		                e = e || w.event;
+		                medium.makeUndoable();
+		                var length = medium.value().length,
+			                totalLength;
+
+		                if (settings.pasteAsText) {
+			                utils.preventDefaultEvent(e);
+			                var
+				                sel = utils.selection.saveSelection(),
+				                text = prompt(Medium.Messages.pastHere) || '';
+
+			                if (text.length > 0) {
+				                el.focus();
+				                Medium.activeElement = el;
+				                utils.selection.restoreSelection(sel);
+
+				                //encode the text first
+				                text = html.encodeHtml(text);
+
+				                //cut down it's length
+				                totalLength = text.length + length;
+				                if (settings.maxLength > 0 && totalLength > settings.maxLength) {
+					                text = text.substring(0, settings.maxLength - length);
+				                }
+
+				                if (settings.mode !== Medium.inlineMode) {
+			                        text = text.replace(/\n/g, '<br>');
+				                }
+
+				                (new Medium.Html(medium, text))
+					                .setClean(false)
+					                .insert(settings.beforeInsertHtml, true);
+
+				                html.clean();
+			                    html.placeholders();
+
+				                return false;
+			                }
+		                } else {
+			                setTimeout(function() {
+				                html.clean();
+				                html.placeholders();
+			                }, 20);
+		                }
+	                }
                 },
                 settings = utils.deepExtend(defaultSettings, userSettings),
                 el,
@@ -549,6 +611,9 @@ var Medium = (function (w, d) {
         value: function (value) {
             if (typeof value !== 'undefined') {
                 this.element.innerHTML = value;
+
+	            this.html.clean();
+	            this.html.placeholders();
             } else {
                 return this.element.innerHTML;
             }
@@ -602,9 +667,10 @@ var Medium = (function (w, d) {
                 settings = this.settings,
                 placeholder = this.placeholder || null;
 
-            if (placeholder !== null) {
+            if (placeholder !== null && placeholder.setup) {
                 //remove placeholder
                 placeholder.parentNode.removeChild(placeholder);
+                delete el.placeHolderActive;
             }
 
             //remove contenteditable
@@ -704,10 +770,11 @@ var Medium = (function (w, d) {
             /**
              * @methodOf Medium.Injector
              * @param {String|HtmlElement} htmlRaw
+             * @param {Boolean} [selectInserted]
              * @returns {null}
              */
-            inject: function (htmlRaw) {
-                this.insertHTML(htmlRaw);
+            inject: function (htmlRaw, selectInserted) {
+                this.insertHTML(htmlRaw, selectInserted);
                 return null;
             }
         };
@@ -959,15 +1026,16 @@ var Medium = (function (w, d) {
         /**
          * @methodOf Medium.Html
          * @param {Function} [fn]
+         * @param {Boolean} [selectInserted]
          * @returns {HtmlElement}
          */
-        insert: function (fn) {
+        insert: function (fn, selectInserted) {
             if (Medium.activeElement === this.element) {
                 if (fn) {
                     fn.apply(this);
                 }
 
-                var inserted = this.injector.inject(this.html);
+                var inserted = this.injector.inject(this.html, selectInserted);
 
                 if (this.clean) {
                     //cleanup
@@ -1168,7 +1236,7 @@ var Medium = (function (w, d) {
                     }
                 }
                 fn(textarea.value);
-                //utils.html.deleteNode( textarea );
+                html.deleteNode( textarea );
             }, 2);
         },
         setupContents: function () {
@@ -1189,9 +1257,13 @@ var Medium = (function (w, d) {
             //has content, but no children
             if (childNodes.length > 0) {
                 initialParagraph = d.createElement(this.settings.tags.paragraph);
-                initialParagraph.innerHTML = el.innerHTML + '&nbsp;';
+	            if (el.innerHTML.match('^[&]nbsp[;]')) {
+		            el.innerHTML = el.innerHTML.substring(6, el.innerHTML.length - 1);
+	            }
+                initialParagraph.innerHTML = el.innerHTML;
                 el.innerHTML = '';
                 el.appendChild(initialParagraph);
+	            this.cursor.set(initialParagraph.innerHTML.length, initialParagraph);
             } else {
                 initialParagraph = d.createElement(this.settings.tags.paragraph);
                 initialParagraph.innerHTML = '&nbsp;';
@@ -1256,7 +1328,7 @@ var Medium = (function (w, d) {
                     lastChild = html.lastChild(),
                     length = html.text(lastChild).length - 1,
                     toModify = el ? el : lastChild,
-                    theLength = typeof pos !== 'undefined' ? pos : length;
+	                theLength = ((typeof pos !== 'undefined') && (pos !== null) ? pos : length);
 
                 range = d.createRange();
                 range.setStart(toModify, theLength);
@@ -1312,6 +1384,10 @@ var Medium = (function (w, d) {
                 this[i] = bridge[i];
             }
         },
+	    encodeHtml: function ( html ) {
+		    return d.createElement( 'a' ).appendChild(
+			    d.createTextNode( html ) ).parentNode.innerHTML;
+	    },
         text: function (node, val) {
             node = node || this.settings.element;
             if (val) {
@@ -1555,7 +1631,7 @@ var Medium = (function (w, d) {
         baseAtCaret: function () {
             if (!this.medium.isActive()) return null;
 
-            var sel = window.getSelection();
+            var sel = w.getSelection ? w.getSelection() : document.selection;
 
             if (sel.rangeCount) {
                 var selRange = sel.getRangeAt(0),
@@ -1655,11 +1731,14 @@ var Medium = (function (w, d) {
         }
     };
 
-	//Modes;
-	Medium.inlineMode = 'inline';
-	Medium.partialMode = 'partial';
-	Medium.richMode = 'rich';
-    Medium.inlineRichMode = 'inlineRich';
+    //Modes;
+    Medium.inlineMode = 'inline';
+    Medium.partialMode = 'partial';
+    Medium.richMode = 'rich';
+	Medium.inlineRichMode = 'inlineRich';
+	Medium.Messages = {
+		pastHere: 'Paste Here'
+	};
 
     return Medium;
 }).call(this, window, document);
