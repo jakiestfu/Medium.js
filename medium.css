@@ -14,6 +14,10 @@
     .Medium p:last-child{
         margin-bottom:0;
         }
+    .Medium p:empty {
+        display: block;
+	    height: 1em;
+    }
 .Medium-paste-hook{
     position: absolute;
     opacity:0;
