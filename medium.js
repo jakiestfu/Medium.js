@@ -1540,6 +1540,7 @@ var Medium = (function (w, d) {
                 only = s.tags.outerLevel || null,
                 el = s.element,
                 children = el.children,
+                text,
                 i,
                 j,
                 k;
@@ -1585,12 +1586,14 @@ var Medium = (function (w, d) {
                                 if (child === child.parentNode.firstChild) {
                                     break;
                                 }
-                                var text = document.createTextNode("");
+                                text = document.createTextNode("");
                                 text.innerHTML = '&nbsp';
                                 child.parentNode.insertBefore(text, child);
                                 break;
                             }
                         default:
+                            text = document.createTextNode(child.innerHTML);
+                            child.parentNode.insertBefore(text, child);
                             this.html.deleteNode(child);
                             break;
                     }
