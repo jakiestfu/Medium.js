@@ -1,5 +1,4 @@
 var article3 = document.getElementById('article3'),
-    article3Button = document.getElementById('article3Button'),
     article3Medium = new Medium({
         element: article3,
         mode: Medium.richMode,
@@ -21,7 +20,7 @@ var article3 = document.getElementById('article3'),
 	    }
     });
 
-article3Button.onmousedown = function() {
+document.getElementById('rich3-li').onmousedown = function() {
 	var ul = document.createElement('ul'),
 		li = document.createElement('li');
 
@@ -30,7 +29,7 @@ article3Button.onmousedown = function() {
 	ul.appendChild(li);
 
 	li.innerHTML = 'I came from an Object!';
-	li.style.color = 'blue';
+	li.style.color = '#57ad68';
 	li.className = 'li-special';
 
     article3Medium.focus();
