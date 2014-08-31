@@ -56,15 +56,16 @@
             </div>
 
             <h4>Inspired</h4>
-            <p>This script is inspired by <a href="http://medium.com" target="_blank">Medium's</a> beautiful content editor, something we have aspired to emulate since it's inception.</p>
+            <p>This script is inspired by <a href="http://mediFum.com" target="_blank">Medium's</a> beautiful content editor, something we have aspired to emulate since it's inception.</p>
 
             <h4>Authors</h4>
-            <p>This code is brought to you by
-                <a href="http://jakiestfu.com/" target="_blank">jakiestfu</a> author of <a href="http://github.com/jakiestfu/Snap.js/" target="_blank">Snap.js</a> and <a href="http://jakiestfu.github.io/Behave.js/" target="_blank">Behave.js</a><br>
-                and
-                <a href="http://visop-dev.com/" target="_blank">Robert Plummer</a> author of <a href="http://wikiLingoDOesThat.com/" target="_blank">wikiLingo</a> and <a href="http://github.com/Spreadsheets/jQuery.sheet" target="_blank">jQuery.sheet</a>.
-                Please share!
-            </p>
+            <p>This code is brought to you by:</p>
+            <ul class="list">
+                <li><a href="http://jakiestfu.com/" target="_blank">Jacob Kelly</a> <br>( author of <a href="http://github.com/jakiestfu/Snap.js/" target="_blank">Snap.js</a> and <a href="http://jakiestfu.github.io/Behave.js/" target="_blank">Behave.js</a> )</li>
+                <li><a href="http://visop-dev.com/" target="_blank">Robert Plummer</a> <br>( author of <a href="http://wikiLingoDOesThat.com/" target="_blank">wikiLingo</a> and <a href="http://github.com/Spreadsheets/jQuery.sheet" target="_blank">jQuery.sheet</a> )</li>
+                <li><a href="https://github.com/jakiestfu/Medium.js/graphs/contributors">All these amazing people!</a>.</li>
+            </ul>
+
 
 
             <hr />
@@ -72,9 +73,9 @@
 
             <h3 id="Features">Features</h3>
             <ul>
+	            <li>Free</li>
                 <li>Library Independent</li>
                 <li>Modern browser compliant</li>
-                <li>Free</li>
                 <li>Contributions Welcomes</li>
                 <li>WYSIWYG editor or Toolbar ready</li>
                 <li>Keeps HTML organized and semantic (even on paste events)</li>
@@ -89,13 +90,83 @@
 
             <hr />
 
-
-
             <h3 id="Usage">Usage</h3>
             <pre data-src="usage.html"></pre>
             <p>Simply include the Medium.js library and CSS, and you are ready to rock. <b>No dependencies</b></p>
-            
+
             <hr />
+
+
+
+            <h3 id="Demos">Demos</h3>
+            <div class="demo-container">
+	            <h4 id="inline"><a href="#inline">Inline</a></h4>
+	            <div data-src="inline.js">
+		            <div id="title" class="title demo"></div>
+	            </div>
+            </div>
+
+            <div class="demo-container">
+	            <h4 id="partial"><a href="#partial">Partial</a></h4>
+	            <div data-src="partial.js">
+		            <div id="comment" class="comment demo"></div>
+	            </div>
+            </div>
+
+            <div class="demo-container">
+	            <h4 id="rich"><a href="#rich">Rich</a></h4>
+	            <div data-src="rich.js">
+		            <div id="article" class="article demo"></div>
+	            </div>
+            </div>
+
+            <div class="demo-container">
+	            <h4 id="insert"><a href="#insert">Rich with Insert Html</a></h4>
+	            <div id="rich2" data-src="rich2.js">
+		            <div class="toolbar-top">
+			            <span class="toolbar">
+				            <span id="rich2-insert">INSERT</span>
+			            </span>
+		            </div>
+		            <div id="article2" class="article demo"></div>
+	            </div>
+            </div>
+
+            <div class="domesticated demo-container">
+	            <h4 id="insert_object"><a href="#insert_object">Rich with Insert <u>Html Object</u> (domesticated only)</a></h4>
+	            <div id="rich3" data-src="rich3.js">
+		            <div class="toolbar-top">
+				            <span class="toolbar">
+					            <span id="rich3-li">LI</span>
+				            </span>
+		            </div>
+		            <div id="article3" class="article demo"></div>
+	            </div>
+            </div>
+
+            <div class="domesticated demo-container">
+	            <h4 id="invoke"><a href="#invoke">Rich with Invoke Element (domesticated only)</a></h4>
+	            <div id="rich4" data-src="rich4.js">
+		            <div class="toolbar-top">
+			            <span class="toolbar">
+				            <span id="rich4-bold" style="font-weight: bold; color: #66d9ef">B</span>
+				            <span id="rich4-underline" style="text-decoration: underline; color: #a6e22e">U</span>
+				            <span id="rich4-italic" style="font-style: italic; color: #f92672">I</span>
+				            <span id="rich4-strike" style="text-decoration: line-through; color: #e6db74">S</span>
+			            </span>
+		            </div>
+		            <div id="article4" class="article demo">
+			            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce rutrum dapibus dictum. Etiam tempor a enim id sagittis. Donec sodales varius elementum. In iaculis consequat enim, et pellentesque erat accumsan ut. Nulla nec lacus nisi. Nullam id interdum risus, sit amet sollicitudin ipsum. Ut vitae rutrum nulla.<br />
+			            <br />
+			            Vivamus eget dolor est. Donec lobortis felis metus, vel placerat nunc iaculis id. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Praesent eu neque dictum, pulvinar massa faucibus, accumsan diam. Vestibulum pharetra massa dolor, ut tincidunt nisl suscipit vitae.
+		            </div>
+	            </div>
+            </div>
+
+
+            <hr/>
+
+
             
             <h3 id="Semantic">Semantic</h3>
             <pre data-src="semantic.html"></pre>
@@ -156,19 +227,22 @@
                         <code class="ref">beforeInvokeElement()</code>:
                         Triggered just before an element is invoked.
                         An element is invoked over a highlighted area.
-                        The <code>this</code> within the context of this function is <code>Medium.Element</code> that is about to be invoked.</div>
+                        The <code>this</code> within the context of this function is <code>Medium.Element</code> that is about to be invoked.
+                    </div>
                 </li>
                 <li>
                     <div>
                         <code class="ref">beforeInsertHtml()</code>:
                         Triggered just before html is added.
                         Inserted at cursor, but only if medium's element has focus.
-                        The <code>this</code> within the context of this function is <code>Medium.Html</code> that is about to be inserted.</div>
+                        The <code>this</code> within the context of this function is <code>Medium.Html</code> that is about to be inserted.
+                    </div>
                 </li>
                 <li>
                     <div>
                         <code class="ref">beforeAddTag(tag, shouldFocus, isEditable, afterElement)</code>:
                         Triggered just before a tag is told to be created from a keyboard action.
+                    </div>
                 </li>
                 <li>
                     <div>
@@ -247,22 +321,19 @@
             <div class="faq">
                 <h3 id="FAQ">FAQ</h3>
                 <h4>What is the purpose of Medium.js?</h4>
-                <p>Medium.js overrides many default keyboard events and substitutes a more cross-browser compliant way to interact with <code>contenteditable</code> elements. This means that you can use <code>contenteditable</code> without fearing your user is going to enter poor or invalid HTML. It keeps things tight, organized, and semantic.</p>
+                <p>Medium.js allows you to take total control over <code>contenteditable</code> elements. This means that you can use <code>contenteditable</code> without fearing your user is going to enter poor or invalid HTML. It keeps things tight, organized, and semantic.</p>
 
                 <h4>Why are there different behaviours available?</h4>
-                <p>Medium.js was written to be used in many environments, of which, toolbars and WYSIWYG (what you see is what you get editors) editors are used commonly.  Plus, when domesticated, you can teach contenteditable all kinds of new tricks ;).</p>
+                <p>Medium.js was written to be used in many environments, some need more stability than others.  Domesticated offers this stability when needed.</p>
 
-                <h4>Does this give me the cool highlighting toolbar like Medium's editor</h4>
-                <p><b>No</b>, it does not. If you're looking for a script that adds support for Medium's toolbar, take a look at <a href="http://wikiLingoDoesThat.com/">wikiLingo</a>, or <a href="http://zenpen.io/" target="_blank">ZenPen.io</a></p>
+                <h4>Does this give me the cool toolbar like Medium's editor?</h4>
+                <p>The focus of Medium.js has been to make introducing a toolbar, any toolbar, YOUR toolbar, ultra easy.  Take a look at <a href="http://wikiLingoDoesThat.com/">wikiLingo</a> for example.  More to come!</p>
                 
-                <h4>There are weird style issues when inserting empty tags. What gives?</h4>
-                <p>Empty tags do not have what is called <code>layout</code>, a sort of property of an element. You need to set a <code>min-height</code> on the paragraph element you specify. </p>
-                
-                <h4>Medium.js works in modern browsers</h4>
-                <p>This is because of you. But if you find a bug, please fork Medium.js and contribute so we can continue wide support!</p>
+                <h4>Medium.js works in all browsers!?!</h4>
+                <p>Yup. This is because of you. But if you find a bug, please let us know or fork Medium.js and contribute so we can continue wide support!</p>
 
                 <h4>Who uses Medium.js</h4>
-                <ul>
+                <ul class="list">
                     <li><a href="http://tiki.org">tiki Wiki CMS Groupware</a></li>
                     <li><a href="http://wikiLingoDoesThat.com/">wikiLingo</a></li>
                     <li>More to come</li>
@@ -272,50 +343,6 @@
 
             <hr />
 
-
-            <h3 id="Demos">Demos</h3>
-            <div>
-                <h4>Inline</h4>
-                <pre data-src="inline.js"></pre>
-                <div id="title" class="title demo"></div>
-            </div>
-
-            <div>
-                <h4>Partial</h4>
-                <pre data-src="partial.js"></pre>
-                <div id="comment" class="comment demo"></div>
-            </div>
-
-            <div>
-                <h4>Rich</h4>
-                <pre data-src="rich.js"></pre>
-                <div id="article" class="article demo"></div>
-            </div>
-
-            <div>
-                <h4>Rich with Insert Html</h4>
-                <pre data-src="rich2.js"></pre>
-                <input id="article2Button" type="button" value="Insert"/>
-                <div id="article2" class="article demo"></div>
-            </div>
-
-            <div class="domesticated">
-                <h4>Rich with Insert Html Object (domesticated only)</h4>
-                <pre data-src="rich3.js"></pre>
-                <input id="article3Button" type="button" value="Insert"/>
-                <div id="article3" class="article demo">
-                </div>
-            </div>
-
-            <div class="domesticated">
-                <h4>Rich with Invoke Element (domesticated only)</h4>
-                <pre data-src="rich4.js"></pre>
-                <input id="article4Button" type="button" value="Invoke Element"/>
-                <div id="article4" class="article demo">Select me, then click the "Invoke Element" above.</div>
-            </div>
-
-
-            <hr/>
 
 
             <h4 id="Support">Support</h4>
@@ -337,13 +364,13 @@
             <ul class="shadow">
                 <li class="catch"><a href="#ThisisMediumjs">This is Medium.js</a></li>
                 <li><a href="#Features">Features</a></li>
-                <li><a href="#Usage">Usage</a></li>
+	            <li><a href="#Usage">Usage</a></li>
+	            <li><a href="#Demos">Demos</a></li>
                 <li><a href="#Semantic">Semantic</a></li>
                 <li><a href="#Options">Options</a></li>
                 <li><a href="#Behavior">Behavior</a></li>
                 <li><a href="#Methods">Methods</a></li>
                 <li><a href="#FAQ">FAQ</a></li>
-                <li><a href="#Demos">Demos</a></li>
                 <li><a href="#Support">Support</a></li>
                 <li><a href="#Licensing">Licensing</a></li>
             </ul>
@@ -361,21 +388,14 @@
         <script src="../bower_components/rangy/uncompressed/rangy-cssclassapplier.js"></script>
         <script src="../medium.js"></script>
         <script src="prism.js"></script>
+
+        <script src="docs.js"></script>
+
         <script src="partials/inline.js"></script>
         <script src="partials/partial.js"></script>
         <script src="partials/rich.js"></script>
         <script src="partials/rich2.js"></script>
         <script src="partials/rich3.js"></script>
         <script src="partials/rich4.js"></script>
-        <script src="docs.js"></script>
-        <script>
-            //make the docs work with IE8
-            if (document.all && document.querySelector && !document.addEventListener) {
-                Medium.Utilities.prototype.triggerEvent = function(element, eventName) {
-                    $(element).trigger(eventName);
-                };
-            }
-        </script>
-
     </body>
 </html>
