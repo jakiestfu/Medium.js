@@ -170,7 +170,7 @@ var Medium = (function (w, d) {
                         utils.isModifier(e, function (cmd) {
                             if (cache.cmd) {
 
-                                if (( (settings.mode === "inline") || (settings.mode === "partial") ) && cmd !== "paste") {
+                                if (( (settings.mode === Medium.inlineMode) || (settings.mode === Medium.partialMode) ) && cmd !== "paste") {
                                     utils.preventDefaultEvent(e);
                                     return;
                                 }
@@ -280,11 +280,10 @@ var Medium = (function (w, d) {
 	                            html.clean();
 	                            html.placeholders();
                             }
-	                        html.placeholders();
                         }
                     },
                     enterKey: function (e) {
-                        if( settings.mode === "inline" || settings.mode === Medium.inlineRichMode ){
+                        if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
                             return utils.preventDefaultEvent(e);
                         }
 
@@ -687,7 +686,8 @@ var Medium = (function (w, d) {
                 .removeEvent(el, 'keyup', intercept.up)
                 .removeEvent(el, 'keydown', intercept.down)
                 .removeEvent(el, 'focus', intercept.focus)
-                .removeEvent(el, 'blur', intercept.focus);
+                .removeEvent(el, 'blur', intercept.focus)
+                .removeEvent(el, 'paste', settings.pasteEventHandler);
         },
 
         // Clears the element and restores the placeholder
@@ -1269,7 +1269,34 @@ var Medium = (function (w, d) {
                 initialParagraph.innerHTML = '&nbsp;';
                 el.appendChild(initialParagraph);
             }
-        }
+        },
+		traverseAll: function(element, options, depth) {
+			var children = element.childNodes,
+				length = children.length,
+				i = 0,
+				node,
+				depth = depth || 1;
+
+			options = options || {};
+
+			if (length > 0) {
+				for(;i < length;i++) {
+					node = children[i];
+					switch (node.nodeType) {
+						case 1:
+							this.traverseAll(node, options, depth + 1);
+							if (options.element !== undefined) options.element(node, i, depth, element);
+							break;
+						case 3:
+							if (options.fragment !== undefined) options.fragment(node, i, depth, element);
+					}
+
+					//length may change
+					length = children.length;
+				}
+			}
+
+		}
     };
 
     /*
@@ -1427,6 +1454,8 @@ var Medium = (function (w, d) {
 
             oldNode.parentNode.insertBefore(newNode, oldNode);
             oldNode.parentNode.removeChild(oldNode);
+
+			return newNode;
         },
         deleteNode: function (el) {
             el.parentNode.removeChild(el);
@@ -1536,69 +1565,96 @@ var Medium = (function (w, d) {
              * Removes Attributes
              */
             var s = this.settings,
-                attsToRemove = s.attributes.remove,
-                only = s.tags.outerLevel || null,
-                el = s.element,
-                children = el.children,
+				placeholderClass = s.cssClasses.placeholder,
+				attributesToRemove = (s.attributes || {}).remove || [],
+				tags = s.tags || {},
+				onlyOuter = tags.outerLevel || null,
+				onlyInner = tags.innerLevel || null,
+				outerSwitch = {},
+				innerSwitch = {},
+				paragraphTag = (tags.paragraph || '').toUpperCase(),
+				html = this.html,
+				el = s.element,
+				attr,
                 text,
-                i,
-                j,
-                k;
+                j;
 
-            if (s.mode === Medium.inlineRichMode) {
-                only = s.tags.innerLevel;
-            }
+			if (s.mode === Medium.inlineRichMode) {
+				onlyOuter = s.tags.innerLevel;
+			}
+			
+			if (onlyOuter !== null) {
+				for (j = 0; j < onlyOuter.length; j++) {
+					outerSwitch[onlyOuter[j].toUpperCase()] = true;
+				}
+			}
 
-            // Go through top level children
-            for (i = 0; i < children.length; i++) {
-                var child = children[i],
-                    nodeName = child.nodeName,
-                    shouldDelete = true;
+			if (onlyInner !== null) {
+				for (j = 0; j < onlyInner.length; j++) {
+					innerSwitch[onlyInner[j].toUpperCase()] = true;
+				}
+			}
 
-                // Remove attributes
-                for (k = 0; k < attsToRemove.length; k++) {
-                    if (child.hasAttribute(attsToRemove[k])) {
-                        if (child.getAttribute(attsToRemove[k]) !== s.cssClasses.placeholder) {
-                            child.removeAttribute(attsToRemove[k]);
-                        }
-                    }
-                }
+			this.utils.traverseAll(el, {
+				element: function(child, i, depth, parent) {
+					var nodeName = child.nodeName,
+						shouldDelete = true;
 
-                if (only === null) {
-                    return;
-                }
+					// Remove attributes
+					for (j = 0; j < attributesToRemove.length; j++) {
+						attr = attributesToRemove[j];
+						if (child.hasAttribute(attr)) {
+							if (child.getAttribute(attr) !== placeholderClass) {
+								child.removeAttribute(attr);
+							}
+						}
+					}
 
-                // Determine if we should modify node
-                for (j = 0; j < only.length; j++) {
-                    if (only[j] === nodeName.toLowerCase()) {
-                        shouldDelete = false;
-                    }
-                }
+					if ( onlyOuter === null && onlyInner === null ) {
+						return;
+					}
 
-                // Convert tags or delete
-                if (shouldDelete) {
-                    switch (nodeName.toLowerCase()) {
-                        case 'div':
-                            this.html.changeTag(child, s.tags.paragraph);
-                            break;
-                        case 'br':
-                            if (child === child.parentNode.lastChild) {
-                                if (child === child.parentNode.firstChild) {
-                                    break;
-                                }
-                                text = document.createTextNode("");
-                                text.innerHTML = '&nbsp';
-                                child.parentNode.insertBefore(text, child);
-                                break;
-                            }
-                        default:
-                            text = document.createTextNode(child.innerHTML);
-                            child.parentNode.insertBefore(text, child);
-                            this.html.deleteNode(child);
-                            break;
-                    }
-                }
-            }
+					if (depth  === 1 && outerSwitch[nodeName] !== undefined) {
+						shouldDelete = false;
+					} else if (depth > 1 && innerSwitch[nodeName] !== undefined) {
+						shouldDelete = false;
+					}
+
+					// Convert tags or delete
+					if (shouldDelete) {
+						if (w.getComputedStyle(child, null).getPropertyValue('display') === 'block') {
+							if (paragraphTag.length > 0 && paragraphTag !== nodeName) {
+								html.changeTag(child, paragraphTag);
+							}
+
+							if (depth > 1) {
+								while (parent.childNodes.length > i) {
+									parent.parentNode.insertBefore(parent.lastChild, parent.nextSibling);
+								}
+							}
+						} else {
+							switch (nodeName) {
+								case 'BR':
+									if (child === child.parentNode.lastChild) {
+										if (child === child.parentNode.firstChild) {
+											break;
+										}
+										text = document.createTextNode("");
+										text.innerHTML = '&nbsp';
+										child.parentNode.insertBefore(text, child);
+										break;
+									}
+								default:
+									while (child.firstChild !== null) {
+										child.parentNode.insertBefore(child.firstChild, child);
+									}
+									html.deleteNode(child);
+									break;
+							}
+						}
+					}
+				}
+			});
         },
         lastChild: function () {
             return this.element.lastChild;
@@ -1685,7 +1741,8 @@ var Medium = (function (w, d) {
                 .addEvent(el, 'keyup', intercept.up)
                 .addEvent(el, 'keydown', intercept.down)
                 .addEvent(el, 'focus', intercept.focus)
-                .addEvent(el, 'blur', intercept.blur);
+                .addEvent(el, 'blur', intercept.blur)
+	            .addEvent(el, 'paste', this.settings.pasteEventHandler);
         },
         preserveElementFocus: function () {
             // Fetch node that has focus

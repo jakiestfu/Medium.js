@@ -12,7 +12,7 @@ var applyPrism = function(){
 				if (that.nodeName === 'PRE') {
 					$(that)
 						.text(d)
-						.addClass('language-javascript');
+						.addClass(src.match('.js') ? 'language-javascript' : 'language-markup');
 
 					Prism.highlightElement(that);
 				} else {
