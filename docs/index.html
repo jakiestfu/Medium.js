@@ -91,7 +91,7 @@
             <hr />
 
             <h3 id="Usage">Usage</h3>
-            <pre data-src="usage.html"></pre>
+            <pre data-src="usage.html" data-language="html"></pre>
             <p>Simply include the Medium.js library and CSS, and you are ready to rock. <b>No dependencies</b></p>
 
             <hr />
@@ -180,9 +180,6 @@
             
             <ul class="def">
                 <li>
-                    <div> <code class="ref">debug</code>: Log properties to the console </div>
-                </li>
-                <li>
                     <div> <code class="ref">element</code>: The element in which you want to apply Medium.js to.</div>
                 </li>
                 <li>
@@ -217,8 +214,27 @@
                     </div>
                 </li>
                 <li>
-                    <div> <code class="ref">tags</code>: Dictates the base tags allowed. <code>tags.paragraph</code> is the element that will be created for paragraphs. <code>tags.outerLevel</code> are the only elements allowed to replace a top-level <code>p</code> tag. <code>tags.innerLevel</code> are the only tags allowed within the parent tags. No additional tags are allowed unless included here.</div>
+                    <div> <code class="ref">tags</code>: Dictates allowed tags. Can be set to <code>null</code> for extreme freedom.<br>
+	                    <br>
+	                    <ul>
+		                    <li><code>tags.break</code> is the element that will be created for line breaks.</li>
+		                    <li><code>tags.horizontalRule</code> is the element that will be created for a horizontal rule.</li>
+		                    <li><code>tags.paragraph</code> is the element that will be created for paragraphs.</li>
+		                    <li><code>tags.outerLevel</code> are the only elements allowed to replace a top-level tag.</li>
+		                    <li><code>tags.innerLevel</code> are the only tags allowed within the parent tags. No additional tags are allowed unless included here.</li>
+	                    </ul>
+                    </div>
+
                 </li>
+	            <li>
+		            <div> <code class="ref">attributes</code>: Dictates attributes. Can be set to <code>null</code> for extreme freedom.<br>
+			            <br>
+			            <ul>
+				            <li><code>attributes.remove</code> are attributes to be removed.</li>
+			            </ul>
+		            </div>
+
+	            </li>
                 <li>
                     <div> <code class="ref">cssClasses</code>: Various classes used within Medium.js, customizable to your liking. </div>
                 </li>

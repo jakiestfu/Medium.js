@@ -3,7 +3,8 @@ var article2 = document.getElementById('article2'),
         element: article2,
         mode: Medium.richMode,
         placeholder: 'Your Article 2',
-        attributes: null
+        attributes: null,
+		tags: null
     });
 
 document.getElementById('rich2-insert').onmousedown = function() {
