@@ -4,9 +4,7 @@ var article3 = document.getElementById('article3'),
         mode: Medium.richMode,
         placeholder: 'Your Article 3',
 	    tags: null,
-        attributes: {
-            remove: []
-        },
+        attributes: null,
 	    keyContext: {
 		    'enter': function(e, element) {
 			    var sib = element.previousSibling;
