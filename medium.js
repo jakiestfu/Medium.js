@@ -1548,7 +1548,12 @@ var Medium = (function (w, d) {
                 utils.setupContents();
             }
         },
-        clean: function () {
+
+		/**
+		 * Cleans element
+		 * @param {HtmlElement} [el] default is settings.element
+		 */
+        clean: function (el) {
 
             /*
              * Deletes invalid nodes
@@ -1564,10 +1569,11 @@ var Medium = (function (w, d) {
 				innerSwitch = {},
 				paragraphTag = (tags.paragraph || '').toUpperCase(),
 				html = this.html,
-				el = s.element,
 				attr,
                 text,
                 j;
+
+			el = el || s.element;
 
 			if (onlyOuter !== null) {
 				for (j = 0; j < onlyOuter.length; j++) {
