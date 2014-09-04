@@ -255,3 +255,6 @@ pre[data-src]{
 	-moz-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.42);
 	box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.42);
 }
+pre[class*='language-'] > code[data-language] {
+	overflow: visible ! important;
+}
