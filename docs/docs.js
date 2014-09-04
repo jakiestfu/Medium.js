@@ -1,29 +1,73 @@
 var applyPrism = function(){
     var jsPattern = /[.](js)$/i;
 	$('[data-src]').each(function(){
-		var that = $(this),
+		var that = this,
             src = this.getAttribute('src') || this.getAttribute('data-src'),
-			isJS = jsPattern.test(src);
+			htmlSource = this.innerHTML;
 
 		$.ajax({
 			url: 'partials/' + src + '?' + new Date().getTime(),
 			dataType:'text',
 			success: function(d){
-				if(isJS){
-                    that.html('<code class="language-javascript"></code>');
-				} else {
-                    that.html('<code class="language-markup"></code>');
-				}
+				if (that.nodeName === 'PRE') {
+					$(that)
+						.text(d)
+						.addClass(src.match('.js') ? 'language-javascript' : 'language-markup');
 
-                that.find('code').text(d);
-				Prism.highlightElement(that.find('code')[0]);
-				var r = that.html();
-				r = r.replace(/_FOLD_/g, '<div class="fold"></div>');
-                that.html(r);
+					Prism.highlightElement(that);
+				} else {
+					var htmlPre = $('<pre>').insertAfter(that),
+						html = $('<code>')
+							.text(htmlSource.replace(/\n\s{12}/g, '\n'))
+							.appendTo(htmlPre),
+						jsPre = $('<pre>').insertAfter(htmlPre),
+						js = $('<code>')
+							.text(d)
+							.appendTo(jsPre);
+
+
+					html.addClass('language-markup');
+					js.addClass('language-javascript');
+
+					Prism.highlightElement(html[0]);
+					Prism.highlightElement(js[0]);
+
+					html.attr('data-language', 'html');
+
+					jsPre.hide();
+					htmlPre.hide();
+
+					$('<img class="view-source" src="img/eye.svg" alt="view source" title="view source"/>')
+						.click(function() {
+							if (jsPre.is(':hidden')) {
+								$(that).slideUp();
+								jsPre.slideDown();
+								htmlPre.slideDown();
+							} else {
+								$(that).slideDown();
+								jsPre.slideUp();
+								htmlPre.slideUp();
+							}
+						})
+						.insertBefore($(that).prev());
+
+					if (!htmlSource.match('<')) {
+						htmlPre.remove();
+					}
+				}
 			}
 		});
 	});
 };
+
+//make the docs work with IE8
+if (document.all && document.querySelector && !document.addEventListener) {
+	Medium.Utilities.prototype.triggerEvent = function(element, eventName) {
+		$(element).trigger(eventName);
+	};
+}
+
+applyPrism();
 
 $(function(){
 	if (Medium.prototype.behavior() == 'wild') {
@@ -74,6 +118,4 @@ $(function(){
 			e.preventDefault();
 			menu.toggleUpDown();
 		});
-
-    applyPrism();
 });
