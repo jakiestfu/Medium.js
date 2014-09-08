@@ -1,1 +1,1 @@
-<a href="http://jakiestfu.github.io/Medium.js/"><img src="http://i.imgur.com/U6t8Eq2.png"></a>
+[![Medium.js](http://i.imgur.com/U6t8Eq2.png "Medium.js")](http://jakiestfu.github.io/Medium.js)
