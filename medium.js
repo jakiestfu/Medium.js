@@ -832,7 +832,7 @@ var Medium = (function (w, d) {
 						cl = (attr.className ? attr.className.split[' '].shift() : 'medium-' + tagName),
 						applier;
 
-					applier = rangy.createCssClassApplier(cl, {
+					applier = rangy.createClassApplier(cl, {
 						elementTagName: tagName,
 						elementAttributes: this.attributes
 					});
