@@ -14,7 +14,7 @@
 		"url": "https://github.com/jakiestfu/Medium.js"
 	},
 	"dependencies": {
-		"rangy": "https://rangy.googlecode.com/files/rangy-1.3alpha.804.zip",
+		"rangy-official": ">=1.3",
 		"undo": "https://github.com/jzaefferer/undo/archive/master.zip"
 	},
 	"keywords": ["editor", "wysiwyg", "contenteditable", "content", "medium", "medium.com"],
