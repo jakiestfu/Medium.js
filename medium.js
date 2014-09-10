@@ -598,7 +598,7 @@ var Medium = (function (w, d) {
 		 * @returns {string}
 		 */
 		behavior: function () {
-			return (wild ? 'wild' : 'domesticated');
+			return (wild ? Medium.wildBehavior : Medium.domesticatedBehavior);
 		},
 
 		/**
@@ -695,14 +695,20 @@ var Medium = (function (w, d) {
 			this.html.placeholders();
 		},
 
+		/**
+		 * Splits content in medium element at cursor
+		 * @returns {DocumentFragment|null}
+		 */
 		splitAtCaret: function() {
+			if (!this.isActive()) return null;
+
 			var selector = (w.getSelection || d.selection),
 				sel = selector(),
 				offset = sel.focusOffset,
 				node = sel.focusNode,
 				el = this.element,
-				range = document.createRange(),
-				endRange = document.createRange(),
+				range = d.createRange(),
+				endRange = d.createRange(),
 				contents;
 
 			range.setStart(node, offset);
@@ -712,6 +718,21 @@ var Medium = (function (w, d) {
 			contents = range.extractContents();
 
 			return contents;
+		},
+
+		/**
+		 * Deletes selection
+		 */
+		deleteSelection: function() {
+			if (!this.isActive()) return;
+
+			var sel = rangy.getSelection(),
+				range;
+
+			if (sel.rangeCount > 0) {
+				range = sel.getRangeAt(0);
+				range.deleteContents();
+			}
 		}
 	};
 
@@ -1823,6 +1844,10 @@ var Medium = (function (w, d) {
 	Medium.Messages = {
 		pastHere: 'Paste Here'
 	};
+
+	//Behaviours
+	Medium.domesticatedBehavior = 'domesticated';
+	Medium.wildBehavior = 'wild';
 
 	return Medium;
 }).call(this, window, document);
