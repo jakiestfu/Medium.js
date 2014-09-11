@@ -60,12 +60,11 @@ var applyPrism = function(){
 	});
 };
 
-//make the docs work with IE8
-if (document.all && document.querySelector && !document.addEventListener) {
-	Medium.Utilities.prototype.triggerEvent = function(element, eventName) {
-		$(element).trigger(eventName);
-	};
-}
+//override the internal event handler to use jQuery for easy demoing
+Medium.Utilities.prototype.triggerEvent = function(element, eventName) {
+	$(element).trigger(eventName);
+};
+
 
 applyPrism();
 

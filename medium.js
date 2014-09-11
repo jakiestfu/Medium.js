@@ -564,13 +564,16 @@ var Medium = (function (w, d) {
 		 *
 		 * @param {String|Object} html
 		 * @param {Function} [callback]
+		 * @param {Boolean} [skipChangeEvent]
 		 * @returns {Medium}
 		 */
-		insertHtml: function (html, callback) {
+		insertHtml: function (html, callback, skipChangeEvent) {
 			var result = (new Medium.Html(this, html))
 				.insert(this.settings.beforeInsertHtml);
 
-			this.utils.triggerEvent(this.element, "change");
+			if (skipChangeEvent === true) {
+				this.utils.triggerEvent(this.element, "change");
+			}
 
 			if (callback) {
 				callback.apply(result);
@@ -583,13 +586,16 @@ var Medium = (function (w, d) {
 		 *
 		 * @param {String} tagName
 		 * @param {Object} [attributes]
+		 * @param {Boolean} [skipChangeEvent]
 		 * @returns {Medium}
 		 */
-		invokeElement: function (tagName, attributes) {
+		invokeElement: function (tagName, attributes, skipChangeEvent) {
 			(new Medium.Element(this, tagName, attributes))
 				.invoke(this.settings.beforeInvokeElement);
 
-			this.utils.triggerEvent(this.element, "change");
+			if (skipChangeEvent === true) {
+				this.utils.triggerEvent(this.element, "change");
+			}
 
 			return this;
 		},
@@ -1209,6 +1215,18 @@ var Medium = (function (w, d) {
 			}
 
 			return this;
+		},
+		isEventSupported: function (eventName) {
+			eventName = 'on' + eventName;
+			var el = d.createElement(this.element.tagName),
+				isSupported = (eventName in el);
+
+			if (!isSupported) {
+				el.setAttribute(eventName, 'return;');
+				isSupported = typeof el[eventName] == 'function';
+			}
+			el = null;
+			return isSupported;
 		},
 		triggerEvent: function (element, eventName) {
 			var e;
