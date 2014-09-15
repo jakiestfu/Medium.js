@@ -6,7 +6,7 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  http://github.com/jakiestfu/Medium.js/
- * Version: 1.0
+ * Version: master
  */
 
 
