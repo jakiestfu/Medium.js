@@ -140,6 +140,7 @@ var Medium = (function (w, d) {
                     focus: function (e) {
                         e = e || w.event;
                         Medium.activeElement = el;
+	                    html.placeholders();
                     },
                     blur: function (e) {
                         e = e || w.event;
@@ -1466,12 +1467,17 @@ var Medium = (function (w, d) {
                 utils = this.utils,
                 text = utils.html.text(el),
                 cursor = this.cursor,
-                childCount = el.children.length;
+                childCount = el.children.length,
+	            hasFocus = Medium.activeElement === el;
 
             el.placeholder = placeholder;
 
             // Empty Editor
-            if (text.length < 1 && childCount < 2) {
+            if (
+	            !hasFocus
+	            && text.length < 1
+	            && childCount < 2
+            ) {
                 if (el.placeHolderActive) return;
 
                 if (!el.innerHTML.match('<' + s.tags.paragraph)) {
