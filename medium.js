@@ -1,7 +1,7 @@
 /*
  * Medium.js
  *
- * Copyright 2013, Jacob Kelley - http://jakiestfu.com/
+ * Copyright 2013-2014, Jacob Kelley - http://jakiestfu.com/
  * Released under the MIT Licence
  * http://opensource.org/licenses/MIT
  *
