@@ -1,12 +1,12 @@
 /*
  * Medium.js
  *
- * Copyright 2013, Jacob Kelley - http://jakiestfu.com/
+ * Copyright 2013-2014, Jacob Kelley - http://jakiestfu.com/
  * Released under the MIT Licence
  * http://opensource.org/licenses/MIT
  *
  * Github:  http://github.com/jakiestfu/Medium.js/
- * Version: 1.0
+ * Version: master
  */
 
 
@@ -128,7 +128,7 @@ var Medium = (function (w, d) {
 		 * @constructor
 		 * @param {Object} [userSettings] user options
 		 */
-		 Medium = function (userSettings) {
+			Medium = function (userSettings) {
 			var medium = this,
 				action = new Medium.Action(),
 				cache = new Medium.Cache(),
@@ -140,6 +140,7 @@ var Medium = (function (w, d) {
 					focus: function (e) {
 						e = e || w.event;
 						Medium.activeElement = el;
+						html.placeholders();
 					},
 					blur: function (e) {
 						e = e || w.event;
@@ -1304,10 +1305,10 @@ var Medium = (function (w, d) {
 
 			if (
 				!this.settings.tags.paragraph
-				|| children.length > 0
-				|| this.settings.mode === Medium.inlineMode
-				|| this.settings.mode === Medium.inlineRichMode
-			) {
+					|| children.length > 0
+					|| this.settings.mode === Medium.inlineMode
+					|| this.settings.mode === Medium.inlineRichMode
+				) {
 				return;
 			}
 
@@ -1533,12 +1534,17 @@ var Medium = (function (w, d) {
 				utils = this.utils,
 				text = utils.html.text(el),
 				cursor = this.cursor,
-				childCount = el.children.length;
+				childCount = el.children.length,
+				hasFocus = Medium.activeElement === el;
 
 			el.placeholder = placeholder;
 
 			// Empty Editor
-			if (text.length < 1 && childCount < 2) {
+			if (
+				!hasFocus
+					&& text.length < 1
+					&& childCount < 2
+				) {
 				if (el.placeHolderActive) return;
 
 				if (!el.innerHTML.match('<' + s.tags.paragraph)) {
@@ -1645,7 +1651,7 @@ var Medium = (function (w, d) {
 			if (s.mode === Medium.inlineRichMode) {
 				onlyOuter = s.tags.innerLevel;
 			}
-			
+
 			if (onlyOuter !== null) {
 				for (j = 0; j < onlyOuter.length; j++) {
 					outerSwitch[onlyOuter[j].toUpperCase()] = true;
@@ -1864,6 +1870,10 @@ var Medium = (function (w, d) {
 	};
 
 	//Behaviours
+	Medium.domesticatedBehavior = 'domesticated';
+	Medium.wildBehavior = 'wild';
+
+		//Behaviours
 	Medium.domesticatedBehavior = 'domesticated';
 	Medium.wildBehavior = 'wild';
 
