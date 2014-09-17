@@ -17,6 +17,15 @@ var Medium = (function (w, d) {
     var trim = function (string) {
             return string.replace(/^\s+|\s+$/g, '');
         },
+		arrayContains = function(array, variable) {
+			var i = array.length;
+			while (i--) {
+				if (array[i] === variable) {
+					return true;
+				}
+			}
+			return false;
+		},
     //two modes, wild (native) or domesticated (rangy + undo.js)
         rangy = w['rangy'] || null,
         undo = w['Undo'] || null,
@@ -578,6 +587,24 @@ var Medium = (function (w, d) {
          * @returns {Medium}
          */
         invokeElement: function (tagName, attributes) {
+			var settings = this.settings,
+				attributes = settings.attributes || {},
+				remove = attributes.remove || [];
+
+			switch (settings.mode) {
+				case Medium.inlineMode:
+				case Medium.partialMode:
+					return this;
+				default:
+			}
+
+			//invoke works off class, so if it isn't there, we just add it
+			if (remove.length > 0) {
+				if (!arrayContains(settings, 'class')) {
+					remove.push('class');
+				}
+			}
+
             (new Medium.Element(this, tagName, attributes))
                 .invoke(this.settings.beforeInvokeElement);
 
