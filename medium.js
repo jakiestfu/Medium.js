@@ -588,7 +588,7 @@ var Medium = (function (w, d) {
 		 */
 		invokeElement: function (tagName, attributes) {
 			var settings = this.settings,
-				attributes = settings.attributes || {},
+				attributes = attributes || {},
 				remove = attributes.remove || [];
 
 			switch (settings.mode) {
