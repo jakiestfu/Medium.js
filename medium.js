@@ -198,8 +198,8 @@ var Medium = (function (w, d) {
 								keepEvent = fn.call(medium, e);
 
 								if (keepEvent === false) {
-									e.preventDefaultEvent(e);
-									e.stopPropagation(e);
+									utils.preventDefaultEvent(e);
+									utils.stopPropagation(e);
 								}
 							}
 						});
