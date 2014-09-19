@@ -829,8 +829,15 @@ var Medium = (function (w, d) {
                     var
                         attr = this.attributes,
                         tagName = this.tagName.toLowerCase(),
-						cl = (attr.className ? (attr.className.split[' '] || [attr.className]).shift() : 'medium-' + tagName),
-                        applier;
+                        applier,
+						cl;
+
+					if (attr.className !== undefined) {
+						cl = (attr.className.split[' '] || [attr.className]).shift();
+						delete attr.className;
+					} else {
+						cl = 'medium-' + tagName;
+					}
 
                     applier = rangy.createClassApplier(cl, {
                         elementTagName: tagName,
