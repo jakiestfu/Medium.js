@@ -34,7 +34,10 @@
 .Medium-placeholder-rich div{
 	font-style: italic;
 	}
-.Medium-inline, .Medium-placeholder-inline div{
+.Medium-inline,
+.Medium-placeholder-inline div,
+.Medium-inlineRich,
+.Medium-placeholder-inlineRich div{
 	overflow: hidden;
 	white-space: nowrap;
 	}
