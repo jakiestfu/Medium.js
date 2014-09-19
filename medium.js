@@ -162,6 +162,8 @@ var Medium = (function (w, d) {
 					down: function (e) {
 						e = e || w.event;
 
+						var keepEvent = true;
+
 						//in Chrome it sends out this event before every regular event, not sure why
 						if (e.keyCode === 229) return;
 
@@ -193,7 +195,7 @@ var Medium = (function (w, d) {
 									fn = intercept.command[cmd];
 								}
 
-								fn.call(medium, e);
+								keepEvent = fn.call(medium, e);
 							}
 						});
 
@@ -221,7 +223,7 @@ var Medium = (function (w, d) {
 								break;
 						}
 
-						return true;
+						return keepEvent;
 					},
 					up: function (e) {
 						e = e || w.event;
