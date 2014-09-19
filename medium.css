@@ -34,3 +34,7 @@
 .Medium-placeholder-rich div{
 	font-style: italic;
 	}
+.Medium-inline, .Medium-placeholder-inline div{
+	overflow: hidden;
+	white-space: nowrap;
+	}
