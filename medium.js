@@ -196,6 +196,11 @@ var Medium = (function (w, d) {
                                 }
 
 								keepEvent = fn.call(medium, e);
+
+								if (keepEvent === false) {
+									utils.preventDefaultEvent(e);
+									utils.stopPropagation(e);
+								}
                             }
                         });
 
@@ -1199,6 +1204,14 @@ var Medium = (function (w, d) {
 
             return this;
         },
+		stopPropagation: function(e) {
+			e = e || window.event;
+			e.cancelBubble = true;
+
+			if (e.stopPropagation !== undefined) {
+				e.stopPropagation();
+			}
+		},
         triggerEvent: function (element, eventName) {
             var e;
             if (d.createEvent) {
