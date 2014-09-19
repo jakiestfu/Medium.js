@@ -192,7 +192,7 @@ var Medium = (function (w, d) {
                                     fn = intercept.command[cmd];
                                 }
 
-                                fn.call(intercept, e);
+                                fn.call(medium, e);
                             }
                         });
 
