@@ -1400,6 +1400,10 @@ var Medium = (function (w, d) {
 
 					//length may change
 					length = children.length;
+					//if length did change, and we are at the last item, this causes infinite recursion, so if we are at the last item, then stop to prevent this
+					if (node === element.lastChild) {
+						i = length;
+					}
 				}
 			}
 
