@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Medium AMD example - need to run in a web server with root as ../</title>
+	<link rel="stylesheet" href="../medium.css"/>
+	<style>
+		.contenteditable {
+			width: 400px;
+			height: 200px;
+			overflow: hidden;
+			-webkit-box-shadow: 1px 1px 1px rgba(0, 0, 0, .5);
+			-moz-box-shadow: 1px 1px 1px rgba(0, 0, 0, .5);
+			box-shadow: 1px 1px 1px rgba(0, 0, 0, .5);
+			border: 1px solid black;
+		}
+	</style>
+</head>
+<body>
+<div class="contenteditable domesticated"></div>
+<div class="contenteditable wild"></div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js"></script>
+<script>
+	require.config({
+		paths: {
+			rangy: '../bower_components/rangy-official/',
+			undo: '../bower_components/undo/undo'
+		},
+		shim: {
+			undo: {
+				exports: 'Undo'
+			}
+		},
+		bundles: {
+			// provides two modules by id
+			'../medium.js': [
+				'medium-wild',
+				'medium-domesticated'
+			]
+		}
+
+	});
+
+	// get domesticated only ver
+	require(['medium-domesticated'], function(Medium){
+		var instance = new Medium({
+			element: document.querySelector('.contenteditable.domesticated'),
+			mode: Medium.richMode,
+			placeholder: 'Your Article Domesictaed'
+		});
+
+		console.log(instance.behavior());
+	});
+
+	// get wild ver, no other deps.
+	require(['medium-wild'], function(Medium){
+		var instance = new Medium({
+			element: document.querySelector('.contenteditable.wild'),
+			mode: Medium.richMode,
+			placeholder: 'Your Article Wild'
+		});
+
+		console.log(instance.behavior());
+	});
+</script>
+</body>
+</html>
