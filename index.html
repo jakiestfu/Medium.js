@@ -1,1 +1,46 @@
-<meta http-equiv="refresh" content="0;URL=http://jakiestfu.github.io/Medium.js/docs/">
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Rangy example</title>
+	<link rel="stylesheet" href="medium.css"/>
+	<style>
+		.contenteditable {
+			width: 400px;
+			height: 400px;
+			overflow: hidden;
+			-webkit-box-shadow: 1px 1px 1px rgba(0, 0, 0, .5);
+			-moz-box-shadow: 1px 1px 1px rgba(0, 0, 0, .5);
+			box-shadow: 1px 1px 1px rgba(0, 0, 0, .5);
+			border: 1px solid black;
+		}
+	</style>
+</head>
+<body>
+<div class="contenteditable"></div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js"></script>
+<script>
+	require.config({
+		paths: {
+			rangy: 'bower_components/rangy-official/',
+			undo: 'bower_components/undo/undo'
+		},
+		shim: {
+			undo: {
+				exports: 'Undo'
+			}
+		}
+	});
+
+	require(['./medium'], function(Medium){
+		var instance = new Medium({
+			element: document.querySelector('.contenteditable'),
+			mode: Medium.richMode,
+			placeholder: 'Your Article'
+		});
+
+		console.log(instance.behavior());
+	});
+</script>
+</body>
+</html>
