@@ -1928,12 +1928,12 @@ var factory = function (rangy, undo) {
 };
 
 
-	if (typeof define == 'function' && define.amd){
+	if (typeof define == 'function' && define.amd) {
 		// todo: figure out how these can be optional deps, which is not easy in define syntax
 		// http://stackoverflow.com/questions/18990281/requirejs-ignore-loading-error-for-optional-dependency
 
 		// Undo needs shimming, classapplier does not return rangy object but depends on it.
-		define('medium-domesticated', ['undo', 'rangy/rangy-classapplier'], function(Undo){
+		define('medium-domesticated', ['undo', 'rangy/rangy-classapplier'], function(Undo) {
 			var rangy = require('rangy/rangy-core'); // resolved!
 			return factory(rangy, Undo);
 		});
