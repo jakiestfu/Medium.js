@@ -8,13 +8,13 @@
  * Github:  http://github.com/jakiestfu/Medium.js/
  * Version: master
  */
-
-
-var Medium = (function (w, d) {
+(function(w, d){
+var factory = function (rangy, undo) {
 
 	'use strict';
 
 	var trim = function (string) {
+			// todo: String.prototype.trim || &nbsp; etc proper polyfill
 			return string.replace(/^[\s]+|\s+$/g, '');
 		},
 		arrayContains = function(array, variable) {
@@ -27,8 +27,6 @@ var Medium = (function (w, d) {
 			return false;
 		},
 		//two modes, wild (native) or domesticated (rangy + undo.js)
-		rangy = w['rangy'] || null,
-		undo = w['Undo'] || null,
 		wild = (!rangy || !undo),
 		domesticated = (!wild),
 		key = w.Key = {
@@ -1927,4 +1925,27 @@ var Medium = (function (w, d) {
 	Medium.wildBehavior = 'wild';
 
 	return Medium;
-}).call(this, window, document);
+};
+
+
+	if (typeof define == 'function' && define.amd) {
+		// todo: figure out how these can be optional deps, which is not easy in define syntax
+		// http://stackoverflow.com/questions/18990281/requirejs-ignore-loading-error-for-optional-dependency
+
+		// Undo needs shimming, classapplier does not return rangy object but depends on it.
+		define('medium-domesticated', ['undo', 'rangy/rangy-classapplier'], function(Undo) {
+			var rangy = require('rangy/rangy-core'); // resolved!
+			return factory(rangy, Undo);
+		});
+
+		define('medium-wild', [], factory);
+	}
+	else {
+		this.Medium = factory(
+			this.rangy,
+			this.Undo
+		);
+	}
+
+
+}.call(this, window, document));
