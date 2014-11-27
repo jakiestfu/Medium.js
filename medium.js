@@ -11,7 +11,7 @@
 
 (function (w, d) {
 
-    'use strict';
+	'use strict';
 
 	var Medium = (function () {
 
