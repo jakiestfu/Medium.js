@@ -259,7 +259,6 @@
 						command: {
 							bold: function (e) {
 								utils.preventDefaultEvent(e);
-								// IE uses strong instead of b
 								(new Medium.Element(medium, 'bold'))
 									.setClean(false)
 									.invoke(settings.beforeInvokeElement);

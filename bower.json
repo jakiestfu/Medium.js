@@ -15,7 +15,8 @@
 	},
 	"dependencies": {
 		"rangy-official": ">=1.3",
-		"undo": "https://github.com/jzaefferer/undo/archive/master.zip"
+		"undo": "https://github.com/jzaefferer/undo/archive/master.zip",
+		"testify.js": ">=1.0"
 	},
 	"keywords": ["editor", "wysiwyg", "contenteditable", "content", "medium", "medium.com"],
 	"license": "MIT",
