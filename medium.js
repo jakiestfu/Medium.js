@@ -305,7 +305,14 @@
 								return utils.preventDefaultEvent(e);
 							}
 
-							if (!cache.shift) {
+							if (cache.shift) {
+								if (settings.tags['break']) {
+									utils.preventDefaultEvent(e);
+									html.addTag(settings.tags['break'], true);
+									return false;
+								}
+
+							} else {
 
 								var focusedElement = html.atCaret() || {},
 									children = el.children,
