@@ -215,6 +215,7 @@
 								}
 
 								if (len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection) {
+									settings.maxLengthReached(settings.element)
 									return utils.preventDefaultEvent(e);
 								}
 							}
@@ -425,6 +426,9 @@
 						},
 						beforeInsertHtml: function () {
 							//this = Medium.Html
+						},
+						maxLengthReached: function (element) {
+							//element
 						},
 						beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
 						},
