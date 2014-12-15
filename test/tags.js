@@ -1,5 +1,5 @@
 tf.test('ctrl + b default on rich mode', function() {
-	Medium.Utilities.prototype.addEvent = function(element, eventName, func) {
+	Medium.Utilities.addEvent = function(element, eventName, func) {
 		element['on' + eventName] = func;
 
 		return this;
@@ -36,7 +36,7 @@ tf.test('ctrl + b default on rich mode', function() {
 });
 
 tf.test('ctrl + b null tags on rich mode', function() {
-	Medium.Utilities.prototype.addEvent = function(element, eventName, func) {
+	Medium.Utilities.addEvent = function(element, eventName, func) {
 		element['on' + eventName] = func;
 
 		return this;

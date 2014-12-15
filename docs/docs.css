@@ -258,3 +258,6 @@ pre[data-src]{
 pre[class*='language-'] > code[data-language] {
 	overflow: auto ! important;
 }
+div[data-src] {
+	position: relative;
+}
