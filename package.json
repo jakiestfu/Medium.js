@@ -6,7 +6,7 @@
 			"name": "Robert Plummer <robertleeplummerjr@gmail.com> (http://visop-dev.com)"
 		}
 	],
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"homepage": "http://jakiestfu.github.io/Medium.js",
 	"bugs": "https://github.com/jakiestfu/Medium.js/issues",
 	"repository": {
@@ -19,5 +19,6 @@
 	},
 	"keywords": ["editor", "wysiwyg", "contenteditable", "content", "medium", "medium.com"],
 	"license": "MIT",
-	"files": ["medium.js", "medium.css"]
+	"files": ["medium.js", "medium.css"],
+	"main": "medium.js"
 }
