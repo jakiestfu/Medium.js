@@ -1,5 +1,6 @@
 {
-	"name": "mediumjs/mediumjs",
+    "name": "mediumjs/mediumjs",
+    "description": "A tiny JavaScript library for making contenteditable beautiful (Like Medium's editor).",
     "license": "MIT",
     "authors": [
         {
