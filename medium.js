@@ -1120,7 +1120,7 @@
 						if (fn) {
 							fn.apply(this);
 						}
-						d.execCommand(this.tagName, false);
+						d.execCommand(this.tagName, false, this.attributes);
 					}
 				},
 				setClean: function () {
