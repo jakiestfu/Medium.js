@@ -206,14 +206,32 @@
 								}
 							}
 
-							switch (e.keyCode) {
-								case key['enter']:
-									intercept.enterKey(e);
-									break;
-								case key['backspace']:
-								case key['delete']:
-									intercept.backspaceOrDeleteKey(e);
-									break;
+							//here we have a key context, so if you need to create your own object within a specific context it is doable
+							var keyContext;
+							if (
+								settings.keyContext !== null
+									&& ( keyContext = settings.keyContext[e.keyCode] )
+								) {
+								var el = cursor.parent();
+
+								if (el) {
+									if (!keyContext.call(medium, e, el)) {
+										utils.preventDefaultEvent(e);
+										utils.stopPropagation(e);
+									}
+								}
+							}
+
+							if (keepEvent) {
+								switch (e.keyCode) {
+									case key['enter']:
+										intercept.enterKey(e);
+										break;
+									case key['backspace']:
+									case key['delete']:
+										intercept.backspaceOrDeleteKey(e);
+										break;
+								}
 							}
 
 							return keepEvent;
@@ -227,19 +245,6 @@
 							});
 							medium.clean();
 							medium.placeholders();
-
-							//here we have a key context, so if you need to create your own object within a specific context it is doable
-							var keyContext;
-							if (
-								settings.keyContext !== null
-									&& ( keyContext = settings.keyContext[e.keyCode] )
-								) {
-								var el = cursor.parent();
-
-								if (el) {
-									keyContext.call(medium, e, el);
-								}
-							}
 
 							action.preserveElementFocus();
 						},
