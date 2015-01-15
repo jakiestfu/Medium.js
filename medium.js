@@ -204,7 +204,7 @@
 							});
 
 							if (settings.maxLength !== -1) {
-								var len = html.text().length,
+								var len = html.text(el).length,
 									hasSelection = false,
 									selection = w.getSelection();
 
