@@ -267,9 +267,9 @@
 							paste: function (e) {
 								medium.makeUndoable();
 								if (settings.pasteAsText) {
-									var sel = utils.selection.saveSelection();
+									var sel = selection.saveSelection();
 									utils.pasteHook(function (text) {
-										utils.selection.restoreSelection(sel);
+										selection.restoreSelection(sel);
 
 										text = text.replace(/\n/g, '<br>');
 
@@ -427,37 +427,37 @@
 
 							if (settings.pasteAsText) {
 								utils.preventDefaultEvent(e);
-								var
-									sel = utils.selection.saveSelection(),
-									text = prompt(Medium.Messages.pastHere) || '';
+								var sel = selection.saveSelection();
 
-								if (text.length > 0) {
-									el.focus();
-									Medium.activeElement = el;
-									utils.selection.restoreSelection(sel);
+								medium.prompt(function(text) {
+									text = text || '';
+									if (text.length > 0) {
+										el.focus();
+										Medium.activeElement = el;
+										selection.restoreSelection(sel);
 
-									//encode the text first
-									text = utils.encodeHtml(text);
+										//encode the text first
+										text = utils.encodeHtml(text);
 
-									//cut down it's length
-									totalLength = text.length + length;
-									if (settings.maxLength > 0 && totalLength > settings.maxLength) {
-										text = text.substring(0, settings.maxLength - length);
+										//cut down it's length
+										totalLength = text.length + length;
+										if (settings.maxLength > 0 && totalLength > settings.maxLength) {
+											text = text.substring(0, settings.maxLength - length);
+										}
+
+										if (settings.mode !== Medium.inlineMode) {
+											text = text.replace(/\n/g, '<br>');
+										}
+
+										(new Medium.Html(medium, text))
+											.setClean(false)
+											.insert(settings.beforeInsertHtml, true);
+
+										medium.clean();
+										medium.placeholders();
 									}
-
-									if (settings.mode !== Medium.inlineMode) {
-										text = text.replace(/\n/g, '<br>');
-									}
-
-									(new Medium.Html(medium, text))
-										.setClean(false)
-										.insert(settings.beforeInsertHtml, true);
-
-									medium.clean();
-									medium.placeholders();
-
-									return false;
-								}
+								});
+								return false;
 							} else {
 								setTimeout(function() {
 									medium.clean();
@@ -586,6 +586,13 @@
 			utils;
 
 		Medium.prototype = {
+			prompt: function(callback) {
+				var result = window.prompt(Medium.Messages.pastHere);
+
+				callback(result);
+
+				return this;
+			},
 			placeholders: function () {
 				//in IE8, just gracefully degrade to no placeholders
 				if (!w.getComputedStyle) return;
@@ -969,7 +976,7 @@
 					initialParagraph.innerHTML = el.innerHTML;
 					el.innerHTML = '';
 					el.appendChild(initialParagraph);
-					this.cursor.set(this, initialParagraph.innerHTML.length, initialParagraph);
+					//this.cursor.set(this, initialParagraph.innerHTML.length, initialParagraph);
 				} else {
 					initialParagraph = d.createElement(s.tags.paragraph);
 					initialParagraph.innerHTML = '&nbsp;';
@@ -1859,8 +1866,7 @@
 				}
 			},
 			set: function (medium, pos, el) {
-				var range,
-					html = this.html;
+				var range;
 
 				if (d.createRange) {
 					var selection = w.getSelection(),
