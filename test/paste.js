@@ -1,8 +1,21 @@
 (function(tf) {
 	var body = document.body,
+		events = {},
 		originalAddEvent = Medium.Utilities.addEvent,
 		overrideAddEvent = function(element, eventName, func) {
-			element['on' + eventName] = func;
+			if (!events[eventName]) {
+				events[eventName] = [];
+			}
+			events[eventName].push(func);
+
+			if (!element['on' + eventName]) {
+				element['on' + eventName] = function() {
+					var i = 0;
+					for (;i < events[eventName].length; i++) {
+						events[eventName][i].call(this, arguments);
+					}
+				};
+			}
 
 			return this;
 		},
@@ -49,6 +62,27 @@
 			});
 
 			tf.assertNotEquals(el.innerHTML, result, "Pasted at beginning");
+		});
+	});
+
+	tf.test('ctrl + p plain to ending', function() {
+		run({
+			mode: Medium.richMode,
+			placeholder: 'Your text'
+		}, function(medium, el) {
+			var result = 'Lorem ipsum dolor sit amet., consectetur',
+				clipboard = ', consectetur';
+
+			el.innerHTML = 'Lorem ipsum dolor sit amet.';
+
+			medium.focus();
+			medium.cursor.caretToEnd(el);
+			el.onpaste({
+				keyCode: Key.p,
+				ctrlKey: true
+			});
+
+			tf.assertNotEquals(el.innerHTML, result, "Pasted at ending");
 		});
 	});
 })(tf);

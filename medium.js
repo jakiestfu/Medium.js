@@ -130,7 +130,7 @@
 				var medium = this,
 					action = new Medium.Action(),
 					cache = new Medium.Cache(),
-					cursor = new Medium.Cursor(),
+					cursor = new Medium.Cursor(this),
 					selection = new Medium.Selection(),
 					intercept = {
 						focus: function (e) {
@@ -543,7 +543,6 @@
 
 				action.setBridge(bridge);
 				cache.setBridge(bridge);
-				cursor.setBridge(bridge);
 				selection.setBridge(bridge);
 
 				// Initialize editor
@@ -741,13 +740,16 @@
 				utils.traverseAll(el, {
 					element: function(child, i, depth, parent) {
 						var nodeName = child.nodeName,
-							shouldDelete = true;
+							shouldDelete = true,
+							attrValue;
 
 						// Remove attributes
+						console.log(attributesToRemove);
 						for (j = 0; j < attributesToRemove.length; j++) {
 							attr = attributesToRemove[j];
 							if (child.hasAttribute(attr)) {
-								if (child.getAttribute(attr) !== placeholderClass) {
+								attrValue = child.getAttribute(attr);
+								if (attrValue !== placeholderClass && (!attrValue.match('medium-') && attr === 'class')) {
 									child.removeAttribute(attr);
 								}
 							}
@@ -943,6 +945,8 @@
 					selection.removeAllRanges();
 					selection.addRange(range);
 				}
+
+				Medium.activeElement = el;
 
 				return this;
 			},
@@ -1328,7 +1332,7 @@
 					.addEvent(element, 'keydown', function (e) {
 						if (!e.ctrlKey || e.keyCode !== key.z) {
 							me.movingThroughStack = false;
-							return true;
+							return;
 						}
 
 						utils.preventDefaultEvent(e);
@@ -1721,23 +1725,25 @@
 					d.createTextNode( html ) ).parentNode.innerHTML;
 			},
 			text: function (node, val) {
-				if (val) {
-					if ((node.textContent) && (typeof (node.textContent) != "undefined")) {
+				if (val !== undefined) {
+					if (node.textContent !== undefined) {
 						node.textContent = val;
 					} else {
 						node.innerText = val;
 					}
+
+					return this;
 				}
 
-				else if (node.innerText) {
+				else if (node.innerText !== undefined) {
 					return utils.trim(node.innerText);
 				}
 
-				else if (node.textContent) {
+				else if (node.textContent !== undefined) {
 					return utils.trim(node.textContent);
 				}
 				//document fragment
-				else if (node.data) {
+				else if (node.data !== undefined) {
 					return utils.trim(node.data);
 				}
 
@@ -1857,20 +1863,16 @@
 		/*
 		 * Handle Cursor Logic
 		 */
-		Medium.Cursor = function () {
+		Medium.Cursor = function (medium) {
+			this.medium = medium;
 		};
 		Medium.Cursor.prototype = {
-			setBridge: function (bridge) {
-				for (var i in bridge) if (bridge.hasOwnProperty(i)) {
-					this[i] = bridge[i];
-				}
-			},
-			set: function (medium, pos, el) {
+			set: function (pos, el) {
 				var range;
 
 				if (d.createRange) {
 					var selection = w.getSelection(),
-						lastChild = medium.lastChild(),
+						lastChild = this.medium.lastChild(),
 						length = utils.text(lastChild).length - 1,
 						toModify = el ? el : lastChild,
 						theLength = ((typeof pos !== 'undefined') && (pos !== null) ? pos : length);
@@ -1883,6 +1885,17 @@
 				} else {
 					range = d.body.createTextRange();
 					range.moveToElementText(el);
+					range.collapse(false);
+					range.select();
+				}
+			},
+			//http://davidwalsh.name/caret-end
+			moveCursorToEnd: function (el) {
+				if (typeof el.selectionStart == "number") {
+					el.selectionStart = el.selectionEnd = el.value.length;
+				} else if (typeof el.createTextRange != "undefined") {
+					el.focus();
+					var range = el.createTextRange();
 					range.collapse(false);
 					range.select();
 				}
@@ -1911,10 +1924,10 @@
 				return target;
 			},
 			caretToBeginning: function (el) {
-				this.set(this, 0, el);
+				this.set(0, el);
 			},
 			caretToEnd: function (el) {
-				this.set(this, utils.text(el).length, el);
+				this.moveCursorToEnd(el);
 			}
 		};
 
