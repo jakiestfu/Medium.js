@@ -1,0 +1,26 @@
+<html>
+<head>
+	<title>({{pass}}|{{fail}}) {{title}} · Testify Suite</title>
+	<script src="../Testify.js"></script>
+	<script src="../bower_components/vue/dist/vue.js"></script>
+	<script>
+		// Create a new test suite
+		var	tf = new Testify('Boolean Test Suite');
+
+		// Add a new test case to this suite
+		tf.test('Testing true equals false', function(tf){
+			tf.assertEqual(true, false);
+		});
+
+		// Run the test and generate a report
+		tf.run();
+	</script>
+</head>
+<body>
+
+</body>
+<script>
+	document.body.innerHTML = Testify.report.html.ui;
+	Testify.report.html(tf);
+</script>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "undo",
+  "_cacheHeaders": {
+    "ETag": "\"0d9844dcd99d287a5e8ccac1b94629310f9945dc\"",
+    "Content-Type": "application/zip",
+    "Content-Disposition": "attachment; filename=undo-master.zip"
+  },
+  "_release": "e-tag:0d9844dcd",
+  "_source": "https://github.com/jzaefferer/undo/archive/master.zip",
+  "_target": "*",
+  "_originalSource": "https://github.com/jzaefferer/undo/archive/master.zip"
+}
