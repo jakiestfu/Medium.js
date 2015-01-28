@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# directories
+JS_IN_DIR='./src/Medium/'
+JS_OUT_DIR='.'
+
+JS_TEMP=""
+JS_WRAPPER=$(<"$JS_IN_DIR/wrapper.js")
+JS_COMBINED_FILE="$JS_OUT_DIR/medium.js"
+JS_COMBINED_FILE_MIN="$JS_OUT_DIR/medium.min.js"
+
+# JS files you want to combine together
+
+JS_FILES=(
+	#constructors first
+	base.js
+	Action.js
+	Cache.js
+	Cursor.js
+	Drag.js
+	Element.js
+	Html.js
+	Injector.js
+	Selection.js
+	Toolbar.js
+	Undoable.js
+	Utilities.js
+
+	#everything else next
+	environmentCorrection.js
+)
+
+#clear the files
+> $JS_COMBINED_FILE
+> $JS_COMBINED_FILE_MIN
+
+#run thru the JS files
+for F in ${JS_FILES[@]}; do
+  CONTENTS=$(<"$JS_IN_DIR/$F")
+  JS_TEMP+="$CONTENTS"
+done
+
+echo "${JS_WRAPPER//CODE_HERE/"$JS_TEMP"}" > $JS_COMBINED_FILE
+
+
+#compress it
+yui-compressor -o $JS_COMBINED_FILE_MIN $JS_COMBINED_FILE
+
+#add the file to the git base
+git add $JS_COMBINED_FILE
+git add $JS_COMBINED_FILE_MIN

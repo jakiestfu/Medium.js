@@ -10,11 +10,15 @@ var applyPrism = function(){
 			dataType:'text',
 			success: function(d){
 				if (that.nodeName === 'PRE') {
-					$(that)
+					var html = $(that)
 						.text(d)
 						.addClass(src.match('.js') ? 'language-javascript' : 'language-markup');
 
 					Prism.highlightElement(that);
+
+					setTimeout(function() {
+						html.attr('data-language', src.match('.js') ? 'javascript' : 'html');
+					}, 1);
 				} else {
 					var htmlPre = $('<pre>').insertAfter(that),
 						html = $('<code>')
@@ -32,7 +36,9 @@ var applyPrism = function(){
 					Prism.highlightElement(html[0]);
 					Prism.highlightElement(js[0]);
 
-					html.attr('data-language', 'html');
+					setTimeout(function() {
+						html.attr('data-language', 'html');
+					},1);
 
 					jsPre.hide();
 					htmlPre.hide();
@@ -60,20 +66,15 @@ var applyPrism = function(){
 	});
 };
 
-//make the docs work with IE8
-if (document.all && document.querySelector && !document.addEventListener) {
-	Medium.Utilities.prototype.triggerEvent = function(element, eventName) {
-		$(element).trigger(eventName);
-	};
-}
+//override the internal event handler to use jQuery for easy demoing
+Medium.Utilities.triggerEvent = function(element, eventName) {
+	$(element).trigger(eventName);
+};
+
 
 applyPrism();
 
 $(function(){
-	if (Medium.prototype.behavior() == 'wild') {
-		$('div.domesticated').hide();
-	}
-
 	//Make menu toggle-able, so it doesn't hog all the realestate
 	var menu = $('#menu'),
 		links = menu.find('ul'),

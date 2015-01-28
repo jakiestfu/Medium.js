@@ -67,15 +67,14 @@
             </ul>
 
 
-
             <hr />
 
 
             <h3 id="Features">Features</h3>
             <ul>
 	            <li>Free</li>
-                <li>Library Independent</li>
                 <li>Modern browser compliant</li>
+                <li>Free</li>
                 <li>Contributions Welcomes</li>
                 <li>WYSIWYG editor or Toolbar ready</li>
                 <li>Keeps HTML organized and semantic (even on paste events)</li>
@@ -92,7 +91,7 @@
 
             <h3 id="Usage">Usage</h3>
             <pre data-src="usage.html" data-language="html"></pre>
-            <p>Simply include the Medium.js library and CSS, and you are ready to rock. <b>No dependencies</b></p>
+            <p>Simply include the dependencies, Medium.js library, CSS, and you are ready to rock.</p>
 
             <hr />
 
@@ -163,6 +162,24 @@
 	            </div>
             </div>
 
+            <div class="domesticated demo-container">
+	            <h4 id="invoke-drag"><a href="#invoke">Rich with Invoke Element (domesticated only)</a></h4>
+	            <div id="rich5" data-src="rich5.js">
+		            <div class="toolbar-top">
+			            <span class="toolbar">
+				            <span id="rich5-bold" style="font-weight: bold; color: #66d9ef">B</span>
+				            <span id="rich5-underline" style="text-decoration: underline; color: #a6e22e">U</span>
+				            <span id="rich5-italic" style="font-style: italic; color: #f92672">I</span>
+				            <span id="rich5-strike" style="text-decoration: line-through; color: #e6db74">S</span>
+			            </span>
+		            </div>
+		            <div id="article5" class="article demo">
+			            <p contenteditable="false">Widget</p>
+			            <br />
+		            </div>
+	            </div>
+            </div>
+
 
             <hr/>
 
@@ -200,6 +217,7 @@
                             <li><code class="ref">Medium.inlineMode</code> or <code>"inline"</code> allows for no rich text editing, and no newlines. Similar to an <code>input</code> element.</li>
                             <li><code class="ref">Medium.partialMode</code> or <code>"partial"</code> is like a <code>textarea</code>, but allows support for paragraphs.</li>
                             <li><code class="ref">Medium.richMode</code> or <code>"rich"</code> allows styling of the text, paragraphs, and hr tags.</li>
+                            <li><code class="ref">Medium.inlineRichMode</code> or <code>"rich"</code> allows styling of the text, but no new lines.</li>
                         </ul>
                     </div>
                 </li>
@@ -274,54 +292,30 @@
             <hr />
 
 
-            <h3 id="Behavior">Behavior</h3>
-            <p>There are two behaviors available, wild and domesticated.</p>
-            <ul class="def">
-                <li>
-                    <div> <code class="ref">wild</code>: (default) uses web browser's <code>document.execCommand()</code> method to insert and invoke elements, which has limitations when using complex html in more tailored scenarios.</div>
-                </li>
-                <li>
-                    <div> <code class="ref">domesticated</code>: when <code>undo.js</code> & <code>rangy</code> are included before Medium.js, domesticated behavior is triggered.  Domesticated behavior makes contenteditable behave when dealing with inserting and invoking more complex html.  By using undo.js, complex elements can be injected without difficulty and be undoable.  By using rangy, we are able to control contenteditable's ability to invoke elements.  Also, created is the <code>onchange</code> event (which does not exist in modern browsers for <code>contenteditable</code> element for some unknown reason) is fired when the value of the element changes.</div>
-                </li>
-            </ul>
-
-
-            <hr />
-
-
             <h3 id="Methods">Methods</h3>
             <p>Methods provide functionality that can be used with buttons, toolbars, WYSIWYG editors, and the environment it is being used with.</p>
 
             <ul class="def">
-                <li>
-                    <div> <code class="ref">behavior()</code>: The type of behavior currently being used with Medium.js.</div>
-                    <div class="important">returns <code>'wild'</code> or <code>'domesticated'</code></div>
-                </li>
                 <li>
                     <div> <code class="ref">destroy()</code>: Destroy the instantiated medium.js </div>
                 </li>
                 <li>
                     <div> <code class="ref">invokeElement({String}tagName, {Object} [attributes])</code>: invokes an element.</div>
                     <div class="important">returns {Medium}</div>
-                    <div class="important">(attributes are domesticated mode only)</div>
                 </li>
                 <li>
                     <div> <code class="ref">insertHtml({String|HtmlElement} html, {Function} [callback])</code>: inserts html into the editor at the cursor.</div>
                     <div class="important">returns {Medium}</div>
                     <div class="important">callback's "this" is inserted/created HtmlElement</div>
-                    <div class="important">(HtmlElement & callback allowed in domesticated mode only)</div>
                 </li>
                 <li>
                     <div> <code class="ref">makeUndoable()</code>: makes the current state of the editor undoable/redoable. </div>
-                    <div class="important">(domesticated mode only)</div>
                 </li>
                 <li>
                     <div> <code class="ref">redo()</code>: redo an edit. </div>
-                    <div class="important">(domesticated mode only)</div>
                 </li>
                 <li>
                     <div> <code class="ref">undo()</code>: undo an edit. </div>
-                    <div class="important">(domesticated mode only)</div>
                 </li>
                 <li>
                     <div> <code class="ref">value({String} [value])</code>: set or get value from medium.</div>
@@ -339,11 +333,8 @@
                 <h4>What is the purpose of Medium.js?</h4>
                 <p>Medium.js allows you to take total control over <code>contenteditable</code> elements. This means that you can use <code>contenteditable</code> without fearing your user is going to enter poor or invalid HTML. It keeps things tight, organized, and semantic.</p>
 
-                <h4>Why are there different behaviours available?</h4>
-                <p>Medium.js was written to be used in many environments, some need more stability than others.  Domesticated offers this stability when needed.</p>
-
                 <h4>Does this give me the cool toolbar like Medium's editor?</h4>
-                <p>The focus of Medium.js has been to make introducing a toolbar, any toolbar, YOUR toolbar, ultra easy.  Take a look at <a href="http://wikiLingoDoesThat.com/">wikiLingo</a> for example.  More to come!</p>
+                <p>Yes...  Coming soon.  The focus of Medium.js has been to make introducing a toolbar, any toolbar, YOUR toolbar, ultra easy.  Take a look at <a href="http://wikiLingoDoesThat.com/">wikiLingo</a> for example.  More to come!</p>
                 
                 <h4>Medium.js works in all browsers!?!</h4>
                 <p>Yup. This is because of you. But if you find a bug, please let us know or fork Medium.js and contribute so we can continue wide support!</p>
@@ -358,8 +349,6 @@
 
 
             <hr />
-
-
 
             <h4 id="Support">Support</h4>
             <p>Need commercial support for Medium.js? Currently provided by <a href="//visop-dev.com/Contact+Us">Visual Interop Development llc.</a>, drop us a line, we can't wait to see what we can do together.</p>
@@ -384,7 +373,6 @@
 	            <li><a href="#Demos">Demos</a></li>
                 <li><a href="#Semantic">Semantic</a></li>
                 <li><a href="#Options">Options</a></li>
-                <li><a href="#Behavior">Behavior</a></li>
                 <li><a href="#Methods">Methods</a></li>
                 <li><a href="#FAQ">FAQ</a></li>
                 <li><a href="#Support">Support</a></li>
@@ -413,5 +401,6 @@
         <script src="partials/rich2.js"></script>
         <script src="partials/rich3.js"></script>
         <script src="partials/rich4.js"></script>
+        <script src="partials/rich5.js"></script>
     </body>
 </html>
