@@ -75,10 +75,6 @@ Medium.Utilities.triggerEvent = function(element, eventName) {
 applyPrism();
 
 $(function(){
-	if (Medium.prototype.behavior() == 'wild') {
-		$('div.domesticated').hide();
-	}
-
 	//Make menu toggle-able, so it doesn't hog all the realestate
 	var menu = $('#menu'),
 		links = menu.find('ul'),
