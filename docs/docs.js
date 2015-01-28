@@ -96,9 +96,11 @@ $(function(){
 		}
 	};
 
-	links.find('a').click(function(e) {
-		e.preventDefault();
+	links.find('a[href^="#"]').click(function(e) {
 		var target = $(this.getAttribute('href').valueOf());
+
+		e.preventDefault();
+
 		viewPort.animate({
 			'scrollTop': target.offset().top
 		}, 1000, function() {
