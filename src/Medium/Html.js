@@ -10,7 +10,6 @@
 	Medium.Html = function (medium, html) {
 		this.html = html;
 		this.medium = medium;
-		this.element = medium.settings.element;
 		this.clean = true;
 		this.injector = new Medium.Injector();
 	};
@@ -23,7 +22,7 @@
 		 * @returns {HtmlElement}
 		 */
 		insert: function (fn, selectInserted) {
-			if (Medium.activeElement === this.element) {
+			if (Medium.activeElement === this.medium.element) {
 				if (fn) {
 					fn.apply(this);
 				}

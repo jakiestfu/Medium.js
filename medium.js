@@ -110,7 +110,7 @@
 			'graveAccent': 192,
 			'openBracket': 219,
 			'backSlash': 220,
-			'closeBraket': 221,
+			'closeBracket': 221,
 			'singleQuote': 222
 		},
 		Medium = (function () {
@@ -124,351 +124,16 @@ var Medium = function (userSettings) {
 	"use strict";
 
 	var medium = this,
-		action = new Medium.Action(),
+		defaultSettings = utils.deepExtend({}, Medium.defaultSettings),
+		settings = this.settings = utils.deepExtend(defaultSettings, userSettings),
 		cache = new Medium.Cache(),
-		cursor = new Medium.Cursor(this),
 		selection = new Medium.Selection(),
-		intercept = {
-			focus: function (e) {
-				e = e || w.event;
-				Medium.activeElement = el;
-				medium.placeholders();
-			},
-			blur: function (e) {
-				e = e || w.event;
-				if (Medium.activeElement === el) {
-					Medium.activeElement = null;
-				}
-
-				medium.placeholders();
-			},
-			down: function (e) {
-				e = e || w.event;
-
-				var keepEvent = true;
-
-				//in Chrome it sends out this event before every regular event, not sure why
-				if (e.keyCode === 229) return;
-
-				utils.isCommand(settings, e, function () {
-					cache.cmd = true;
-				}, function () {
-					cache.cmd = false;
-				});
-
-				utils.isShift(e, function () {
-					cache.shift = true;
-				}, function () {
-					cache.shift = false;
-				});
-
-				utils.isModifier(settings, e, function (cmd) {
-					if (cache.cmd) {
-
-						if (( (settings.mode === Medium.inlineMode) || (settings.mode === Medium.partialMode) ) && cmd !== "paste") {
-							utils.preventDefaultEvent(e);
-							return;
-						}
-
-						var cmdType = typeof cmd;
-						var fn = null;
-						if (cmdType === "function") {
-							fn = cmd;
-						} else {
-							fn = intercept.command[cmd];
-						}
-
-						keepEvent = fn.call(medium, e);
-
-						if (keepEvent === false) {
-							utils.preventDefaultEvent(e);
-							utils.stopPropagation(e);
-						}
-					}
-				});
-
-				if (settings.maxLength !== -1) {
-					var len = utils.text(el).length,
-						hasSelection = false,
-						selection = w.getSelection();
-
-					if (selection) {
-						hasSelection = !selection.isCollapsed;
-					}
-
-					if (len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection) {
-						settings.maxLengthReached(settings.element)
-						return utils.preventDefaultEvent(e);
-					}
-				}
-
-				switch (e.keyCode) {
-					case key['enter']:
-						intercept.enterKey(e);
-						break;
-					case key['backspace']:
-					case key['delete']:
-						intercept.backspaceOrDeleteKey(e);
-						break;
-				}
-
-				return keepEvent;
-			},
-			up: function (e) {
-				e = e || w.event;
-				utils.isCommand(settings, e, function () {
-					cache.cmd = false;
-				}, function () {
-					cache.cmd = true;
-				});
-				medium.clean();
-				medium.placeholders();
-
-				//here we have a key context, so if you need to create your own object within a specific context it is doable
-				var keyContext;
-				if (
-					settings.keyContext !== null
-					&& ( keyContext = settings.keyContext[e.keyCode] )
-				) {
-					var el = cursor.parent();
-
-					if (el) {
-						keyContext.call(medium, e, el);
-					}
-				}
-
-				action.preserveElementFocus();
-			},
-			command: {
-				bold: function (e) {
-					utils.preventDefaultEvent(e);
-					(new Medium.Element(medium, 'bold'))
-						.setClean(false)
-						.invoke(settings.beforeInvokeElement);
-				},
-				underline: function (e) {
-					utils.preventDefaultEvent(e);
-					(new Medium.Element(medium, 'underline'))
-						.setClean(false)
-						.invoke(settings.beforeInvokeElement);
-				},
-				italicize: function (e) {
-					utils.preventDefaultEvent(e);
-					(new Medium.Element(medium, 'italic'))
-						.setClean(false)
-						.invoke(settings.beforeInvokeElement);
-				},
-				quote: function (e) {
-				},
-				paste: function (e) {
-					medium.makeUndoable();
-					if (settings.pasteAsText) {
-						var sel = selection.saveSelection();
-						utils.pasteHook(function (text) {
-							selection.restoreSelection(sel);
-
-							text = text.replace(/\n/g, '<br>');
-
-							(new Medium.Html(medium, text))
-								.setClean(false)
-								.insert(settings.beforeInsertHtml, true);
-
-							medium.clean();
-							medium.placeholders();
-						});
-					} else {
-						medium.clean();
-						medium.placeholders();
-					}
-				}
-			},
-			enterKey: function (e) {
-				if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
-					return utils.preventDefaultEvent(e);
-				}
-
-				if (cache.shift) {
-					if (settings.tags['break']) {
-						utils.preventDefaultEvent(e);
-						medium.addTag(settings.tags['break'], true);
-						return false;
-					}
-
-				} else {
-
-					var focusedElement = utils.atCaret(medium) || {},
-						children = el.children,
-						lastChild = focusedElement === el.lastChild ? el.lastChild : null,
-						makeHR,
-						secondToLast,
-						paragraph;
-
-					if (
-						lastChild
-						&& lastChild !== el.firstChild
-						&& settings.autoHR
-						&& settings.mode !== 'partial'
-						&& settings.tags.horizontalRule
-					) {
-
-						utils.preventDefaultEvent(e);
-
-						makeHR =
-							utils.text(lastChild) === ""
-							&& lastChild.nodeName.toLowerCase() === settings.tags.paragraph;
-
-						if (makeHR && children.length >= 2) {
-							secondToLast = children[ children.length - 2 ];
-
-							if (secondToLast.nodeName.toLowerCase() === settings.tags.horizontalRule) {
-								makeHR = false;
-							}
-						}
-
-						if (makeHR) {
-							medium.addTag(settings.tags.horizontalRule, false, true, focusedElement);
-							focusedElement = focusedElement.nextSibling;
-						}
-
-						if ((paragraph = medium.addTag(settings.tags.paragraph, true, null, focusedElement)) !== null) {
-							paragraph.innerHTML = '';
-							cursor.set(medium, 0, paragraph);
-						}
-					}
-				}
-
-				return true;
-			},
-			backspaceOrDeleteKey: function (e) {
-				if (settings.onBackspaceOrDelete !== undefined) {
-					var result = settings.onBackspaceOrDelete.call(medium, e, el);
-
-					if (result) {
-						return;
-					}
-				}
-
-				if (el.lastChild === null) return;
-
-				var lastChild = el.lastChild,
-					beforeLastChild = lastChild.previousSibling;
-
-				if (
-					lastChild
-					&& settings.tags.horizontalRule
-					&& lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule
-				) {
-					el.removeChild(lastChild);
-				} else if (
-					lastChild
-					&& beforeLastChild
-					&& utils.text(lastChild).length < 1
-
-					&& beforeLastChild.nodeName.toLowerCase() === settings.tags.horizontalRule
-					&& lastChild.nodeName.toLowerCase() === settings.tags.paragraph
-				) {
-					el.removeChild(lastChild);
-					el.removeChild(beforeLastChild);
-				}
-			}
-		},
-		defaultSettings = {
-			element: null,
-			modifier: 'auto',
-			placeholder: "",
-			autofocus: false,
-			autoHR: true,
-			mode: Medium.richMode,
-			maxLength: -1,
-			modifiers: {
-				'b': 'bold',
-				'i': 'italicize',
-				'u': 'underline',
-				'v': 'paste'
-			},
-			tags: {
-				'break': 'br',
-				'horizontalRule': 'hr',
-				'paragraph': 'p',
-				'outerLevel': ['pre', 'blockquote', 'figure'],
-				'innerLevel': ['a', 'b', 'u', 'i', 'img', 'strong']
-			},
-			cssClasses: {
-				editor: 'Medium',
-				pasteHook: 'Medium-paste-hook',
-				placeholder: 'Medium-placeholder',
-				clear: 'Medium-clear'
-			},
-			attributes: {
-				remove: ['style', 'class']
-			},
-			pasteAsText: true,
-			beforeInvokeElement: function () {
-				//this = Medium.Element
-			},
-			beforeInsertHtml: function () {
-				//this = Medium.Html
-			},
-			maxLengthReached: function (element) {
-				//element
-			},
-			beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
-			},
-			keyContext: null,
-			pasteEventHandler: function(e) {
-				e = e || w.event;
-				medium.makeUndoable();
-				var length = medium.value().length,
-					totalLength;
-
-				if (settings.pasteAsText) {
-					utils.preventDefaultEvent(e);
-					var sel = selection.saveSelection();
-
-					medium.prompt(function(text) {
-						text = text || '';
-						if (text.length > 0) {
-							el.focus();
-							Medium.activeElement = el;
-							selection.restoreSelection(sel);
-
-							//encode the text first
-							text = utils.encodeHtml(text);
-
-							//cut down it's length
-							totalLength = text.length + length;
-							if (settings.maxLength > 0 && totalLength > settings.maxLength) {
-								text = text.substring(0, settings.maxLength - length);
-							}
-
-							if (settings.mode !== Medium.inlineMode) {
-								text = text.replace(/\n/g, '<br>');
-							}
-
-							(new Medium.Html(medium, text))
-								.setClean(false)
-								.insert(settings.beforeInsertHtml, true);
-
-							medium.clean();
-							medium.placeholders();
-						}
-					});
-					return false;
-				} else {
-					setTimeout(function() {
-						medium.clean();
-						medium.placeholders();
-					}, 20);
-				}
-			},
-			drag: false
-		},
-		settings = utils.deepExtend(defaultSettings, userSettings),
+		action = new Medium.Action(this),
+		cursor = new Medium.Cursor(this),
+		undoable = new Medium.Undoable(this),
 		el,
 		newVal,
-		i,
-		bridge = {},
-		drag;
+		i;
 
 	for (i in defaultSettings) if (defaultSettings.hasOwnProperty(i)) {
 		// Override defaults with data-attributes
@@ -487,7 +152,7 @@ var Medium = function (userSettings) {
 	}
 
 	if (settings.modifiers) {
-		for (i in settings.modifiers) {
+		for (i in settings.modifiers) if (settings.modifiers.hasOwnProperty(i)) {
 			if (typeof(key[i]) !== 'undefined') {
 				settings.modifiers[key[i]] = settings.modifiers[i];
 			}
@@ -495,7 +160,7 @@ var Medium = function (userSettings) {
 	}
 
 	if (settings.keyContext) {
-		for (i in settings.keyContext) {
+		for (i in settings.keyContext) if (settings.keyContext.hasOwnProperty(i)) {
 			if (typeof(key[i]) !== 'undefined') {
 				settings.keyContext[key[i]] = settings.keyContext[i];
 			}
@@ -518,7 +183,7 @@ var Medium = function (userSettings) {
 
 	this.settings = settings;
 	this.element = el;
-	this.intercept = intercept;
+	el.medium = this;
 
 	this.action = action;
 	this.cache = cache;
@@ -526,49 +191,23 @@ var Medium = function (userSettings) {
 	this.utils = utils;
 	this.selection = selection;
 
-	bridge.element = el;
-	bridge.medium = this;
-	bridge.settings = settings;
-
-	bridge.action = action;
-	bridge.cache = cache;
-	bridge.cursor = cursor;
-	bridge.intercept = intercept;
-	bridge.utils = utils;
-	bridge.selection = selection;
-
-	action.setBridge(bridge);
-	cache.setBridge(bridge);
-	selection.setBridge(bridge);
-
 	// Initialize editor
 	medium.clean();
 	medium.placeholders();
 	action.preserveElementFocus();
 
-	// Capture Events
-	action.listen();
-
 	this.dirty = false;
-	this.undoable = new Medium.Undoable(this);
-	this.undo = this.undoable.undo;
-	this.redo = this.undoable.redo;
-	this.makeUndoable = this.undoable.makeUndoable;
+	this.undoable = undoable;
+	this.undo = undoable.undo;
+	this.redo = undoable.redo;
+	this.makeUndoable = undoable.makeUndoable;
 
 	if (settings.drag) {
-		drag = medium.drag = new Medium.Drag(medium);
-
-		utils.addEvent(el, 'mousemove', function(e) {
-			e = e || w.event;
-			var target = e.target || {};
-
-			if (target.getAttribute('contenteditable') === 'false') {
-				drag.show(target);
-			}
-		});
+		medium.drag = new Medium.Drag(medium);
+		medium.drag.setup();
 	}
 
-	el.medium = this;
+	action.setup();
 
 	// Set as initialized
 	cache.initialized = true;
@@ -586,8 +225,7 @@ Medium.prototype = {
 		//in IE8, just gracefully degrade to no placeholders
 		if (!w.getComputedStyle) return;
 
-		var that = this,
-			s = this.settings,
+		var s = this.settings,
 			placeholder = this.placeholder || (this.placeholder = d.createElement('div')),
 			el = this.element,
 			style = placeholder.style,
@@ -799,7 +437,8 @@ Medium.prototype = {
 	 */
 	insertHtml: function (html, callback, skipChangeEvent) {
 		var result = (new Medium.Html(this, html))
-			.insert(this.settings.beforeInsertHtml);
+			.insert(this.settings.beforeInsertHtml),
+			lastElement = result[result.length - 1];
 
 		if (skipChangeEvent === true) {
 			utils.triggerEvent(this.element, "change");
@@ -807,6 +446,19 @@ Medium.prototype = {
 
 		if (callback) {
 			callback.apply(result);
+		}
+
+		switch (lastElement.nodeName) {
+			//lists need their last child selected if it exists
+			case 'UL':
+			case 'OL':
+			case 'DL':
+				if (lastElement.lastChild !== null) {
+					this.cursor.moveCursorToEnd(lastElement.lastChild);
+					break;
+				}
+			default:
+				this.cursor.moveCursorToEnd(lastElement);
 		}
 
 		return this;
@@ -850,8 +502,9 @@ Medium.prototype = {
 	 */
 	invokeElement: function (tagName, attributes, skipChangeEvent) {
 		var settings = this.settings,
-			attributes = attributes || {},
 			remove = attributes.remove || [];
+
+		attributes = attributes || {};
 
 		switch (settings.mode) {
 			case Medium.inlineMode:
@@ -910,26 +563,7 @@ Medium.prototype = {
 	 * @returns {Medium}
 	 */
 	select: function () {
-		var el = this.element,
-			range,
-			selection;
-
-		el.focus();
-
-		if (d.body.createTextRange) {
-			range = d.body.createTextRange();
-			range.moveToElementText(el);
-			range.select();
-		} else if (w.getSelection) {
-			selection = w.getSelection();
-			range = d.createRange();
-			range.selectNodeContents(el);
-			selection.removeAllRanges();
-			selection.addRange(range);
-		}
-
-		Medium.activeElement = el;
-
+		utils.selectNode(Medium.activeElement = this.element);
 		return this;
 	},
 
@@ -974,7 +608,6 @@ Medium.prototype = {
 
 	destroy: function () {
 		var el = this.element,
-			intercept = this.intercept,
 			settings = this.settings,
 			placeholder = this.placeholder || null;
 
@@ -994,12 +627,11 @@ Medium.prototype = {
 			.replace(settings.cssClasses.editor + '-' + settings.mode, ''));
 
 		//remove events
-		utils
-			.removeEvent(el, 'keyup', intercept.up)
-			.removeEvent(el, 'keydown', intercept.down)
-			.removeEvent(el, 'focus', intercept.focus)
-			.removeEvent(el, 'blur', intercept.focus)
-			.removeEvent(el, 'paste', settings.pasteEventHandler);
+		this.action.destroy();
+
+		if (this.settings.drag) {
+			this.drag.destroy();
+		}
 	},
 
 	// Clears the element and restores the placeholder
@@ -1050,6 +682,79 @@ Medium.prototype = {
 
 	lastChild: function () {
 		return this.element.lastChild;
+	},
+
+	bold: function () {
+
+		switch (this.settings.mode) {
+			case Medium.partialMode:
+			case Medium.inlineMode:
+				return this;
+		}
+
+		(new Medium.Element(this, 'bold'))
+			.setClean(false)
+			.invoke(this.settings.beforeInvokeElement);
+
+		return this;
+	},
+	underline: function () {
+		switch (this.settings.mode) {
+			case Medium.partialMode:
+			case Medium.inlineMode:
+				return this;
+		}
+
+		(new Medium.Element(this, 'underline'))
+			.setClean(false)
+			.invoke(this.settings.beforeInvokeElement);
+
+		return this;
+	},
+	italicize: function () {
+		switch (this.settings.mode) {
+			case Medium.partialMode:
+			case Medium.inlineMode:
+				return this;
+		}
+
+		(new Medium.Element(this, 'italic'))
+			.setClean(false)
+			.invoke(this.settings.beforeInvokeElement);
+
+		return this;
+	},
+	quote: function () {
+
+		return this;
+	},
+	paste: function () {
+		var medium = this,
+			settings = this.settings,
+			selection = this.selection;
+
+		this.makeUndoable();
+
+		if (settings.pasteAsText) {
+			var sel = selection.saveSelection();
+			utils.pasteHook(this, function (text) {
+				selection.restoreSelection(sel);
+
+				text = text.replace(/\n/g, '<br>');
+
+				(new Medium.Html(medium, text))
+					.setClean(false)
+					.insert(settings.beforeInsertHtml, true);
+
+				medium.clean();
+				medium.placeholders();
+			});
+		} else {
+			this.clean();
+			this.placeholders();
+		}
+
+		return true;
 	}
 };
 
@@ -1061,36 +766,413 @@ Medium.inlineRichMode = 'inlineRich';
 Medium.Messages = {
 	pastHere: 'Paste Here'
 };
+
+Medium.defaultSettings = {
+	element: null,
+	modifier: 'auto',
+	placeholder: "",
+	autofocus: false,
+	autoHR: true,
+	mode: Medium.richMode,
+	maxLength: -1,
+	modifiers: {
+		'b': 'bold',
+		'i': 'italicize',
+		'u': 'underline',
+		'v': 'paste'
+	},
+	tags: {
+		'break': 'br',
+		'horizontalRule': 'hr',
+		'paragraph': 'p',
+		'outerLevel': ['pre', 'blockquote', 'figure'],
+		'innerLevel': ['a', 'b', 'u', 'i', 'img', 'strong']
+	},
+	cssClasses: {
+		editor: 'Medium',
+		pasteHook: 'Medium-paste-hook',
+		placeholder: 'Medium-placeholder',
+		clear: 'Medium-clear'
+	},
+	attributes: {
+		remove: ['style', 'class']
+	},
+	pasteAsText: true,
+	beforeInvokeElement: function () {
+		//this = Medium.Element
+	},
+	beforeInsertHtml: function () {
+		//this = Medium.Html
+	},
+	maxLengthReached: function (element) {
+		//element
+	},
+	beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
+	},
+	keyContext: null,
+	drag: false
+};
 (function(Medium, w, d) {
 	"use strict";
 
-	Medium.Action = function () {
+	Medium.Action = function (medium) {
+		this.medium = medium;
+
+		this.handledEvents = {
+			keydown: null,
+			keyup: null,
+			blur: null,
+			focus: null,
+			paste: null
+		};
+
 	};
 	Medium.Action.prototype = {
-		setBridge: function (bridge) {
-			for (var i in bridge) if (bridge.hasOwnProperty(i)) {
-				this[i] = bridge[i];
-			}
+		setup: function () {
+			this
+				.handleFocus()
+				.handleBlur()
+				.handleKeyDown()
+				.handleKeyUp()
+				.handlePaste();
 		},
-		listen: function () {
-			var el = this.element,
-				intercept = this.intercept;
+		destroy: function() {
+			var el = this.medium.element;
 
 			utils
-				.addEvent(el, 'keyup', intercept.up)
-				.addEvent(el, 'keydown', intercept.down)
-				.addEvent(el, 'focus', intercept.focus)
-				.addEvent(el, 'blur', intercept.blur)
-				.addEvent(el, 'paste', this.settings.pasteEventHandler);
+				.removeEvent(el, 'focus', this.handledEvents.focus)
+				.removeEvent(el, 'blur', this.handledEvents.blur)
+				.removeEvent(el, 'keydown', this.handledEvents.keydown)
+				.removeEvent(el, 'keyup', this.handledEvents.keyup)
+				.removeEvent(el, 'paste', this.handledEvents.paste);
+		},
+		handleFocus: function () {
+
+			var medium = this.medium,
+				el = medium.element;
+
+			utils.addEvent(el, 'focus', this.handledEvents.focus = function(e) {
+				e = e || w.event;
+
+				console.log(el);
+				Medium.activeElement = el;
+
+				medium.placeholders();
+			});
+
+			return this;
+		},
+		handleBlur: function () {
+
+			var medium = this.medium,
+				el = medium.element;
+
+			utils.addEvent(el, 'blur', this.handledEvents.blur = function(e) {
+				e = e || w.event;
+
+				if (Medium.activeElement === el) {
+					Medium.activeElement = null;
+				}
+
+				medium.placeholders();
+			});
+
+			return this;
+		},
+		handleKeyDown: function () {
+
+			var action = this,
+				medium = this.medium,
+				settings = medium.settings,
+				cache = medium.cache,
+				el = medium.element;
+
+			utils.addEvent(el, 'keydown', this.handledEvents.keydown = function(e) {
+				e = e || w.event;
+
+				var keepEvent = true;
+
+				//in Chrome it sends out this event before every regular event, not sure why
+				if (e.keyCode === 229) return;
+
+				utils.isCommand(settings, e, function () {
+					cache.cmd = true;
+				}, function () {
+					cache.cmd = false;
+				});
+
+				utils.isShift(e, function () {
+					cache.shift = true;
+				}, function () {
+					cache.shift = false;
+				});
+
+				utils.isModifier(settings, e, function (cmd) {
+					if (cache.cmd) {
+
+						if (( (settings.mode === Medium.inlineMode) || (settings.mode === Medium.partialMode) ) && cmd !== "paste") {
+							utils.preventDefaultEvent(e);
+							return false;
+						}
+
+						var cmdType = typeof cmd;
+						var fn = null;
+						if (cmdType === "function") {
+							fn = cmd;
+						} else {
+							fn = medium[cmd];
+						}
+
+						keepEvent = fn.call(medium, e);
+
+						if (keepEvent === false || keepEvent === medium) {
+							utils.preventDefaultEvent(e);
+							utils.stopPropagation(e);
+						}
+						return true;
+					}
+					return false;
+				});
+
+				if (settings.maxLength !== -1) {
+					var len = utils.text(el).length,
+						hasSelection = false,
+						selection = w.getSelection(),
+						isSpecial = utils.isSpecial(e),
+						isNavigational = utils.isNavigational(e);
+
+					if (selection) {
+						hasSelection = !selection.isCollapsed;
+					}
+
+					if (isSpecial || isNavigational) {
+						return true;
+					}
+
+					if (len >= settings.maxLength && !hasSelection) {
+						settings.maxLengthReached(el);
+						utils.preventDefaultEvent(e);
+						return false;
+					}
+				}
+
+				switch (e.keyCode) {
+					case key['enter']:
+						if (action.enterKey(e) === false) {
+							utils.preventDefaultEvent(e);
+						}
+						break;
+					case key['backspace']:
+					case key['delete']:
+						action.backspaceOrDeleteKey(e);
+						break;
+				}
+
+				return keepEvent;
+			});
+
+			return this;
+		},
+		handleKeyUp: function () {
+
+			var action = this,
+				medium = this.medium,
+				settings = medium.settings,
+				cache = medium.cache,
+				cursor = medium.cursor,
+				el = medium.element;
+
+			utils.addEvent(el, 'keyup', this.handledEvents.keyup = function(e) {
+				e = e || w.event;
+				utils.isCommand(settings, e, function () {
+					cache.cmd = false;
+				}, function () {
+					cache.cmd = true;
+				});
+				medium.clean();
+				medium.placeholders();
+
+				//here we have a key context, so if you need to create your own object within a specific context it is doable
+				var keyContext;
+				if (
+					settings.keyContext !== null
+					&& ( keyContext = settings.keyContext[e.keyCode] )
+				) {
+					var el = cursor.parent();
+
+					if (el) {
+						keyContext.call(medium, e, el);
+					}
+				}
+
+				action.preserveElementFocus();
+			});
+
+			return this;
+		},
+		handlePaste: function(e) {
+			var medium = this.medium,
+				el = medium.element,
+				settings = medium.settings,
+				selection = medium.selection;
+
+			utils.addEvent(el, 'paste', this.handledEvents.paste = function(e) {
+				e = e || w.event;
+				medium.makeUndoable();
+				var length = medium.value().length,
+					totalLength;
+
+				if (settings.pasteAsText) {
+					utils.preventDefaultEvent(e);
+					var sel = selection.saveSelection();
+
+					medium.prompt(function(text) {
+						text = text || '';
+						if (text.length > 0) {
+							el.focus();
+							Medium.activeElement = el;
+							selection.restoreSelection(sel);
+
+							//encode the text first
+							text = utils.encodeHtml(text);
+
+							//cut down it's length
+							totalLength = text.length + length;
+							if (settings.maxLength > 0 && totalLength > settings.maxLength) {
+								text = text.substring(0, settings.maxLength - length);
+							}
+
+							if (settings.mode !== Medium.inlineMode) {
+								text = text.replace(/\n/g, '<br>');
+							}
+
+							(new Medium.Html(medium, text))
+								.setClean(false)
+								.insert(settings.beforeInsertHtml, true);
+
+							medium.clean();
+							medium.placeholders();
+						}
+					});
+					return false;
+				} else {
+					setTimeout(function() {
+						medium.clean();
+						medium.placeholders();
+					}, 20);
+				}
+			});
+
+			return this;
+		},
+		enterKey: function (e) {
+			var medium = this.medium,
+				el = medium.element,
+				settings = medium.settings,
+				cache = medium.cache,
+				cursor = medium.cursor;
+
+			if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
+				return false;
+			}
+
+			if (cache.shift) {
+				if (settings.tags['break']) {
+					medium.addTag(settings.tags['break'], true);
+					return false;
+				}
+
+			} else {
+
+				var focusedElement = utils.atCaret(medium) || {},
+					children = el.children,
+					lastChild = focusedElement === el.lastChild ? el.lastChild : null,
+					makeHR,
+					secondToLast,
+					paragraph;
+
+				if (
+					lastChild
+					&& lastChild !== el.firstChild
+					&& settings.autoHR
+					&& settings.mode !== Medium.partialMode
+					&& settings.tags.horizontalRule
+				) {
+
+					utils.preventDefaultEvent(e);
+
+					makeHR =
+						utils.text(lastChild) === ""
+						&& lastChild.nodeName.toLowerCase() === settings.tags.paragraph;
+
+					if (makeHR && children.length >= 2) {
+						secondToLast = children[ children.length - 2 ];
+
+						if (secondToLast.nodeName.toLowerCase() === settings.tags.horizontalRule) {
+							makeHR = false;
+						}
+					}
+
+					if (makeHR) {
+						medium.addTag(settings.tags.horizontalRule, false, true, focusedElement);
+						focusedElement = focusedElement.nextSibling;
+					}
+
+					if ((paragraph = medium.addTag(settings.tags.paragraph, true, null, focusedElement)) !== null) {
+						paragraph.innerHTML = '';
+						cursor.set(medium, 0, paragraph);
+					}
+				}
+			}
+
+			return true;
+		},
+		backspaceOrDeleteKey: function (e) {
+			var medium = this.medium,
+				settings = medium.settings,
+				el = medium.element;
+
+			if (settings.onBackspaceOrDelete !== undefined) {
+				var result = settings.onBackspaceOrDelete.call(medium, e, el);
+
+				if (result) {
+					return;
+				}
+			}
+
+			if (el.lastChild === null) return;
+
+			var lastChild = el.lastChild,
+				beforeLastChild = lastChild.previousSibling;
+
+			if (
+				lastChild
+				&& settings.tags.horizontalRule
+				&& lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule
+			) {
+				el.removeChild(lastChild);
+			} else if (
+				lastChild
+				&& beforeLastChild
+				&& utils.text(lastChild).length < 1
+
+				&& beforeLastChild.nodeName.toLowerCase() === settings.tags.horizontalRule
+				&& lastChild.nodeName.toLowerCase() === settings.tags.paragraph
+			) {
+				el.removeChild(lastChild);
+				el.removeChild(beforeLastChild);
+			}
 		},
 		preserveElementFocus: function () {
 			// Fetch node that has focus
 			var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
 			if (anchorNode) {
-				var cache = this.medium.cache,
-					s = this.settings,
+				var medium = this.medium,
+					cache = medium.cache,
+					el = medium.element,
+					s = medium.settings,
 					cur = anchorNode.parentNode,
-					children = s.element.children,
+					children = el.children,
 					diff = cur !== cache.focusedElement,
 					elementIndex = 0,
 					i;
@@ -1127,14 +1209,6 @@ Medium.Messages = {
 		this.focusedElement = null
 	};
 
-	Medium.Cache.prototype = {
-		setBridge: function (bridge) {
-			for (var i in bridge) if (bridge.hasOwnProperty(i)) {
-				this[i] = bridge[i];
-			}
-		}
-	};
-
 })(Medium);
 (function(Medium) {
 	"use strict";
@@ -1169,14 +1243,22 @@ Medium.Messages = {
 		},
 		//http://davidwalsh.name/caret-end
 		moveCursorToEnd: function (el) {
-			if (typeof el.selectionStart == "number") {
-				el.selectionStart = el.selectionEnd = el.value.length;
-			} else if (typeof el.createTextRange != "undefined") {
-				el.focus();
-				var range = el.createTextRange();
-				range.collapse(false);
-				range.select();
-			}
+			//get the browser selection object - it may or may not have a selected range
+			var selection = rangy.getSelection(),
+
+				//create a range object to set the caret positioning for
+				range = rangy.createRange();
+
+
+			//set the caret after the start node and at the end of the end node
+			//Note: the end is set using endNode.length when the node is of the text type
+			//and it is set using childNodes.length when the end node is of the element type
+			range.setStartAfter(el);
+			range.setEnd(el, el.length || el.childNodes.length);
+
+			//apply this range to the selection object
+			selection.removeAllRanges();
+			selection.addRange(range);
 		},
 		parent: function () {
 			var target = null, range;
@@ -1231,41 +1313,13 @@ Medium.Messages = {
 		this.hide();
 		this.element = null;
 		this.protectedElement = null;
-
-		utils
-			.addEvent(icon, 'dragstart', function(e) {
-				if (that.protectedElement !== null) return;
-
-				e = e || w.event;
-
-				that.protectedElement = utils.detachNode(that.element);
-
-				that.icon.style.opacity = 0.00;
-			})
-			.addEvent(icon, 'mouseover', function(e) {
-				if (that.protectedElement !== null) return;
-
-				utils
-					.stopPropagation(e)
-					.addClass(that.element, that.elementClass);
-
-			})
-			.addEvent(icon, 'mouseout', function(e) {
-				if (that.protectedElement !== null) return;
-
-				utils
-					.stopPropagation(e)
-					.removeClass(that.element, that.elementClass);
-
-			})
-			.addEvent(icon, 'dragend', d.body.ondragend = function(e) {
-				if (that.protectedElement === null) return;
-
-				setTimeout(function() {
-					that.cleanCanvas();
-					that.protectedElement = null;
-				}, 1);
-			});
+		this.handledEvents = {
+			dragstart: null,
+			dragend: null,
+			mouseover: null,
+			mouseout: null,
+			mousemove: null
+		};
 	};
 	Medium.Drag.prototype = {
 		elementClass: 'Medium-focused',
@@ -1286,10 +1340,95 @@ Medium.Messages = {
 	</g>\
 </svg>',
 		iconColor: '#231F20',
+		setup: function() {
+			this
+				.handleDragstart()
+				.handleDragend()
+				.handleMouseover()
+				.handleMouseout()
+				.handleMousemove();
+		},
+		destroy: function() {
+			utils
+				.removeEvent(this.icon, 'dragstart', this.handledEvents.dragstart)
+				.removeEvent(this.icon, 'dragend', this.handledEvents.dragend)
+				.removeEvent(this.icon, 'mouseover', this.handledEvents.mouseover)
+				.removeEvent(this.icon, 'mouseout', this.handledEvents.mouseout)
+				.removeEvent(this.medium.element, 'mousemove', this.handledEvents.mousemove);
+		},
 		hide: function() {
 			utils.hide(this.icon);
 		},
+		handleDragstart: function() {
 
+			var me = this;
+
+			utils.addEvent(this.icon, 'dragstart', this.handledEvents.dragstart = function(e) {
+				if (me.protectedElement !== null) return;
+
+				e = e || w.event;
+
+				me.protectedElement = utils.detachNode(me.element);
+
+				me.icon.style.opacity = 0.00;
+			});
+
+			return this;
+		},
+		handleDragend: function() {
+			var me = this;
+
+			utils.addEvent(this.icon, 'dragend',  this.handledEvents.dragend = d.body.ondragend = function(e) {
+				if (me.protectedElement === null) return;
+
+				setTimeout(function() {
+					me.cleanCanvas();
+					me.protectedElement = null;
+				}, 1);
+			});
+
+			return this;
+		},
+		handleMouseover: function() {
+			var me = this;
+
+			utils.addEvent(this.icon, 'mouseover', this.handledEvents.mouseover = function(e) {
+				if (me.protectedElement !== null) return;
+
+				utils
+					.stopPropagation(e)
+					.addClass(me.element, me.elementClass);
+
+			});
+
+			return this;
+		},
+		handleMouseout: function() {
+			var me = this;
+
+			utils.addEvent(this.icon, 'mouseout', this.handledEvents.mouseout = function(e) {
+				if (me.protectedElement !== null) return;
+
+				utils
+					.stopPropagation(e)
+					.removeClass(me.element, me.elementClass);
+			});
+			return this;
+		},
+		handleMousemove: function() {
+			var me = this;
+
+			utils.addEvent(this.medium.element, 'mousemove', this.handledEvents.mousemove = function(e) {
+				e = e || w.event;
+				var target = e.target || {};
+
+				if (target.getAttribute('contenteditable') === 'false') {
+					me.show(target);
+				}
+			});
+
+			return this;
+		},
 		show: function(el) {
 			if (el === this.icon && this.protectedElement === null) return;
 
@@ -1339,7 +1478,7 @@ Medium.Messages = {
 	 */
 	Medium.Element = function (medium, tagName, attributes) {
 		this.medium = medium;
-		this.element = medium.settings.element;
+		this.element = medium.element;
 
 		switch (tagName.toLowerCase()) {
 			case 'bold':
@@ -1424,7 +1563,6 @@ Medium.Messages = {
 	Medium.Html = function (medium, html) {
 		this.html = html;
 		this.medium = medium;
-		this.element = medium.settings.element;
 		this.clean = true;
 		this.injector = new Medium.Injector();
 	};
@@ -1437,7 +1575,7 @@ Medium.Messages = {
 		 * @returns {HtmlElement}
 		 */
 		insert: function (fn, selectInserted) {
-			if (Medium.activeElement === this.element) {
+			if (Medium.activeElement === this.medium.element) {
 				if (fn) {
 					fn.apply(this);
 				}
@@ -1484,10 +1622,13 @@ Medium.Messages = {
 		/**
 		 * @methodOf Medium.Injector
 		 * @param {String|HtmlElement} htmlRaw
-		 * @returns {HtmlElement}
+		 * @returns {[HtmlElement|Node]}
 		 */
 		inject: function (htmlRaw) {
-			var html, isConverted = false;
+			var nodes = [],
+				html,
+				isConverted = false;
+
 			if (typeof htmlRaw === 'string') {
 				var htmlConverter = d.createElement('div');
 				htmlConverter.innerHTML = htmlRaw;
@@ -1497,24 +1638,32 @@ Medium.Messages = {
 				html = htmlRaw;
 			}
 
-			this.insertHTML('<span id="wedge"></span>');
+			this.insertHTML('<span id="Medium-wedge"></span>');
 
-			var wedge = d.getElementById('wedge'),
+			var wedge = d.getElementById('Medium-wedge'),
 				parent = wedge.parentNode,
 				i = 0;
+
 			wedge.removeAttribute('id');
 
 			if (isConverted) {
+				//make an array of elements that are about to be inserted, can't use html because they will
 				while (i < html.length) {
-					parent.insertBefore(html[i], wedge);
+					nodes.push(html[i]);
+					i++;
+				}
+
+				while (html.length > 0) {
+					parent.insertBefore(html[html.length - 1], wedge);
 				}
 			} else {
+				nodes.push(html);
 				parent.insertBefore(html, wedge);
 			}
 			parent.removeChild(wedge);
 			wedge = null;
 
-			return html;
+			return nodes;
 		},
 
 		//Thank you Tim Down (super uber genius): http://stackoverflow.com/questions/6690752/insert-html-at-caret-in-a-contenteditable-div/6691294#6691294
@@ -1575,11 +1724,6 @@ Medium.Messages = {
 	Medium.Selection = function () {
 	};
 	Medium.Selection.prototype = {
-		setBridge: function (bridge) {
-			for (var i in bridge) if (bridge.hasOwnProperty(i)) {
-				this[i] = bridge[i];
-			}
-		},
 		saveSelection: function () {
 			if (w.getSelection) {
 				var sel = w.getSelection();
@@ -1607,8 +1751,9 @@ Medium.Messages = {
 })(Medium);(function(Medium) {
 	"use strict";
 	Medium.Toolbar = function(medium, buttons) {
-		var elementCreator = d.createElement('div'),
-			that = this;
+		this.medium = medium;
+
+		var elementCreator = d.createElement('div');
 
 		elementCreator.innerHTML = this.html;
 
@@ -1618,18 +1763,13 @@ Medium.Messages = {
 		this.active = false;
 		this.busy = true;
 
-		utils
-			.addEvents(document, 'mouseup keyup', function(e) {
-				if (Medium.activeElement === medium.element && !that.busy) {
-					that.goToSelection();
-				}
-			})
-			.addEvent(w, 'scroll', function() {
-				if (that.active) {
-					that.goToSelection();
-				}
-			});
+		this.handledEvents = {
+			scroll: null,
+			mouseup: null,
+			keyup: null
+		};
 	};
+
 	Medium.Toolbar.prototype = {
 		fixedClass: 'Medium-toolbar-fixed',
 		showClass: 'Medium-toolbar-show',
@@ -1649,6 +1789,52 @@ Medium.Messages = {
 				</table>\
 			</div>',
 
+		setup: function() {
+			this
+				.handleScroll()
+				.handleMouseup()
+				.handleKeyup();
+
+		},
+		destroy: function() {
+			utils
+				.removeEvent(w, 'scroll', this.handledEvents.scroll)
+				.removeEvent(d, 'mouseup', this.handledEvents.mouseup)
+				.removeEvent(d, 'keyup', this.handledEvents.keyup);
+		},
+		handleScroll: function() {
+			var me = this;
+
+			utils.addEvent(w, 'scroll', this.handledEvents.scroll = function() {
+				if (me.active) {
+					me.goToSelection();
+				}
+			});
+
+			return this;
+		},
+		handleMouseup: function() {
+			var me = this;
+
+			utils.addEvent(d, 'mouseup', this.handledEvents.mouseup = function() {
+				if (Medium.activeElement === me.medium.element && !me.busy) {
+					me.goToSelection();
+				}
+			});
+
+			return this;
+		},
+		handleKeyup: function() {
+			var me = this;
+
+			utils.addEvent(d, 'meyup', this.handledEvents.keyup = function() {
+				if (Medium.activeElement === me.medium.element && !me.busy) {
+					me.goToSelection();
+				}
+			});
+
+			return this;
+		},
 		goToSelection: function() {
 			var high = this.getHighlighted(),
 				y = high.boundary.top - 5,
@@ -1837,12 +2023,7 @@ Medium.Messages = {
 
 			return special;
 		})(),
-		isSpecial: function (cacheCmd, e) {
-
-			if (cacheCmd) {
-				return true;
-			}
-
+		isSpecial: function (e) {
 			return typeof Medium.Utilities.special[e.keyCode] !== 'undefined';
 		},
 		navigational: (function () {
@@ -1973,34 +2154,37 @@ Medium.Messages = {
 		 * plain text before inserting the data.
 		 */
 		pasteHook: function (medium, fn) {
-			var textarea = d.createElement('textarea'),
+			medium.makeUndoable();
+
+			var tempEditable = d.createElement('div'),
 				el = medium.element,
 				existingValue,
 				existingLength,
 				overallLength,
 				s = medium.settings,
-				html = medium.html;
+				value;
 
-			textarea.className = s.cssClasses.pasteHook;
+			tempEditable.style.zIndex = 9999999;
+			tempEditable.className = s.cssClasses.pasteHook;
+			tempEditable.setAttribute('contenteditable', true);
 
-			el.parentNode.appendChild(textarea);
+			el.parentNode.insertBefore(tempEditable, el.nextSibling);
 
-			textarea.focus();
-
-			medium.makeUndoable();
+			utils.selectNode(tempEditable);
 
 			setTimeout(function () {
+				value = utils.text(tempEditable);
 				el.focus();
 				if (s.maxLength > 0) {
 					existingValue = utils.text(el);
 					existingLength = existingValue.length;
-					overallLength = existingLength + textarea.value.length;
+					overallLength = existingLength + value.length;
 					if (overallLength > existingLength) {
-						textarea.value = textarea.value.substring(0, s.maxLength - existingLength);
+						value = value.substring(0, s.maxLength - existingLength);
 					}
 				}
-				fn(textarea.value);
-				utils.detachNode( textarea );
+				fn(value);
+				utils.detachNode( tempEditable );
 			}, 2);
 
 			return Medium.Utilities;
@@ -2009,8 +2193,9 @@ Medium.Messages = {
 			var children = element.childNodes,
 				length = children.length,
 				i = 0,
-				node,
-				depth = depth || 1;
+				node;
+
+			depth = depth || 1;
 
 			options = options || {};
 
@@ -2081,6 +2266,9 @@ Medium.Messages = {
 		},
 		text: function (node, val) {
 			if (val !== undefined) {
+				if (node === null) {
+					return this;
+				}
 				if (node.textContent !== undefined) {
 					node.textContent = val;
 				} else {
@@ -2089,7 +2277,9 @@ Medium.Messages = {
 
 				return this;
 			}
-
+			else if (node === null) {
+				return this;
+			}
 			else if (node.innerText !== undefined) {
 				return utils.trim(node.innerText);
 			}
@@ -2126,7 +2316,28 @@ Medium.Messages = {
 			if (el.parentNode !== null) {
 				el.parentNode.removeChild(el);
 			}
-			return el;
+
+			return this;
+		},
+		selectNode: function(el) {
+			var range,
+				selection;
+
+			el.focus();
+
+			if (d.body.createTextRange) {
+				range = d.body.createTextRange();
+				range.moveToElementText(el);
+				range.select();
+			} else if (w.getSelection) {
+				selection = w.getSelection();
+				range = d.createRange();
+				range.selectNodeContents(el);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			}
+
+			return this;
 		},
 		baseAtCaret: function (medium) {
 			if (!medium.isActive()) return null;

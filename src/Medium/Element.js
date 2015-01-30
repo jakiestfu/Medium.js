@@ -10,7 +10,7 @@
 	 */
 	Medium.Element = function (medium, tagName, attributes) {
 		this.medium = medium;
-		this.element = medium.settings.element;
+		this.element = medium.element;
 
 		switch (tagName.toLowerCase()) {
 			case 'bold':

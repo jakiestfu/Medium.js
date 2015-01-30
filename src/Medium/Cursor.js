@@ -32,14 +32,22 @@
 		},
 		//http://davidwalsh.name/caret-end
 		moveCursorToEnd: function (el) {
-			if (typeof el.selectionStart == "number") {
-				el.selectionStart = el.selectionEnd = el.value.length;
-			} else if (typeof el.createTextRange != "undefined") {
-				el.focus();
-				var range = el.createTextRange();
-				range.collapse(false);
-				range.select();
-			}
+			//get the browser selection object - it may or may not have a selected range
+			var selection = rangy.getSelection(),
+
+				//create a range object to set the caret positioning for
+				range = rangy.createRange();
+
+
+			//set the caret after the start node and at the end of the end node
+			//Note: the end is set using endNode.length when the node is of the text type
+			//and it is set using childNodes.length when the end node is of the element type
+			range.setStartAfter(el);
+			range.setEnd(el, el.length || el.childNodes.length);
+
+			//apply this range to the selection object
+			selection.removeAllRanges();
+			selection.addRange(range);
 		},
 		parent: function () {
 			var target = null, range;

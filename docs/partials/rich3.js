@@ -32,7 +32,6 @@ document.getElementById('rich3-li').onmousedown = function() {
 
     article3Medium.focus();
     article3Medium.insertHtml(ul);
-	article3Medium.cursor.caretToBeginning(li);
 
     return false;
 };
