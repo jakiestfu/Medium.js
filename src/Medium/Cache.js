@@ -8,12 +8,4 @@
 		this.focusedElement = null
 	};
 
-	Medium.Cache.prototype = {
-		setBridge: function (bridge) {
-			for (var i in bridge) if (bridge.hasOwnProperty(i)) {
-				this[i] = bridge[i];
-			}
-		}
-	};
-
 })(Medium);

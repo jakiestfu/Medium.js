@@ -42,12 +42,7 @@
 
 			return special;
 		})(),
-		isSpecial: function (cacheCmd, e) {
-
-			if (cacheCmd) {
-				return true;
-			}
-
+		isSpecial: function (e) {
 			return typeof Medium.Utilities.special[e.keyCode] !== 'undefined';
 		},
 		navigational: (function () {
@@ -178,34 +173,37 @@
 		 * plain text before inserting the data.
 		 */
 		pasteHook: function (medium, fn) {
-			var textarea = d.createElement('textarea'),
+			medium.makeUndoable();
+
+			var tempEditable = d.createElement('div'),
 				el = medium.element,
 				existingValue,
 				existingLength,
 				overallLength,
 				s = medium.settings,
-				html = medium.html;
+				value;
 
-			textarea.className = s.cssClasses.pasteHook;
+			tempEditable.style.zIndex = 9999999;
+			tempEditable.className = s.cssClasses.pasteHook;
+			tempEditable.setAttribute('contenteditable', true);
 
-			el.parentNode.appendChild(textarea);
+			el.parentNode.insertBefore(tempEditable, el.nextSibling);
 
-			textarea.focus();
-
-			medium.makeUndoable();
+			utils.selectNode(tempEditable);
 
 			setTimeout(function () {
+				value = utils.text(tempEditable);
 				el.focus();
 				if (s.maxLength > 0) {
 					existingValue = utils.text(el);
 					existingLength = existingValue.length;
-					overallLength = existingLength + textarea.value.length;
+					overallLength = existingLength + value.length;
 					if (overallLength > existingLength) {
-						textarea.value = textarea.value.substring(0, s.maxLength - existingLength);
+						value = value.substring(0, s.maxLength - existingLength);
 					}
 				}
-				fn(textarea.value);
-				utils.detachNode( textarea );
+				fn(value);
+				utils.detachNode( tempEditable );
 			}, 2);
 
 			return Medium.Utilities;
@@ -214,8 +212,9 @@
 			var children = element.childNodes,
 				length = children.length,
 				i = 0,
-				node,
-				depth = depth || 1;
+				node;
+
+			depth = depth || 1;
 
 			options = options || {};
 
@@ -286,6 +285,9 @@
 		},
 		text: function (node, val) {
 			if (val !== undefined) {
+				if (node === null) {
+					return this;
+				}
 				if (node.textContent !== undefined) {
 					node.textContent = val;
 				} else {
@@ -294,7 +296,9 @@
 
 				return this;
 			}
-
+			else if (node === null) {
+				return this;
+			}
 			else if (node.innerText !== undefined) {
 				return utils.trim(node.innerText);
 			}
@@ -331,7 +335,28 @@
 			if (el.parentNode !== null) {
 				el.parentNode.removeChild(el);
 			}
-			return el;
+
+			return this;
+		},
+		selectNode: function(el) {
+			var range,
+				selection;
+
+			el.focus();
+
+			if (d.body.createTextRange) {
+				range = d.body.createTextRange();
+				range.moveToElementText(el);
+				range.select();
+			} else if (w.getSelection) {
+				selection = w.getSelection();
+				range = d.createRange();
+				range.selectNodeContents(el);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			}
+
+			return this;
 		},
 		baseAtCaret: function (medium) {
 			if (!medium.isActive()) return null;

@@ -21,41 +21,13 @@
 		this.hide();
 		this.element = null;
 		this.protectedElement = null;
-
-		utils
-			.addEvent(icon, 'dragstart', function(e) {
-				if (that.protectedElement !== null) return;
-
-				e = e || w.event;
-
-				that.protectedElement = utils.detachNode(that.element);
-
-				that.icon.style.opacity = 0.00;
-			})
-			.addEvent(icon, 'mouseover', function(e) {
-				if (that.protectedElement !== null) return;
-
-				utils
-					.stopPropagation(e)
-					.addClass(that.element, that.elementClass);
-
-			})
-			.addEvent(icon, 'mouseout', function(e) {
-				if (that.protectedElement !== null) return;
-
-				utils
-					.stopPropagation(e)
-					.removeClass(that.element, that.elementClass);
-
-			})
-			.addEvent(icon, 'dragend', d.body.ondragend = function(e) {
-				if (that.protectedElement === null) return;
-
-				setTimeout(function() {
-					that.cleanCanvas();
-					that.protectedElement = null;
-				}, 1);
-			});
+		this.handledEvents = {
+			dragstart: null,
+			dragend: null,
+			mouseover: null,
+			mouseout: null,
+			mousemove: null
+		};
 	};
 	Medium.Drag.prototype = {
 		elementClass: 'Medium-focused',
@@ -76,10 +48,95 @@
 	</g>\
 </svg>',
 		iconColor: '#231F20',
+		setup: function() {
+			this
+				.handleDragstart()
+				.handleDragend()
+				.handleMouseover()
+				.handleMouseout()
+				.handleMousemove();
+		},
+		destroy: function() {
+			utils
+				.removeEvent(this.icon, 'dragstart', this.handledEvents.dragstart)
+				.removeEvent(this.icon, 'dragend', this.handledEvents.dragend)
+				.removeEvent(this.icon, 'mouseover', this.handledEvents.mouseover)
+				.removeEvent(this.icon, 'mouseout', this.handledEvents.mouseout)
+				.removeEvent(this.medium.element, 'mousemove', this.handledEvents.mousemove);
+		},
 		hide: function() {
 			utils.hide(this.icon);
 		},
+		handleDragstart: function() {
 
+			var me = this;
+
+			utils.addEvent(this.icon, 'dragstart', this.handledEvents.dragstart = function(e) {
+				if (me.protectedElement !== null) return;
+
+				e = e || w.event;
+
+				me.protectedElement = utils.detachNode(me.element);
+
+				me.icon.style.opacity = 0.00;
+			});
+
+			return this;
+		},
+		handleDragend: function() {
+			var me = this;
+
+			utils.addEvent(this.icon, 'dragend',  this.handledEvents.dragend = d.body.ondragend = function(e) {
+				if (me.protectedElement === null) return;
+
+				setTimeout(function() {
+					me.cleanCanvas();
+					me.protectedElement = null;
+				}, 1);
+			});
+
+			return this;
+		},
+		handleMouseover: function() {
+			var me = this;
+
+			utils.addEvent(this.icon, 'mouseover', this.handledEvents.mouseover = function(e) {
+				if (me.protectedElement !== null) return;
+
+				utils
+					.stopPropagation(e)
+					.addClass(me.element, me.elementClass);
+
+			});
+
+			return this;
+		},
+		handleMouseout: function() {
+			var me = this;
+
+			utils.addEvent(this.icon, 'mouseout', this.handledEvents.mouseout = function(e) {
+				if (me.protectedElement !== null) return;
+
+				utils
+					.stopPropagation(e)
+					.removeClass(me.element, me.elementClass);
+			});
+			return this;
+		},
+		handleMousemove: function() {
+			var me = this;
+
+			utils.addEvent(this.medium.element, 'mousemove', this.handledEvents.mousemove = function(e) {
+				e = e || w.event;
+				var target = e.target || {};
+
+				if (target.getAttribute('contenteditable') === 'false') {
+					me.show(target);
+				}
+			});
+
+			return this;
+		},
 		show: function(el) {
 			if (el === this.icon && this.protectedElement === null) return;
 

@@ -8,11 +8,6 @@
 	Medium.Selection = function () {
 	};
 	Medium.Selection.prototype = {
-		setBridge: function (bridge) {
-			for (var i in bridge) if (bridge.hasOwnProperty(i)) {
-				this[i] = bridge[i];
-			}
-		},
 		saveSelection: function () {
 			if (w.getSelection) {
 				var sel = w.getSelection();

@@ -7,351 +7,16 @@ var Medium = function (userSettings) {
 	"use strict";
 
 	var medium = this,
-		action = new Medium.Action(),
+		defaultSettings = utils.deepExtend({}, Medium.defaultSettings),
+		settings = this.settings = utils.deepExtend(defaultSettings, userSettings),
 		cache = new Medium.Cache(),
-		cursor = new Medium.Cursor(this),
 		selection = new Medium.Selection(),
-		intercept = {
-			focus: function (e) {
-				e = e || w.event;
-				Medium.activeElement = el;
-				medium.placeholders();
-			},
-			blur: function (e) {
-				e = e || w.event;
-				if (Medium.activeElement === el) {
-					Medium.activeElement = null;
-				}
-
-				medium.placeholders();
-			},
-			down: function (e) {
-				e = e || w.event;
-
-				var keepEvent = true;
-
-				//in Chrome it sends out this event before every regular event, not sure why
-				if (e.keyCode === 229) return;
-
-				utils.isCommand(settings, e, function () {
-					cache.cmd = true;
-				}, function () {
-					cache.cmd = false;
-				});
-
-				utils.isShift(e, function () {
-					cache.shift = true;
-				}, function () {
-					cache.shift = false;
-				});
-
-				utils.isModifier(settings, e, function (cmd) {
-					if (cache.cmd) {
-
-						if (( (settings.mode === Medium.inlineMode) || (settings.mode === Medium.partialMode) ) && cmd !== "paste") {
-							utils.preventDefaultEvent(e);
-							return;
-						}
-
-						var cmdType = typeof cmd;
-						var fn = null;
-						if (cmdType === "function") {
-							fn = cmd;
-						} else {
-							fn = intercept.command[cmd];
-						}
-
-						keepEvent = fn.call(medium, e);
-
-						if (keepEvent === false) {
-							utils.preventDefaultEvent(e);
-							utils.stopPropagation(e);
-						}
-					}
-				});
-
-				if (settings.maxLength !== -1) {
-					var len = utils.text(el).length,
-						hasSelection = false,
-						selection = w.getSelection();
-
-					if (selection) {
-						hasSelection = !selection.isCollapsed;
-					}
-
-					if (len >= settings.maxLength && !utils.isSpecial(e) && !utils.isNavigational(e) && !hasSelection) {
-						settings.maxLengthReached(settings.element)
-						return utils.preventDefaultEvent(e);
-					}
-				}
-
-				switch (e.keyCode) {
-					case key['enter']:
-						intercept.enterKey(e);
-						break;
-					case key['backspace']:
-					case key['delete']:
-						intercept.backspaceOrDeleteKey(e);
-						break;
-				}
-
-				return keepEvent;
-			},
-			up: function (e) {
-				e = e || w.event;
-				utils.isCommand(settings, e, function () {
-					cache.cmd = false;
-				}, function () {
-					cache.cmd = true;
-				});
-				medium.clean();
-				medium.placeholders();
-
-				//here we have a key context, so if you need to create your own object within a specific context it is doable
-				var keyContext;
-				if (
-					settings.keyContext !== null
-					&& ( keyContext = settings.keyContext[e.keyCode] )
-				) {
-					var el = cursor.parent();
-
-					if (el) {
-						keyContext.call(medium, e, el);
-					}
-				}
-
-				action.preserveElementFocus();
-			},
-			command: {
-				bold: function (e) {
-					utils.preventDefaultEvent(e);
-					(new Medium.Element(medium, 'bold'))
-						.setClean(false)
-						.invoke(settings.beforeInvokeElement);
-				},
-				underline: function (e) {
-					utils.preventDefaultEvent(e);
-					(new Medium.Element(medium, 'underline'))
-						.setClean(false)
-						.invoke(settings.beforeInvokeElement);
-				},
-				italicize: function (e) {
-					utils.preventDefaultEvent(e);
-					(new Medium.Element(medium, 'italic'))
-						.setClean(false)
-						.invoke(settings.beforeInvokeElement);
-				},
-				quote: function (e) {
-				},
-				paste: function (e) {
-					medium.makeUndoable();
-					if (settings.pasteAsText) {
-						var sel = selection.saveSelection();
-						utils.pasteHook(function (text) {
-							selection.restoreSelection(sel);
-
-							text = text.replace(/\n/g, '<br>');
-
-							(new Medium.Html(medium, text))
-								.setClean(false)
-								.insert(settings.beforeInsertHtml, true);
-
-							medium.clean();
-							medium.placeholders();
-						});
-					} else {
-						medium.clean();
-						medium.placeholders();
-					}
-				}
-			},
-			enterKey: function (e) {
-				if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
-					return utils.preventDefaultEvent(e);
-				}
-
-				if (cache.shift) {
-					if (settings.tags['break']) {
-						utils.preventDefaultEvent(e);
-						medium.addTag(settings.tags['break'], true);
-						return false;
-					}
-
-				} else {
-
-					var focusedElement = utils.atCaret(medium) || {},
-						children = el.children,
-						lastChild = focusedElement === el.lastChild ? el.lastChild : null,
-						makeHR,
-						secondToLast,
-						paragraph;
-
-					if (
-						lastChild
-						&& lastChild !== el.firstChild
-						&& settings.autoHR
-						&& settings.mode !== 'partial'
-						&& settings.tags.horizontalRule
-					) {
-
-						utils.preventDefaultEvent(e);
-
-						makeHR =
-							utils.text(lastChild) === ""
-							&& lastChild.nodeName.toLowerCase() === settings.tags.paragraph;
-
-						if (makeHR && children.length >= 2) {
-							secondToLast = children[ children.length - 2 ];
-
-							if (secondToLast.nodeName.toLowerCase() === settings.tags.horizontalRule) {
-								makeHR = false;
-							}
-						}
-
-						if (makeHR) {
-							medium.addTag(settings.tags.horizontalRule, false, true, focusedElement);
-							focusedElement = focusedElement.nextSibling;
-						}
-
-						if ((paragraph = medium.addTag(settings.tags.paragraph, true, null, focusedElement)) !== null) {
-							paragraph.innerHTML = '';
-							cursor.set(medium, 0, paragraph);
-						}
-					}
-				}
-
-				return true;
-			},
-			backspaceOrDeleteKey: function (e) {
-				if (settings.onBackspaceOrDelete !== undefined) {
-					var result = settings.onBackspaceOrDelete.call(medium, e, el);
-
-					if (result) {
-						return;
-					}
-				}
-
-				if (el.lastChild === null) return;
-
-				var lastChild = el.lastChild,
-					beforeLastChild = lastChild.previousSibling;
-
-				if (
-					lastChild
-					&& settings.tags.horizontalRule
-					&& lastChild.nodeName.toLocaleLowerCase() === settings.tags.horizontalRule
-				) {
-					el.removeChild(lastChild);
-				} else if (
-					lastChild
-					&& beforeLastChild
-					&& utils.text(lastChild).length < 1
-
-					&& beforeLastChild.nodeName.toLowerCase() === settings.tags.horizontalRule
-					&& lastChild.nodeName.toLowerCase() === settings.tags.paragraph
-				) {
-					el.removeChild(lastChild);
-					el.removeChild(beforeLastChild);
-				}
-			}
-		},
-		defaultSettings = {
-			element: null,
-			modifier: 'auto',
-			placeholder: "",
-			autofocus: false,
-			autoHR: true,
-			mode: Medium.richMode,
-			maxLength: -1,
-			modifiers: {
-				'b': 'bold',
-				'i': 'italicize',
-				'u': 'underline',
-				'v': 'paste'
-			},
-			tags: {
-				'break': 'br',
-				'horizontalRule': 'hr',
-				'paragraph': 'p',
-				'outerLevel': ['pre', 'blockquote', 'figure'],
-				'innerLevel': ['a', 'b', 'u', 'i', 'img', 'strong']
-			},
-			cssClasses: {
-				editor: 'Medium',
-				pasteHook: 'Medium-paste-hook',
-				placeholder: 'Medium-placeholder',
-				clear: 'Medium-clear'
-			},
-			attributes: {
-				remove: ['style', 'class']
-			},
-			pasteAsText: true,
-			beforeInvokeElement: function () {
-				//this = Medium.Element
-			},
-			beforeInsertHtml: function () {
-				//this = Medium.Html
-			},
-			maxLengthReached: function (element) {
-				//element
-			},
-			beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
-			},
-			keyContext: null,
-			pasteEventHandler: function(e) {
-				e = e || w.event;
-				medium.makeUndoable();
-				var length = medium.value().length,
-					totalLength;
-
-				if (settings.pasteAsText) {
-					utils.preventDefaultEvent(e);
-					var sel = selection.saveSelection();
-
-					medium.prompt(function(text) {
-						text = text || '';
-						if (text.length > 0) {
-							el.focus();
-							Medium.activeElement = el;
-							selection.restoreSelection(sel);
-
-							//encode the text first
-							text = utils.encodeHtml(text);
-
-							//cut down it's length
-							totalLength = text.length + length;
-							if (settings.maxLength > 0 && totalLength > settings.maxLength) {
-								text = text.substring(0, settings.maxLength - length);
-							}
-
-							if (settings.mode !== Medium.inlineMode) {
-								text = text.replace(/\n/g, '<br>');
-							}
-
-							(new Medium.Html(medium, text))
-								.setClean(false)
-								.insert(settings.beforeInsertHtml, true);
-
-							medium.clean();
-							medium.placeholders();
-						}
-					});
-					return false;
-				} else {
-					setTimeout(function() {
-						medium.clean();
-						medium.placeholders();
-					}, 20);
-				}
-			},
-			drag: false
-		},
-		settings = utils.deepExtend(defaultSettings, userSettings),
+		action = new Medium.Action(this),
+		cursor = new Medium.Cursor(this),
+		undoable = new Medium.Undoable(this),
 		el,
 		newVal,
-		i,
-		bridge = {},
-		drag;
+		i;
 
 	for (i in defaultSettings) if (defaultSettings.hasOwnProperty(i)) {
 		// Override defaults with data-attributes
@@ -370,7 +35,7 @@ var Medium = function (userSettings) {
 	}
 
 	if (settings.modifiers) {
-		for (i in settings.modifiers) {
+		for (i in settings.modifiers) if (settings.modifiers.hasOwnProperty(i)) {
 			if (typeof(key[i]) !== 'undefined') {
 				settings.modifiers[key[i]] = settings.modifiers[i];
 			}
@@ -378,7 +43,7 @@ var Medium = function (userSettings) {
 	}
 
 	if (settings.keyContext) {
-		for (i in settings.keyContext) {
+		for (i in settings.keyContext) if (settings.keyContext.hasOwnProperty(i)) {
 			if (typeof(key[i]) !== 'undefined') {
 				settings.keyContext[key[i]] = settings.keyContext[i];
 			}
@@ -401,7 +66,7 @@ var Medium = function (userSettings) {
 
 	this.settings = settings;
 	this.element = el;
-	this.intercept = intercept;
+	el.medium = this;
 
 	this.action = action;
 	this.cache = cache;
@@ -409,49 +74,23 @@ var Medium = function (userSettings) {
 	this.utils = utils;
 	this.selection = selection;
 
-	bridge.element = el;
-	bridge.medium = this;
-	bridge.settings = settings;
-
-	bridge.action = action;
-	bridge.cache = cache;
-	bridge.cursor = cursor;
-	bridge.intercept = intercept;
-	bridge.utils = utils;
-	bridge.selection = selection;
-
-	action.setBridge(bridge);
-	cache.setBridge(bridge);
-	selection.setBridge(bridge);
-
 	// Initialize editor
 	medium.clean();
 	medium.placeholders();
 	action.preserveElementFocus();
 
-	// Capture Events
-	action.listen();
-
 	this.dirty = false;
-	this.undoable = new Medium.Undoable(this);
-	this.undo = this.undoable.undo;
-	this.redo = this.undoable.redo;
-	this.makeUndoable = this.undoable.makeUndoable;
+	this.undoable = undoable;
+	this.undo = undoable.undo;
+	this.redo = undoable.redo;
+	this.makeUndoable = undoable.makeUndoable;
 
 	if (settings.drag) {
-		drag = medium.drag = new Medium.Drag(medium);
-
-		utils.addEvent(el, 'mousemove', function(e) {
-			e = e || w.event;
-			var target = e.target || {};
-
-			if (target.getAttribute('contenteditable') === 'false') {
-				drag.show(target);
-			}
-		});
+		medium.drag = new Medium.Drag(medium);
+		medium.drag.setup();
 	}
 
-	el.medium = this;
+	action.setup();
 
 	// Set as initialized
 	cache.initialized = true;
@@ -469,8 +108,7 @@ Medium.prototype = {
 		//in IE8, just gracefully degrade to no placeholders
 		if (!w.getComputedStyle) return;
 
-		var that = this,
-			s = this.settings,
+		var s = this.settings,
 			placeholder = this.placeholder || (this.placeholder = d.createElement('div')),
 			el = this.element,
 			style = placeholder.style,
@@ -682,7 +320,8 @@ Medium.prototype = {
 	 */
 	insertHtml: function (html, callback, skipChangeEvent) {
 		var result = (new Medium.Html(this, html))
-			.insert(this.settings.beforeInsertHtml);
+			.insert(this.settings.beforeInsertHtml),
+			lastElement = result[result.length - 1];
 
 		if (skipChangeEvent === true) {
 			utils.triggerEvent(this.element, "change");
@@ -690,6 +329,19 @@ Medium.prototype = {
 
 		if (callback) {
 			callback.apply(result);
+		}
+
+		switch (lastElement.nodeName) {
+			//lists need their last child selected if it exists
+			case 'UL':
+			case 'OL':
+			case 'DL':
+				if (lastElement.lastChild !== null) {
+					this.cursor.moveCursorToEnd(lastElement.lastChild);
+					break;
+				}
+			default:
+				this.cursor.moveCursorToEnd(lastElement);
 		}
 
 		return this;
@@ -733,8 +385,9 @@ Medium.prototype = {
 	 */
 	invokeElement: function (tagName, attributes, skipChangeEvent) {
 		var settings = this.settings,
-			attributes = attributes || {},
 			remove = attributes.remove || [];
+
+		attributes = attributes || {};
 
 		switch (settings.mode) {
 			case Medium.inlineMode:
@@ -793,26 +446,7 @@ Medium.prototype = {
 	 * @returns {Medium}
 	 */
 	select: function () {
-		var el = this.element,
-			range,
-			selection;
-
-		el.focus();
-
-		if (d.body.createTextRange) {
-			range = d.body.createTextRange();
-			range.moveToElementText(el);
-			range.select();
-		} else if (w.getSelection) {
-			selection = w.getSelection();
-			range = d.createRange();
-			range.selectNodeContents(el);
-			selection.removeAllRanges();
-			selection.addRange(range);
-		}
-
-		Medium.activeElement = el;
-
+		utils.selectNode(Medium.activeElement = this.element);
 		return this;
 	},
 
@@ -857,7 +491,6 @@ Medium.prototype = {
 
 	destroy: function () {
 		var el = this.element,
-			intercept = this.intercept,
 			settings = this.settings,
 			placeholder = this.placeholder || null;
 
@@ -877,12 +510,11 @@ Medium.prototype = {
 			.replace(settings.cssClasses.editor + '-' + settings.mode, ''));
 
 		//remove events
-		utils
-			.removeEvent(el, 'keyup', intercept.up)
-			.removeEvent(el, 'keydown', intercept.down)
-			.removeEvent(el, 'focus', intercept.focus)
-			.removeEvent(el, 'blur', intercept.focus)
-			.removeEvent(el, 'paste', settings.pasteEventHandler);
+		this.action.destroy();
+
+		if (this.settings.drag) {
+			this.drag.destroy();
+		}
 	},
 
 	// Clears the element and restores the placeholder
@@ -933,6 +565,79 @@ Medium.prototype = {
 
 	lastChild: function () {
 		return this.element.lastChild;
+	},
+
+	bold: function () {
+
+		switch (this.settings.mode) {
+			case Medium.partialMode:
+			case Medium.inlineMode:
+				return this;
+		}
+
+		(new Medium.Element(this, 'bold'))
+			.setClean(false)
+			.invoke(this.settings.beforeInvokeElement);
+
+		return this;
+	},
+	underline: function () {
+		switch (this.settings.mode) {
+			case Medium.partialMode:
+			case Medium.inlineMode:
+				return this;
+		}
+
+		(new Medium.Element(this, 'underline'))
+			.setClean(false)
+			.invoke(this.settings.beforeInvokeElement);
+
+		return this;
+	},
+	italicize: function () {
+		switch (this.settings.mode) {
+			case Medium.partialMode:
+			case Medium.inlineMode:
+				return this;
+		}
+
+		(new Medium.Element(this, 'italic'))
+			.setClean(false)
+			.invoke(this.settings.beforeInvokeElement);
+
+		return this;
+	},
+	quote: function () {
+
+		return this;
+	},
+	paste: function () {
+		var medium = this,
+			settings = this.settings,
+			selection = this.selection;
+
+		this.makeUndoable();
+
+		if (settings.pasteAsText) {
+			var sel = selection.saveSelection();
+			utils.pasteHook(this, function (text) {
+				selection.restoreSelection(sel);
+
+				text = text.replace(/\n/g, '<br>');
+
+				(new Medium.Html(medium, text))
+					.setClean(false)
+					.insert(settings.beforeInsertHtml, true);
+
+				medium.clean();
+				medium.placeholders();
+			});
+		} else {
+			this.clean();
+			this.placeholders();
+		}
+
+		return true;
 	}
 };
 
@@ -943,4 +648,50 @@ Medium.richMode = 'rich';
 Medium.inlineRichMode = 'inlineRich';
 Medium.Messages = {
 	pastHere: 'Paste Here'
+};
+
+Medium.defaultSettings = {
+	element: null,
+	modifier: 'auto',
+	placeholder: "",
+	autofocus: false,
+	autoHR: true,
+	mode: Medium.richMode,
+	maxLength: -1,
+	modifiers: {
+		'b': 'bold',
+		'i': 'italicize',
+		'u': 'underline',
+		'v': 'paste'
+	},
+	tags: {
+		'break': 'br',
+		'horizontalRule': 'hr',
+		'paragraph': 'p',
+		'outerLevel': ['pre', 'blockquote', 'figure'],
+		'innerLevel': ['a', 'b', 'u', 'i', 'img', 'strong']
+	},
+	cssClasses: {
+		editor: 'Medium',
+		pasteHook: 'Medium-paste-hook',
+		placeholder: 'Medium-placeholder',
+		clear: 'Medium-clear'
+	},
+	attributes: {
+		remove: ['style', 'class']
+	},
+	pasteAsText: true,
+	beforeInvokeElement: function () {
+		//this = Medium.Element
+	},
+	beforeInsertHtml: function () {
+		//this = Medium.Html
+	},
+	maxLengthReached: function (element) {
+		//element
+	},
+	beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
+	},
+	keyContext: null,
+	drag: false
 };

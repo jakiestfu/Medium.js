@@ -13,10 +13,13 @@
 		/**
 		 * @methodOf Medium.Injector
 		 * @param {String|HtmlElement} htmlRaw
-		 * @returns {HtmlElement}
+		 * @returns {[HtmlElement|Node]}
 		 */
 		inject: function (htmlRaw) {
-			var html, isConverted = false;
+			var nodes = [],
+				html,
+				isConverted = false;
+
 			if (typeof htmlRaw === 'string') {
 				var htmlConverter = d.createElement('div');
 				htmlConverter.innerHTML = htmlRaw;
@@ -26,24 +29,32 @@
 				html = htmlRaw;
 			}
 
-			this.insertHTML('<span id="wedge"></span>');
+			this.insertHTML('<span id="Medium-wedge"></span>');
 
-			var wedge = d.getElementById('wedge'),
+			var wedge = d.getElementById('Medium-wedge'),
 				parent = wedge.parentNode,
 				i = 0;
+
 			wedge.removeAttribute('id');
 
 			if (isConverted) {
+				//make an array of elements that are about to be inserted, can't use html because they will
 				while (i < html.length) {
-					parent.insertBefore(html[i], wedge);
+					nodes.push(html[i]);
+					i++;
+				}
+
+				while (html.length > 0) {
+					parent.insertBefore(html[html.length - 1], wedge);
 				}
 			} else {
+				nodes.push(html);
 				parent.insertBefore(html, wedge);
 			}
 			parent.removeChild(wedge);
 			wedge = null;
 
-			return html;
+			return nodes;
 		},
 
 		//Thank you Tim Down (super uber genius): http://stackoverflow.com/questions/6690752/insert-html-at-caret-in-a-contenteditable-div/6691294#6691294

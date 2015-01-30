@@ -1,8 +1,9 @@
 (function(Medium) {
 	"use strict";
 	Medium.Toolbar = function(medium, buttons) {
-		var elementCreator = d.createElement('div'),
-			that = this;
+		this.medium = medium;
+
+		var elementCreator = d.createElement('div');
 
 		elementCreator.innerHTML = this.html;
 
@@ -12,18 +13,13 @@
 		this.active = false;
 		this.busy = true;
 
-		utils
-			.addEvents(document, 'mouseup keyup', function(e) {
-				if (Medium.activeElement === medium.element && !that.busy) {
-					that.goToSelection();
-				}
-			})
-			.addEvent(w, 'scroll', function() {
-				if (that.active) {
-					that.goToSelection();
-				}
-			});
+		this.handledEvents = {
+			scroll: null,
+			mouseup: null,
+			keyup: null
+		};
 	};
+
 	Medium.Toolbar.prototype = {
 		fixedClass: 'Medium-toolbar-fixed',
 		showClass: 'Medium-toolbar-show',
@@ -43,6 +39,52 @@
 				</table>\
 			</div>',
 
+		setup: function() {
+			this
+				.handleScroll()
+				.handleMouseup()
+				.handleKeyup();
+
+		},
+		destroy: function() {
+			utils
+				.removeEvent(w, 'scroll', this.handledEvents.scroll)
+				.removeEvent(d, 'mouseup', this.handledEvents.mouseup)
+				.removeEvent(d, 'keyup', this.handledEvents.keyup);
+		},
+		handleScroll: function() {
+			var me = this;
+
+			utils.addEvent(w, 'scroll', this.handledEvents.scroll = function() {
+				if (me.active) {
+					me.goToSelection();
+				}
+			});
+
+			return this;
+		},
+		handleMouseup: function() {
+			var me = this;
+
+			utils.addEvent(d, 'mouseup', this.handledEvents.mouseup = function() {
+				if (Medium.activeElement === me.medium.element && !me.busy) {
+					me.goToSelection();
+				}
+			});
+
+			return this;
+		},
+		handleKeyup: function() {
+			var me = this;
+
+			utils.addEvent(d, 'meyup', this.handledEvents.keyup = function() {
+				if (Medium.activeElement === me.medium.element && !me.busy) {
+					me.goToSelection();
+				}
+			});
+
+			return this;
+		},
 		goToSelection: function() {
 			var high = this.getHighlighted(),
 				y = high.boundary.top - 5,
