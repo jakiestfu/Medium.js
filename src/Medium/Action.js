@@ -41,7 +41,6 @@
 			utils.addEvent(el, 'focus', this.handledEvents.focus = function(e) {
 				e = e || w.event;
 
-				console.log(el);
 				Medium.activeElement = el;
 
 				medium.placeholders();
