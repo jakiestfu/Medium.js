@@ -77,7 +77,7 @@
 		handleKeyup: function() {
 			var me = this;
 
-			utils.addEvent(d, 'meyup', this.handledEvents.keyup = function() {
+			utils.addEvent(d, 'keyup', this.handledEvents.keyup = function() {
 				if (Medium.activeElement === me.medium.element && !me.busy) {
 					me.goToSelection();
 				}

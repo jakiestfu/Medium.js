@@ -181,15 +181,20 @@
 				existingLength,
 				overallLength,
 				s = medium.settings,
-				value;
+				value,
+				body = d.body,
+				bodyParent = body.parentNode,
+				scrollTop = bodyParent.scrollTop,
+				scrollLeft = bodyParent.scrollLeft;
 
-			tempEditable.style.zIndex = 9999999;
 			tempEditable.className = s.cssClasses.pasteHook;
 			tempEditable.setAttribute('contenteditable', true);
 
-			el.parentNode.insertBefore(tempEditable, el.nextSibling);
-
+			body.appendChild(tempEditable);
 			utils.selectNode(tempEditable);
+
+			bodyParent.scrollTop = scrollTop;
+			bodyParent.scrollLeft = scrollLeft;
 
 			setTimeout(function () {
 				value = utils.text(tempEditable);
@@ -202,9 +207,11 @@
 						value = value.substring(0, s.maxLength - existingLength);
 					}
 				}
-				fn(value);
 				utils.detachNode( tempEditable );
-			}, 2);
+				bodyParent.scrollTop = scrollTop;
+				bodyParent.scrollLeft = scrollLeft;
+				fn(value);
+			}, 0);
 
 			return Medium.Utilities;
 		},

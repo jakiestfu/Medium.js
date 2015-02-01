@@ -97,13 +97,6 @@ var Medium = function (userSettings) {
 };
 
 Medium.prototype = {
-	prompt: function(callback) {
-		var result = window.prompt(Medium.Messages.pastHere);
-
-		callback(result);
-
-		return this;
-	},
 	placeholders: function () {
 		//in IE8, just gracefully degrade to no placeholders
 		if (!w.getComputedStyle) return;
@@ -294,7 +287,7 @@ Medium.prototype = {
 									if (child === child.parentNode.firstChild) {
 										break;
 									}
-									text = document.createTextNode("");
+									text = d.createTextNode("");
 									text.innerHTML = '&nbsp';
 									child.parentNode.insertBefore(text, child);
 									break;
@@ -415,7 +408,7 @@ Medium.prototype = {
 
 	/**
 	 *
-	 * @param value
+	 * @param {String} [value]
 	 * @returns {Medium}
 	 */
 	value: function (value) {
@@ -611,32 +604,62 @@ Medium.prototype = {
 
 		return this;
 	},
-	paste: function () {
-		var medium = this,
+	/**
+	 *
+	 * @param {String} [text]
+	 * @returns {boolean}
+	 */
+	paste: function (text) {
+		var value = this.value(),
+			length = value.length,
+			totalLength,
 			settings = this.settings,
-			selection = this.selection;
+			selection = this.selection,
+			el = this.element,
+			medium = this,
+			postPaste = function(text) {
+				text = text || '';
+				if (text.length > 0) {
+					el.focus();
+					Medium.activeElement = el;
+					selection.restoreSelection(sel);
 
-		this.makeUndoable();
+					//encode the text first
+					text = utils.encodeHtml(text);
 
-		if (settings.pasteAsText) {
+					//cut down it's length
+					totalLength = text.length + length;
+					if (settings.maxLength > 0 && totalLength > settings.maxLength) {
+						text = text.substring(0, settings.maxLength - length);
+					}
+
+					if (settings.mode !== Medium.inlineMode) {
+						text = text.replace(/\n/g, '<br>');
+					}
+
+					(new Medium.Html(medium, text))
+						.setClean(false)
+						.insert(settings.beforeInsertHtml, true);
+
+					medium.clean();
+					medium.placeholders();
+				}
+			};
+
+		medium.makeUndoable();
+
+		if (text !== undefined) {
+			postPaste(text);
+		} else if (settings.pasteAsText) {
 			var sel = selection.saveSelection();
-			utils.pasteHook(this, function (text) {
-				selection.restoreSelection(sel);
 
-				text = text.replace(/\n/g, '<br>');
-
-				(new Medium.Html(medium, text))
-					.setClean(false)
-					.insert(settings.beforeInsertHtml, true);
-
+			utils.pasteHook(this, postPaste);
+		} else {
+			setTimeout(function() {
 				medium.clean();
 				medium.placeholders();
-			});
-		} else {
-			this.clean();
-			this.placeholders();
+			}, 20);
 		}
-
 		return true;
 	}
 };
@@ -661,8 +684,7 @@ Medium.defaultSettings = {
 	modifiers: {
 		'b': 'bold',
 		'i': 'italicize',
-		'u': 'underline',
-		'v': 'paste'
+		'u': 'underline'
 	},
 	tags: {
 		'break': 'br',

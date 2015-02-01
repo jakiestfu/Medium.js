@@ -214,13 +214,6 @@ var Medium = function (userSettings) {
 };
 
 Medium.prototype = {
-	prompt: function(callback) {
-		var result = window.prompt(Medium.Messages.pastHere);
-
-		callback(result);
-
-		return this;
-	},
 	placeholders: function () {
 		//in IE8, just gracefully degrade to no placeholders
 		if (!w.getComputedStyle) return;
@@ -411,7 +404,7 @@ Medium.prototype = {
 									if (child === child.parentNode.firstChild) {
 										break;
 									}
-									text = document.createTextNode("");
+									text = d.createTextNode("");
 									text.innerHTML = '&nbsp';
 									child.parentNode.insertBefore(text, child);
 									break;
@@ -532,7 +525,7 @@ Medium.prototype = {
 
 	/**
 	 *
-	 * @param value
+	 * @param {String} [value]
 	 * @returns {Medium}
 	 */
 	value: function (value) {
@@ -728,32 +721,62 @@ Medium.prototype = {
 
 		return this;
 	},
-	paste: function () {
-		var medium = this,
+	/**
+	 *
+	 * @param {String} [text]
+	 * @returns {boolean}
+	 */
+	paste: function (text) {
+		var value = this.value(),
+			length = value.length,
+			totalLength,
 			settings = this.settings,
-			selection = this.selection;
+			selection = this.selection,
+			el = this.element,
+			medium = this,
+			postPaste = function(text) {
+				text = text || '';
+				if (text.length > 0) {
+					el.focus();
+					Medium.activeElement = el;
+					selection.restoreSelection(sel);
 
-		this.makeUndoable();
+					//encode the text first
+					text = utils.encodeHtml(text);
 
-		if (settings.pasteAsText) {
+					//cut down it's length
+					totalLength = text.length + length;
+					if (settings.maxLength > 0 && totalLength > settings.maxLength) {
+						text = text.substring(0, settings.maxLength - length);
+					}
+
+					if (settings.mode !== Medium.inlineMode) {
+						text = text.replace(/\n/g, '<br>');
+					}
+
+					(new Medium.Html(medium, text))
+						.setClean(false)
+						.insert(settings.beforeInsertHtml, true);
+
+					medium.clean();
+					medium.placeholders();
+				}
+			};
+
+		medium.makeUndoable();
+
+		if (text !== undefined) {
+			postPaste(text);
+		} else if (settings.pasteAsText) {
 			var sel = selection.saveSelection();
-			utils.pasteHook(this, function (text) {
-				selection.restoreSelection(sel);
 
-				text = text.replace(/\n/g, '<br>');
-
-				(new Medium.Html(medium, text))
-					.setClean(false)
-					.insert(settings.beforeInsertHtml, true);
-
+			utils.pasteHook(this, postPaste);
+		} else {
+			setTimeout(function() {
 				medium.clean();
 				medium.placeholders();
-			});
-		} else {
-			this.clean();
-			this.placeholders();
+			}, 20);
 		}
-
 		return true;
 	}
 };
@@ -778,8 +801,7 @@ Medium.defaultSettings = {
 	modifiers: {
 		'b': 'bold',
 		'i': 'italicize',
-		'u': 'underline',
-		'v': 'paste'
+		'u': 'underline'
 	},
 	tags: {
 		'break': 'br',
@@ -909,7 +931,7 @@ Medium.defaultSettings = {
 				utils.isModifier(settings, e, function (cmd) {
 					if (cache.cmd) {
 
-						if (( (settings.mode === Medium.inlineMode) || (settings.mode === Medium.partialMode) ) && cmd !== "paste") {
+						if ( (settings.mode === Medium.inlineMode) || (settings.mode === Medium.partialMode) ) {
 							utils.preventDefaultEvent(e);
 							return false;
 						}
@@ -1012,54 +1034,36 @@ Medium.defaultSettings = {
 		handlePaste: function(e) {
 			var medium = this.medium,
 				el = medium.element,
-				settings = medium.settings,
-				selection = medium.selection;
+				text,
+				i,
+				max,
+				data,
+				cD,
+				type,
+				types;
 
 			utils.addEvent(el, 'paste', this.handledEvents.paste = function(e) {
 				e = e || w.event;
-				medium.makeUndoable();
-				var length = medium.value().length,
-					totalLength;
+				i = 0;
+				utils.preventDefaultEvent(e);
+				text = '';
+				cD = e.clipboardData;
 
-				if (settings.pasteAsText) {
-					utils.preventDefaultEvent(e);
-					var sel = selection.saveSelection();
-
-					medium.prompt(function(text) {
-						text = text || '';
-						if (text.length > 0) {
-							el.focus();
-							Medium.activeElement = el;
-							selection.restoreSelection(sel);
-
-							//encode the text first
-							text = utils.encodeHtml(text);
-
-							//cut down it's length
-							totalLength = text.length + length;
-							if (settings.maxLength > 0 && totalLength > settings.maxLength) {
-								text = text.substring(0, settings.maxLength - length);
-							}
-
-							if (settings.mode !== Medium.inlineMode) {
-								text = text.replace(/\n/g, '<br>');
-							}
-
-							(new Medium.Html(medium, text))
-								.setClean(false)
-								.insert(settings.beforeInsertHtml, true);
-
-							medium.clean();
-							medium.placeholders();
+				if (cD && (data = cD.getData)) {
+					types = cD.types;
+					max = types.length;
+					for (i = 0; i < max; i++) {
+						type = types[i];
+						switch (type) {
+							//case 'text/html':
+							//	return medium.paste(cD.getData('text/html'));
+							case 'text/plain':
+								return medium.paste(cD.getData('text/plain'));
 						}
-					});
-					return false;
-				} else {
-					setTimeout(function() {
-						medium.clean();
-						medium.placeholders();
-					}, 20);
+					}
 				}
+
+				medium.paste();
 			});
 
 			return this;
@@ -1826,7 +1830,7 @@ Medium.defaultSettings = {
 		handleKeyup: function() {
 			var me = this;
 
-			utils.addEvent(d, 'meyup', this.handledEvents.keyup = function() {
+			utils.addEvent(d, 'keyup', this.handledEvents.keyup = function() {
 				if (Medium.activeElement === me.medium.element && !me.busy) {
 					me.goToSelection();
 				}
@@ -2161,15 +2165,20 @@ Medium.defaultSettings = {
 				existingLength,
 				overallLength,
 				s = medium.settings,
-				value;
+				value,
+				body = d.body,
+				bodyParent = body.parentNode,
+				scrollTop = bodyParent.scrollTop,
+				scrollLeft = bodyParent.scrollLeft;
 
-			tempEditable.style.zIndex = 9999999;
 			tempEditable.className = s.cssClasses.pasteHook;
 			tempEditable.setAttribute('contenteditable', true);
 
-			el.parentNode.insertBefore(tempEditable, el.nextSibling);
-
+			body.appendChild(tempEditable);
 			utils.selectNode(tempEditable);
+
+			bodyParent.scrollTop = scrollTop;
+			bodyParent.scrollLeft = scrollLeft;
 
 			setTimeout(function () {
 				value = utils.text(tempEditable);
@@ -2182,9 +2191,11 @@ Medium.defaultSettings = {
 						value = value.substring(0, s.maxLength - existingLength);
 					}
 				}
-				fn(value);
 				utils.detachNode( tempEditable );
-			}, 2);
+				bodyParent.scrollTop = scrollTop;
+				bodyParent.scrollLeft = scrollLeft;
+				fn(value);
+			}, 0);
 
 			return Medium.Utilities;
 		},
