@@ -120,40 +120,40 @@
 
             <div class="demo-container">
 	            <h4 id="insert"><a href="#insert">Rich with Insert Html</a></h4>
-	            <div id="rich2" data-src="rich2.js">
+	            <div data-src="rich_with_insert_html.js">
 		            <div class="toolbar-top">
 			            <span class="toolbar">
-				            <span id="rich2-insert">INSERT</span>
+				            <span class="insert">INSERT</span>
 			            </span>
 		            </div>
-		            <div id="article2" class="article demo"></div>
+		            <div id="rich_with_insert_html" class="article demo"></div>
 	            </div>
             </div>
 
             <div class="demo-container">
 	            <h4 id="insert_object"><a href="#insert_object">Rich with Insert <u>Html Object</u></a></h4>
-	            <div id="rich3" data-src="rich3.js">
+	            <div data-src="rich_with_insert_html_object.js">
 		            <div class="toolbar-top">
 				            <span class="toolbar">
-					            <span id="rich3-li">LI</span>
+					            <span class="li">LI</span>
 				            </span>
 		            </div>
-		            <div id="article3" class="article demo"></div>
+		            <div id="rich_with_insert_html_object" class="article demo"></div>
 	            </div>
             </div>
 
             <div class="demo-container">
 	            <h4 id="invoke"><a href="#invoke">Rich with Invoke Element</a></h4>
-	            <div id="rich4" data-src="rich4.js">
+	            <div data-src="rich_with_invoke_element.js">
 		            <div class="toolbar-top">
 			            <span class="toolbar">
-				            <span id="rich4-bold" style="font-weight: bold; color: #66d9ef">B</span>
-				            <span id="rich4-underline" style="text-decoration: underline; color: #a6e22e">U</span>
-				            <span id="rich4-italic" style="font-style: italic; color: #f92672">I</span>
-				            <span id="rich4-strike" style="text-decoration: line-through; color: #e6db74">S</span>
+				            <span class="bold" style="font-weight: bold; color: #66d9ef">B</span>
+				            <span class="underline" style="text-decoration: underline; color: #a6e22e">U</span>
+				            <span class="italic" style="font-style: italic; color: #f92672">I</span>
+				            <span class="strike" style="text-decoration: line-through; color: #e6db74">S</span>
 			            </span>
 		            </div>
-		            <div id="article4" class="article demo">
+		            <div id="rich_with_invoke_element" class="article demo">
 			            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce rutrum dapibus dictum. Etiam tempor a enim id sagittis. Donec sodales varius elementum. In iaculis consequat enim, et pellentesque erat accumsan ut. Nulla nec lacus nisi. Nullam id interdum risus, sit amet sollicitudin ipsum. Ut vitae rutrum nulla.<br />
 			            <br />
 			            Vivamus eget dolor est. Donec lobortis felis metus, vel placerat nunc iaculis id. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Praesent eu neque dictum, pulvinar massa faucibus, accumsan diam. Vestibulum pharetra massa dolor, ut tincidunt nisl suscipit vitae.
@@ -162,17 +162,29 @@
             </div>
 
             <div class="demo-container">
+                <h4 id="widget-img"><a href="#widget-img">Rich with Widgets</a></h4>
+                <div data-src="rich_with_widget_img.js">
+                    <div id="rich_with_widget_img" class="article demo">
+                        <p>
+                            <img contenteditable="false" alt="T" style="height: 50px;" src="//upload.wikimedia.org/wikipedia/commons/2/22/Fra_Luca_Pacioli_Letter_T_1509.png">his is Medium.j<img contenteditable="false" alt="s" style="height: 14px;" src="//upload.wikimedia.org/wikipedia/commons/4/42/Fra_Luca_Pacioli_Letter_S_1509.png">
+                        </p>
+                        <br />
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-container">
 	            <h4 id="invoke-drag"><a href="#invoke-drag">Rich with Widget & Invoke Element</a></h4>
-	            <div id="rich5" data-src="rich5.js">
+	            <div data-src="rich_with_widget_invoke_element.js">
 		            <div class="toolbar-top">
 			            <span class="toolbar">
-				            <span id="rich5-bold" style="font-weight: bold; color: #66d9ef">B</span>
-				            <span id="rich5-underline" style="text-decoration: underline; color: #a6e22e">U</span>
-				            <span id="rich5-italic" style="font-style: italic; color: #f92672">I</span>
-				            <span id="rich5-strike" style="text-decoration: line-through; color: #e6db74">S</span>
+				            <span class="bold" style="font-weight: bold; color: #66d9ef">B</span>
+				            <span class="underline" style="text-decoration: underline; color: #a6e22e">U</span>
+				            <span class="italic" style="font-style: italic; color: #f92672">I</span>
+				            <span class="strike" style="text-decoration: line-through; color: #e6db74">S</span>
 			            </span>
 		            </div>
-		            <div id="article5" class="article demo">
+		            <div id="rich_with_widget_invoke_element" class="article demo">
 			            <p contenteditable="false">Widget</p>
 			            <br />
 		            </div>
@@ -383,6 +395,8 @@
 
         <!--Make Forkable-->
         <a href="//github.com/jakiestfu/Medium.js"><img style="position: fixed; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+        <a href="../test/" title="Testify.js Tested!"><img style="position: fixed; top: 0; right: 0; border: 0;" src="//robertleeplummerjr.github.io/testify.js/icon.svg" alt="Testify.js Tested!"></a>
         <script>
             window.Prism = {};
         </script>
@@ -398,9 +412,10 @@
         <script src="partials/inline.js"></script>
         <script src="partials/partial.js"></script>
         <script src="partials/rich.js"></script>
-        <script src="partials/rich2.js"></script>
-        <script src="partials/rich3.js"></script>
-        <script src="partials/rich4.js"></script>
-        <script src="partials/rich5.js"></script>
+        <script src="partials/rich_with_insert_html.js"></script>
+        <script src="partials/rich_with_insert_html_object.js"></script>
+        <script src="partials/rich_with_invoke_element.js"></script>
+        <script src="partials/rich_with_widget_img.js"></script>
+        <script src="partials/rich_with_widget_invoke_element.js"></script>
     </body>
 </html>
