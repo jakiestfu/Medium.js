@@ -49,6 +49,15 @@
 			selection.removeAllRanges();
 			selection.addRange(range);
 		},
+		moveCursorToAfter: function (el) {
+			var sel = rangy.getSelection();
+			if (sel.rangeCount) {
+				var range = sel.getRangeAt(0);
+				range.collapse(false);
+				range.collapseAfter(el);
+				sel.setSingleRange(range);
+			}
+		},
 		parent: function () {
 			var target = null, range;
 
@@ -77,6 +86,9 @@
 		},
 		caretToEnd: function (el) {
 			this.moveCursorToEnd(el);
+		},
+		caretToAfter: function (el) {
+			this.moveCursorToAfter(el);
 		}
 	};
 })(Medium);

@@ -153,16 +153,21 @@
 		},
 
 		deepExtend: function (destination, source) {
-			for (var property in source) if (source.hasOwnProperty(property)) {
+			var property,
+				propertyValue;
+
+			for (property in source) if (source.hasOwnProperty(property)) {
+				propertyValue = source[property];
 				if (
-					source[property]
-					&& source[property].constructor
-					&& source[property].constructor === Object
+					propertyValue !== undefined
+					&& propertyValue !== null
+					&& propertyValue.constructor !== undefined
+					&& propertyValue.constructor === Object
 				) {
 					destination[property] = destination[property] || {};
-					Medium.Utilities.deepExtend(destination[property], source[property]);
+					Medium.Utilities.deepExtend(destination[property], propertyValue);
 				} else {
-					destination[property] = source[property];
+					destination[property] = propertyValue;
 				}
 			}
 			return destination;

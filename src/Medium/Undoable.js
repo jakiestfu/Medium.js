@@ -9,8 +9,8 @@
 	Medium.Undoable = function (medium) {
 		var me = this,
 			element = medium.settings.element,
-			startValue = element.innerHTML,
 			timer,
+			startValue,
 			stack = new Undo.Stack(),
 			EditCommand = Undo.Command.extend({
 				constructor: function (oldValue, newValue) {
@@ -32,10 +32,16 @@
 					medium.dirty = stack.dirty();
 				}
 			}),
-			makeUndoable = function () {
+			makeUndoable = function (isInit) {
 				var newValue = element.innerHTML;
+
+				if (isInit) {
+					startValue = element.innerHTML;
+					stack.execute(new EditCommand(startValue, startValue));
+				}
+
 				// ignore meta key presses
-				if (newValue != startValue) {
+				else if (newValue != startValue) {
 
 					if (!me.movingThroughStack) {
 						// this could try and make a diff instead of storing snapshots

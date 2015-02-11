@@ -2,6 +2,14 @@
 (function(Medium, w, d) {
 	"use strict";
 
+	function isEditable(e) {
+		if (e.hasOwnProperty('target') && e.target.getAttribute('contenteditable') === 'false') {
+			utils.preventDefaultEvent(e);
+			return false;
+		}
+		return true;
+	}
+
 	Medium.Action = function (medium) {
 		this.medium = medium;
 
@@ -10,7 +18,8 @@
 			keyup: null,
 			blur: null,
 			focus: null,
-			paste: null
+			paste: null,
+			click: null
 		};
 
 	};
@@ -21,7 +30,8 @@
 				.handleBlur()
 				.handleKeyDown()
 				.handleKeyUp()
-				.handlePaste();
+				.handlePaste()
+				.handleClick();
 		},
 		destroy: function() {
 			var el = this.medium.element;
@@ -31,7 +41,8 @@
 				.removeEvent(el, 'blur', this.handledEvents.blur)
 				.removeEvent(el, 'keydown', this.handledEvents.keydown)
 				.removeEvent(el, 'keyup', this.handledEvents.keyup)
-				.removeEvent(el, 'paste', this.handledEvents.paste);
+				.removeEvent(el, 'paste', this.handledEvents.paste)
+				.removeEvent(el, 'click', this.handledEvents.click);
 		},
 		handleFocus: function () {
 
@@ -40,6 +51,10 @@
 
 			utils.addEvent(el, 'focus', this.handledEvents.focus = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
 
 				Medium.activeElement = el;
 
@@ -75,6 +90,10 @@
 
 			utils.addEvent(el, 'keydown', this.handledEvents.keydown = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
 
 				var keepEvent = true;
 
@@ -170,6 +189,11 @@
 
 			utils.addEvent(el, 'keyup', this.handledEvents.keyup = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
+
 				utils.isCommand(settings, e, function () {
 					cache.cmd = false;
 				}, function () {
@@ -196,7 +220,7 @@
 
 			return this;
 		},
-		handlePaste: function(e) {
+		handlePaste: function() {
 			var medium = this.medium,
 				el = medium.element,
 				text,
@@ -209,6 +233,11 @@
 
 			utils.addEvent(el, 'paste', this.handledEvents.paste = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
+
 				i = 0;
 				utils.preventDefaultEvent(e);
 				text = '';
@@ -229,6 +258,20 @@
 				}
 
 				medium.paste();
+			});
+
+			return this;
+		},
+		handleClick: function() {
+			var medium = this.medium,
+				el = medium.element,
+				cursor = medium.cursor;
+
+			utils.addEvent(el, 'click', this.handledEvents.click = function(e) {
+				if (!isEditable(e)) {
+					cursor.caretToAfter(e.target);
+				}
+
 			});
 
 			return this;
