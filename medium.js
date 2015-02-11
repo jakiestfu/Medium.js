@@ -198,8 +198,6 @@ var Medium = function (userSettings) {
 
 	this.dirty = false;
 	this.undoable = undoable;
-	this.undo = undoable.undo;
-	this.redo = undoable.redo;
 	this.makeUndoable = undoable.makeUndoable;
 
 	if (settings.drag) {
@@ -211,6 +209,8 @@ var Medium = function (userSettings) {
 
 	// Set as initialized
 	cache.initialized = true;
+
+	this.makeUndoable(true);
 };
 
 Medium.prototype = {
@@ -534,6 +534,8 @@ Medium.prototype = {
 
 			this.clean();
 			this.placeholders();
+
+			this.makeUndoable();
 		} else {
 			return this.element.innerHTML;
 		}
@@ -778,6 +780,28 @@ Medium.prototype = {
 			}, 20);
 		}
 		return true;
+	},
+	undo: function() {
+		var undoable = this.undoable,
+			stack = undoable.stack,
+			can = stack.canUndo();
+
+		if (can) {
+			stack.undo();
+		}
+
+		return this;
+	},
+	redo: function() {
+		var undoable = this.undoable,
+			stack = undoable.stack,
+			can = stack.canRedo();
+
+		if (can) {
+			stack.redo();
+		}
+
+		return this;
 	}
 };
 
@@ -837,6 +861,14 @@ Medium.defaultSettings = {
 (function(Medium, w, d) {
 	"use strict";
 
+	function isEditable(e) {
+		if (e.hasOwnProperty('target') && e.target.getAttribute('contenteditable') === 'false') {
+			utils.preventDefaultEvent(e);
+			return false;
+		}
+		return true;
+	}
+
 	Medium.Action = function (medium) {
 		this.medium = medium;
 
@@ -845,7 +877,8 @@ Medium.defaultSettings = {
 			keyup: null,
 			blur: null,
 			focus: null,
-			paste: null
+			paste: null,
+			click: null
 		};
 
 	};
@@ -856,7 +889,8 @@ Medium.defaultSettings = {
 				.handleBlur()
 				.handleKeyDown()
 				.handleKeyUp()
-				.handlePaste();
+				.handlePaste()
+				.handleClick();
 		},
 		destroy: function() {
 			var el = this.medium.element;
@@ -866,7 +900,8 @@ Medium.defaultSettings = {
 				.removeEvent(el, 'blur', this.handledEvents.blur)
 				.removeEvent(el, 'keydown', this.handledEvents.keydown)
 				.removeEvent(el, 'keyup', this.handledEvents.keyup)
-				.removeEvent(el, 'paste', this.handledEvents.paste);
+				.removeEvent(el, 'paste', this.handledEvents.paste)
+				.removeEvent(el, 'click', this.handledEvents.click);
 		},
 		handleFocus: function () {
 
@@ -875,6 +910,10 @@ Medium.defaultSettings = {
 
 			utils.addEvent(el, 'focus', this.handledEvents.focus = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
 
 				Medium.activeElement = el;
 
@@ -910,6 +949,10 @@ Medium.defaultSettings = {
 
 			utils.addEvent(el, 'keydown', this.handledEvents.keydown = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
 
 				var keepEvent = true;
 
@@ -1005,6 +1048,11 @@ Medium.defaultSettings = {
 
 			utils.addEvent(el, 'keyup', this.handledEvents.keyup = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
+
 				utils.isCommand(settings, e, function () {
 					cache.cmd = false;
 				}, function () {
@@ -1031,7 +1079,7 @@ Medium.defaultSettings = {
 
 			return this;
 		},
-		handlePaste: function(e) {
+		handlePaste: function() {
 			var medium = this.medium,
 				el = medium.element,
 				text,
@@ -1044,6 +1092,11 @@ Medium.defaultSettings = {
 
 			utils.addEvent(el, 'paste', this.handledEvents.paste = function(e) {
 				e = e || w.event;
+
+				if (!isEditable(e)) {
+					return false;
+				}
+
 				i = 0;
 				utils.preventDefaultEvent(e);
 				text = '';
@@ -1064,6 +1117,20 @@ Medium.defaultSettings = {
 				}
 
 				medium.paste();
+			});
+
+			return this;
+		},
+		handleClick: function() {
+			var medium = this.medium,
+				el = medium.element,
+				cursor = medium.cursor;
+
+			utils.addEvent(el, 'click', this.handledEvents.click = function(e) {
+				if (!isEditable(e)) {
+					cursor.caretToAfter(e.target);
+				}
+
 			});
 
 			return this;
@@ -1263,6 +1330,15 @@ Medium.defaultSettings = {
 			selection.removeAllRanges();
 			selection.addRange(range);
 		},
+		moveCursorToAfter: function (el) {
+			var sel = rangy.getSelection();
+			if (sel.rangeCount) {
+				var range = sel.getRangeAt(0);
+				range.collapse(false);
+				range.collapseAfter(el);
+				sel.setSingleRange(range);
+			}
+		},
 		parent: function () {
 			var target = null, range;
 
@@ -1291,6 +1367,9 @@ Medium.defaultSettings = {
 		},
 		caretToEnd: function (el) {
 			this.moveCursorToEnd(el);
+		},
+		caretToAfter: function (el) {
+			this.moveCursorToAfter(el);
 		}
 	};
 })(Medium);
@@ -1905,8 +1984,8 @@ Medium.defaultSettings = {
 	Medium.Undoable = function (medium) {
 		var me = this,
 			element = medium.settings.element,
-			startValue = element.innerHTML,
 			timer,
+			startValue,
 			stack = new Undo.Stack(),
 			EditCommand = Undo.Command.extend({
 				constructor: function (oldValue, newValue) {
@@ -1928,10 +2007,16 @@ Medium.defaultSettings = {
 					medium.dirty = stack.dirty();
 				}
 			}),
-			makeUndoable = function () {
+			makeUndoable = function (isInit) {
 				var newValue = element.innerHTML;
+
+				if (isInit) {
+					startValue = element.innerHTML;
+					stack.execute(new EditCommand(startValue, startValue));
+				}
+
 				// ignore meta key presses
-				if (newValue != startValue) {
+				else if (newValue != startValue) {
 
 					if (!me.movingThroughStack) {
 						// this could try and make a diff instead of storing snapshots
@@ -2137,16 +2222,21 @@ Medium.defaultSettings = {
 		},
 
 		deepExtend: function (destination, source) {
-			for (var property in source) if (source.hasOwnProperty(property)) {
+			var property,
+				propertyValue;
+
+			for (property in source) if (source.hasOwnProperty(property)) {
+				propertyValue = source[property];
 				if (
-					source[property]
-					&& source[property].constructor
-					&& source[property].constructor === Object
+					propertyValue !== undefined
+					&& propertyValue !== null
+					&& propertyValue.constructor !== undefined
+					&& propertyValue.constructor === Object
 				) {
 					destination[property] = destination[property] || {};
-					Medium.Utilities.deepExtend(destination[property], source[property]);
+					Medium.Utilities.deepExtend(destination[property], propertyValue);
 				} else {
-					destination[property] = source[property];
+					destination[property] = propertyValue;
 				}
 			}
 			return destination;

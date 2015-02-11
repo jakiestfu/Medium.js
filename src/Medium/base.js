@@ -81,8 +81,6 @@ var Medium = function (userSettings) {
 
 	this.dirty = false;
 	this.undoable = undoable;
-	this.undo = undoable.undo;
-	this.redo = undoable.redo;
 	this.makeUndoable = undoable.makeUndoable;
 
 	if (settings.drag) {
@@ -94,6 +92,8 @@ var Medium = function (userSettings) {
 
 	// Set as initialized
 	cache.initialized = true;
+
+	this.makeUndoable(true);
 };
 
 Medium.prototype = {
@@ -417,6 +417,8 @@ Medium.prototype = {
 
 			this.clean();
 			this.placeholders();
+
+			this.makeUndoable();
 		} else {
 			return this.element.innerHTML;
 		}
@@ -661,6 +663,28 @@ Medium.prototype = {
 			}, 20);
 		}
 		return true;
+	},
+	undo: function() {
+		var undoable = this.undoable,
+			stack = undoable.stack,
+			can = stack.canUndo();
+
+		if (can) {
+			stack.undo();
+		}
+
+		return this;
+	},
+	redo: function() {
+		var undoable = this.undoable,
+			stack = undoable.stack,
+			can = stack.canRedo();
+
+		if (can) {
+			stack.redo();
+		}
+
+		return this;
 	}
 };
 
