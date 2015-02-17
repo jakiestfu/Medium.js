@@ -606,7 +606,7 @@ Medium.prototype = {
 			settings = this.settings,
 			placeholder = this.placeholder || null;
 
-		if (placeholder !== null && placeholder.setup) {
+		if (placeholder !== null && placeholder.setup && placeholder.parentNode !== null) {
 			//remove placeholder
 			placeholder.parentNode.removeChild(placeholder);
 			delete el.placeHolderActive;
