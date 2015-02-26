@@ -479,6 +479,7 @@ Medium.prototype = {
 			initialParagraph = d.createElement(s.tags.paragraph);
 			initialParagraph.innerHTML = '&nbsp;';
 			el.appendChild(initialParagraph);
+			this.cursor.set(this, 0, el.firstChild);
 		}
 
 		return this;

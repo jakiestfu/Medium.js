@@ -40,7 +40,7 @@ for F in ${JS_FILES[@]}; do
   JS_TEMP+="$CONTENTS"
 done
 
-echo "${JS_WRAPPER//CODE_HERE/"$JS_TEMP"}" > $JS_COMBINED_FILE
+echo "${JS_WRAPPER//CODE_HERE/$JS_TEMP}" > $JS_COMBINED_FILE
 
 
 #compress it
