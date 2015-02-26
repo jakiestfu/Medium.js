@@ -340,6 +340,7 @@
 		},
 		backspaceOrDeleteKey: function (e) {
 			var medium = this.medium,
+				cursor = medium.cursor,
 				settings = medium.settings,
 				el = medium.element;
 
@@ -354,7 +355,8 @@
 			if (el.lastChild === null) return;
 
 			var lastChild = el.lastChild,
-				beforeLastChild = lastChild.previousSibling;
+				beforeLastChild = lastChild.previousSibling,
+				anchorNode = rangy.getSelection().anchorNode;
 
 			if (
 				lastChild
@@ -372,11 +374,23 @@
 			) {
 				el.removeChild(lastChild);
 				el.removeChild(beforeLastChild);
+			} else if (
+				el.childNodes.length === 1
+				&& lastChild
+				&& !utils.text(lastChild).length
+			) {
+				utils.preventDefaultEvent(e);
+				medium.setupContents();
+			}
+			else if ( anchorNode && anchorNode === el ) {
+				medium.deleteSelection();
+				medium.setupContents();
+				cursor.set(medium, 0, el.firstChild);
 			}
 		},
 		preserveElementFocus: function () {
 			// Fetch node that has focus
-			var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
+			var anchorNode = w.getSelection ? w.getSelection().anchorNode : document.activeElement;
 			if (anchorNode) {
 				var medium = this.medium,
 					cache = medium.cache,
