@@ -22,6 +22,7 @@ gulp.task('default', ['js', 'css']);
 
 gulp.task('js', function() {
 	gulp.src([
+		'_header.js',
 		'base.js',
 		'Action.js',
 		'base.js',
@@ -36,7 +37,8 @@ gulp.task('js', function() {
 		'Toolbar.js',
 		'Undoable.js',
 		'Utilities.js',
-		'environmentCorrection.js'
+		'environmentCorrection.js',
+		'_footer.js'
 	], { base: 'src/js/' })
 	.pipe(concat('medium.js'))
 	.pipe(header(banner, { pkg : pkg } ))

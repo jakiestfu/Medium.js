@@ -10,7 +10,7 @@
 
 (function (w, d) {
 	'use strict';
-
+	var LOLWUT = false;
 	var rangy = w['rangy'] || null,
 		undo = w['Undo'] || null,
 		key = w.Key = {
@@ -115,18 +115,3 @@
 		},
 		Medium = (function () {
 
-			CODE_HERE
-
-			return Medium;
-		}()),
-		utils = Medium.Utilities;
-
-	if (typeof define === 'function' && define['amd']) {
-		define(function () { return Medium; });
-	} else if (typeof module !== 'undefined' && module.exports) {
-		module.exports = Medium;
-	} else if (typeof this !== 'undefined') {
-		this.Medium = Medium;
-	}
-
-}).call(this, window, document);
