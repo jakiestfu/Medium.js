@@ -1,0 +1,20 @@
+{
+  "name": "undo.js",
+  "version": "0.2.0",
+  "description": "Undo.js http://jzaefferer.github.com/undo/demos/",
+  "main": "undo.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jzaefferer/undo.git"
+  },
+  "keywords": [
+    "undo",
+    "redo"
+  ],
+  "author": "Jörn Zaefferer <joern.zaefferer@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jzaefferer/undo/issues"
+  },
+  "homepage": "https://github.com/jzaefferer/undo"
+}

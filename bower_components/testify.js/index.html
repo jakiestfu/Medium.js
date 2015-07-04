@@ -1,0 +1,442 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="viewport" content="width=device-width; initial-scale=1.0" />
+
+	<title>Testify.js - a micro framework that makes testing fun again</title>
+
+	<meta name="description" content="Testify is a micro unit testing framework for Javascript" />
+	<meta name="author" content="Robert Plummer, http://visop-dev.com" />
+
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow" />
+
+	<style>
+		*{
+			margin:0;
+			padding:0;
+		}
+
+		html{
+			background-color: #fafafa;
+			overflow-x:hidden;
+		}
+
+		body{
+			font:12px/1.5 Tahoma, Arial, sans-serif;
+			color:#5a5a5a;
+		}
+
+		h1,h2,h3,h4{
+			font-family:'PT Sans Narrow',sans-serif;
+			font-weight:normal;
+			margin-bottom:10px;
+		}
+
+		h1{
+			font-size:48px;
+			padding: 60px 40px;
+			position:relative;
+			border-bottom:1px solid #ddd;
+			background-color:#fff;
+			box-shadow: 0 0 3px #ddd;
+			margin-bottom: 40px;
+			color: #777;
+			text-align:center;
+		}
+
+		h2{
+			font-size:24px;
+		}
+
+		h3{
+			font-size:24px;
+			color:#69aa1c;
+		}
+
+		h4{
+			background-color: #F0F0F0;
+			border: 1px solid #DDDDDD;
+			border-radius: 4px 4px 4px 4px;
+			display: inline-block;
+			font-size: 19px;
+			padding: 2px 8px;
+			color:#444;
+			letter-spacing: 0.2px;
+			margin-bottom:15px;
+		}
+
+
+		h1:before,h2:before{
+			display:inline-block;
+			font:normal 0.6em/1.1 sans-serif;
+			text-align:center;
+			color:#fff;
+			content:'\2714';
+
+			position:relative;
+			top: -0.2em;
+			width:1em;
+			height:1em;
+			padding:0.32em;
+			margin-right:1.2em;
+
+			background-color:#a8d474;
+			border-radius:50%;
+		}
+
+		footer,aside,section{
+			display: block;
+			padding: 5px 10px;
+		}
+
+		#main{
+			width: 1000px;
+			overflow: hidden;
+			margin:0 auto;
+			padding-bottom:40px;
+		}
+
+		#about{
+			width:250px;
+			float:left;
+			margin-right: 30px;
+		}
+
+		h4+p+pre{
+			margin-bottom: 50px;
+			padding-bottom: 10px;
+		}
+
+		#doc{
+			float: left;
+			margin-right: 20px;
+			width: 440px;
+		}
+
+		#links{
+			width:200px;
+			float:left;
+		}
+
+		#links p{
+			margin-bottom:8px;
+		}
+
+		footer{
+			background-color: #FFFFFF;
+			border-top: 1px solid #DDDDDD;
+			box-shadow: 0 0 3px #DDDDDD;
+			color: #888888;
+			font-size: 10px;
+			padding: 15px;
+			display:block;
+			text-align:center;
+		}
+
+		p, pre{
+			margin-bottom:15px;
+		}
+
+		.underline{
+			text-decoration: underline;
+		}
+
+		.bigBottomMargin{
+			margin-bottom:50px;
+		}
+
+		a,a:visited{
+			background-color:#57b7da;
+			color:#fff;
+			text-decoration:none;
+			padding:0 2px;
+		}
+
+		a:hover{
+			background-color:#df6270;
+
+		}
+
+		/*a,a:visited{
+			color:#3ba2cd;
+			text-decoration:none;
+		}
+
+		a:hover{
+			text-decoration:underline;
+		}*/
+
+
+		/* Pretty print customizations */
+
+		pre{
+			padding:5px 10px;
+			border-radius:3px;
+		}
+	</style>
+
+	<!-- Google +1 -->
+	<meta itemprop="name" content="Testify.js - a micro framework that makes testing fun again">
+	<meta itemprop="description" content="">
+</head>
+
+<body>
+<div>
+<header>
+	<h1>Testify.js - a micro unit testing framework</h1>
+</header>
+
+<div id="main">
+
+<aside id="about">
+	<h2>What?</h2>
+	<p>Testify is a micro unit testing framework for javascript. It strives for elegance instead of feature bloat. Testing your code is no longer a chore - it's fun again.</p>
+	<p class="bigBottomMargin">The framework is released under <strong>MIT</strong> and is freely <a href="https://github.com/robertleeplummerjr/Testify.js">available for download</a>.</p>
+
+	<!-- +1 button -->
+	<g:plusone size="medium" annotation="inline" width="300" ></g:plusone>
+
+	<a href="https://twitter.com/share" class="twitter-share-button" style="margin-top:4px;" data-text="Testify.js - a micro framework that makes testing fun again" data-count="horizontal" data-via="Tutorialzine">Tweet</a>
+
+
+	<a href="https://github.com/robertleeplummerjr/Testify.js"><img style="position: fixed; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+
+	<a href="test/" title="Testify.js Tested!"><img style="position: fixed; top: 0; right: 0; border: 0;" src="icon.svg" alt="Testify.js Tested!" data-canonical-src="icon.svg"></a>
+</aside>
+
+<section id="doc">
+<h2>Documentation</h2>
+<p>Here is a quick, comment free example of Testify:</p>
+
+<pre class="prettyprint">
+tf = new Testify('MyCalc Test Suite');
+
+tf.beforeEach(function(tf){
+	tf.data.calc = new MyCalc(10);
+});
+
+tf.test('Testing the add() method', function(tf){
+	calc = tf.data.calc;
+
+	calc.add(4);
+	tf.assert(calc.result() == 14);
+
+	calc.add(-5);
+	tf.assertEqual(calc.result(),9);
+});
+
+tf.test('Testing the mul() method', function(tf){
+	calc = tf.data.calc;
+
+	calc.mul(1.5);
+	tf.assertEqual(calc.result(),15);
+
+	calc.mul(-1);
+	tf.assertEqual(calc.result(),-15);
+});
+
+tf.run();
+</pre>
+
+<p>If you like what you see, keep reeding below.</p>
+<h3>Getting Started</h3>
+<p>Getting started with Testify.js is really easy: <code>bower install testify.js</code></p>
+<pre class="prettyprint">
+// Create a new test suite
+tf = new Testify('MyCalc Test Suite');
+
+// Our test cases will go here..
+
+// Run the suite
+tf.run();
+</pre>
+
+<p>The test cases, or groups of related tests, are defined by passing a closure to the <strong>test()</strong> method:</p>
+
+<pre class="prettyprint">
+// Adding a new test case to the suite
+tf.test('Testing the Add method', function(tf){
+	// Write individual tests here..
+});
+</pre>
+
+<p>Noice that the closure takes tf as an argument. It is important to include it, as otherwise the rest of the examples here will not work. There are other ways to make the tf object accessible inside the function, but this is more convenient.</p>
+
+<pre class="prettyprint">
+// Create a new test suite
+tf = new Testify('MyCalc Test Suite');
+
+// Add a new test case to this suite
+tf.test('Testing the Add method', function(tf){
+	calc = new MyCalc(10);
+
+	calc.add(4);
+	tf.assertEqual(calc.result(),14);
+
+	calc.add(-5);
+	tf.assertEqual(calc.result(),9);
+});
+
+// Run the test and generate a report
+tf.run();
+</pre>
+<p>Congratulations! You wrote your first test. See it in action <a href="examples/doc_example1.html">here</a>.</p>
+<h3>Method Reference</h3>
+<p>These methods (and properties) help you organize your tests and group them logically into test cases.</p>
+<h4>data</h4>
+<p>This is a public property, instance of stdClass. You can use it to share objects and variables between tests. Example:</p>
+<pre class="prettyprint">
+tf.data.calc = new MyCalc(10);
+
+// It is now available in your test cases:
+tf.test('Example',function(tf){
+	tf.data.calc.add(42);
+});
+</pre>
+
+<h4>test( title, callback )</h4>
+<p>The test function defines a test case. It takes a title and a callback function (closure). This function is stored internally and executed when we call the run() method. The title is optional, but recommended.</p>
+<pre class="prettyprint">
+tf.test('This is the test case title', function(tf){
+	tf.assert(true);
+	// More tests go here..
+});
+</pre>
+
+<h4>run( )</h4>
+<p>This method is called once after all your test cases have been defined. It executes the stored test cases and prints the result page.</p>
+<pre class="prettyprint">
+tf.run();
+</pre>
+
+<h4>before( callback )</h4>
+<p>This function is executed once, before any of the test cases. You can use it to instantiate objects or prepare the environment for your tests.</p>
+<pre class="prettyprint">
+tf.before(function(tf){
+	// Calc will be available in all
+	// subsequent method calls
+	tf.data.calc = new MyCalc(10);
+});
+</pre>
+<h4>beforeEach( callback )</h4>
+<p>This function is executed once, before every one of the test cases. You can use it to instantiate objects that need to start fresh for every test case.</p>
+<pre class="prettyprint">
+tf.beforeEach(function(tf){
+	// This will recreate the calc object
+	// for every test case
+	tf.data.calc = new MyCalc(10);
+});
+</pre>
+
+<h4>after( callback )</h4>
+<p>This function is executed once, after all the test cases are completed. You can use it to clean up, delete temporary files or close DB connections.</p>
+<pre class="prettyprint">
+tf.after(function(tf){
+	// All the tests have completed
+});
+</pre>
+<h4>afterEach( callback )</h4>
+<p>This function is executed once for every test case, after it is complete. You can use it to clean up or gather stats after each test case.</p>
+<pre class="prettyprint">
+tf.afterEach(function(tf){
+	// After a test has completed
+});
+</pre>
+
+<h3>Test Methods</h3>
+<p>You can use these methods inside a test case to test for different conditions.</p>
+
+<h4>assert( cond )</h4>
+<p>This is the basic test method. cond is a boolean expression. The test is considered pased if cond is truthful. You can emulate all of the other test methods using this one.</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.assert( true ); // pass
+tf.assert( false ); // fail
+</pre>
+
+<h4>assertFalse( cond )</h4>
+<p>The opposite of assert().</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.assertFalse( true ); // fail
+tf.assertFalse( false ); // pass
+</pre>
+
+<h4>assertEqual( exp1, exp2 )</h4>
+<p>This method compares exp1 to exp2 using PHP's non-strict comparison operator (==).</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.assertEqual( 1, 1 ); // pass
+tf.assertEqual( 1, '1' ); // pass
+tf.assertEqual( 1, 2 ); // fail
+</pre>
+
+<h4>assertIdentical( exp1, exp2 )</h4>
+<p>This method compares exp1 to exp2 using PHP's strict comparison operator (===).</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.assertIdentical( 1, 1 ); // pass
+tf.assertIdentical( 1, '1' ); // fail
+tf.assertIdentical( 1, 2 ); // fail
+</pre>
+
+<h4>assertInArray( needle, Array haystack )</h4>
+<p>This method checks whether variable needle is a member of array haystack.</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.assertInArray( 1, [1,2,3,4,5] ); // pass
+tf.assertInArray( 1, [3,4,6,7] ); // fail
+</pre>
+
+<h4>assertNotInArray( needle, Array haystack )</h4>
+<p>The opposite of assertInArray()</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.assertNotInArray( 1, [1,2,3,4,5] ); // fail
+tf.assertNotInArray( 1, [3,4,6,7] ); // pass
+</pre>
+<h4>pass( )</h4>
+<p>Unconditional pass.</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.pass(); // pass
+</pre>
+<h4>fail( )</h4>
+<p>Unconditional fail.</p>
+<pre class="prettyprint">
+// Inside a test case
+tf.fail(); // fail
+</pre>
+</section>
+<aside id="links">
+	<h2>Links</h2>
+	<p>Examples: <a href="examples/example2.html">Pass</a>
+		<a href="examples/example1.html">Fail</a></p>
+		<a href="test.html">Suite</a>
+	<p>Download: <a href="https://github.com/RobertLeePlummerJr/testify.js/zipball/master">Zip</a>
+		<a href="https://github.com/RobertLeePlummerJr/testify.js/tarball/master">Tar.gz</a></p>
+</aside>
+</div>
+
+<footer>
+	Created by <a href="https://github.com/martinaglv/">Martin Angelov</a> | Ported by <a href="https://github.com/robertleeplummerjr">Robert Plummer</a> Released under MIT
+</footer>
+</div>
+
+<script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+
+<!-- Google +1 -->
+<script type="text/javascript">
+	(function() {
+		var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+		po.src = 'https://apis.google.com/js/plusone.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+	})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "name": "testify.js",
+  "version": "1.0.2",
+  "homepage": "https://github.com/robertleeplummerjr/testify.js",
+  "authors": [
+    "Robert Plummer <RobertLeePlummerJr@Gmail.com>"
+  ],
+  "description": "A micro unit testing framework ported from Testify.php",
+  "main": "Testify.js",
+  "keywords": [
+    "unit",
+    "test",
+    "testing",
+    "gui",
+    "testify",
+    "testify.js"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "vue": "~0.10.6"
+  },
+  "_release": "1.0.2",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.0.2",
+    "commit": "a8f23795ee2e2edb4d9c456ac4aa0f17941be6f8"
+  },
+  "_source": "git://github.com/robertleeplummerjr/Testify.js.git",
+  "_target": ">=1.0",
+  "_originalSource": "testify.js"
+}

@@ -433,6 +433,7 @@ Medium.prototype = {
 	focus: function () {
 		var el = this.element;
 		el.focus();
+                console.info(el);
 		return this;
 	},
 
@@ -739,6 +740,8 @@ Medium.defaultSettings = {
 	},
 	beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
 	},
+        onBlur: function() {},
+        onFocus: function() {},
 	keyContext: null,
 	drag: false
 };
