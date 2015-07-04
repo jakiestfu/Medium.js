@@ -433,7 +433,6 @@ Medium.prototype = {
 	focus: function () {
 		var el = this.element;
 		el.focus();
-                console.info(el);
 		return this;
 	},
 
