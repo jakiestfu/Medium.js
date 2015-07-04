@@ -44,7 +44,7 @@ echo "${JS_WRAPPER//CODE_HERE/$JS_TEMP}" > $JS_COMBINED_FILE
 
 
 #compress it
-yui-compressor -o $JS_COMBINED_FILE_MIN $JS_COMBINED_FILE
+uglifyjs -o $JS_COMBINED_FILE_MIN $JS_COMBINED_FILE
 
 #add the file to the git base
 git add $JS_COMBINED_FILE

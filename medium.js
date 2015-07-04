@@ -550,7 +550,6 @@ Medium.prototype = {
 	focus: function () {
 		var el = this.element;
 		el.focus();
-                console.info(el);
 		return this;
 	},
 
@@ -1154,8 +1153,6 @@ Medium.defaultSettings = {
                         cache = medium.cache;
 
                     if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
-                        console.info(cache);
-                        console.info(cache.originalVal);
                         e.target.textContent = cache.originalVal;
                         
                         if (settings.element.blur) {
