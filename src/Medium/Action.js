@@ -57,6 +57,8 @@
 				}
 
 				Medium.activeElement = el;
+                                medium.cache.originalVal = e.target.textContent;
+                                medium.settings.onFocus(e);
 
 				medium.placeholders();
 			});
@@ -74,7 +76,8 @@
 				if (Medium.activeElement === el) {
 					Medium.activeElement = null;
 				}
-
+				
+				medium.settings.onBlur(e);
 				medium.placeholders();
 			});
 
@@ -162,8 +165,13 @@
 				}
 
 				switch (e.keyCode) {
-					case key['enter']:
-						if (action.enterKey(e) === false) {
+                                        case key['enter']:
+                                                if (action.enterKey(e) === false) {
+                                                        utils.preventDefaultEvent(e);
+                                                }
+                                                break;
+                                        case key['escape']:
+                                                if (action.escKey(e) === false) {
 							utils.preventDefaultEvent(e);
 						}
 						break;
@@ -276,6 +284,23 @@
 
 			return this;
 		},
+                escKey: function (e) {
+                    var medium = this.medium,
+                        el = medium.element,
+                        settings = medium.settings,
+                        cache = medium.cache;
+
+                    if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
+                        e.target.textContent = cache.originalVal;
+                        
+                        if (settings.element.blur) {
+                            settings.element.blur();
+                        } else if (settings.element.onblur) {
+                            settings.element.onblur();
+                        }   
+                        return false;
+                    }
+                },
 		enterKey: function (e) {
 			var medium = this.medium,
 				el = medium.element,
@@ -284,7 +309,12 @@
 				cursor = medium.cursor;
 
 			if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
-				return false;
+                            if (settings.element.blur) {
+                                settings.element.blur();
+                            } else if (settings.element.onblur) {
+                                settings.element.onblur();
+                            }	
+                            return false;
 			}
 
 			if (cache.shift) {

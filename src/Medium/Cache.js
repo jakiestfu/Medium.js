@@ -5,7 +5,8 @@
 	Medium.Cache = function () {
 		this.initialized = false;
 		this.cmd = false;
-		this.focusedElement = null
+		this.focusedElement = null;
+                this.originalVal = null;
 	};
 
 })(Medium);

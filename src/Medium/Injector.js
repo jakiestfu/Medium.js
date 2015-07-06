@@ -45,7 +45,7 @@
 				}
 
 				while (html.length > 0) {
-					parent.insertBefore(html[0], wedge);
+                                        parent.insertBefore(html[html.length - 1], wedge);
 				}
 			} else {
 				nodes.push(html);
