@@ -44,30 +44,32 @@
 			Medium.prototype.prompt = originalMediumPrompt;
 		};
 
-  tf.test('ctrl + p ordering', function() {
-    run({
-      mode: Medium.richMode,
-      placeholder: 'Your text'
-    }, function(medium, el) {
-      var result = 'top<br><br>bottom',
-        clipboard = 'top\n\n\n\nbottom';
+	tf.test('ctrl + p ordering', function() {
+		run({
+			mode: Medium.richMode,
+			placeholder: 'Your text'
+		}, function(medium, el) {
+			var result = 'top<br><br>bottom',
+				clipboard = 'top\n\n\n\nbottom';
 
-      el.innerHTML = '';
+			el.innerHTML = '';
 
-      el.onpaste({
-        keyCode: Key.p,
-        ctrlKey: true,
-        clipboardData: {
-          types: ['text/plain'],
-          getData: function () {
-            return clipboard;
-          }
-        }
-      });
+			el.onpaste({
+				keyCode: Key.p,
+				ctrlKey: true,
+				clipboardData: {
+					types: ['text/plain'],
+					getData: function () {
+						return clipboard;
+					}
+				}
+			});
 
-      tf.assertEquals(el.innerHTML, result, "Paste ordering");
-    });
-  });
+			// in some browsers whitespace is added to the text on paste,
+			// so we just test to see if the innerHTML matches result
+			tf.assertEquals((new RegExp(result)).test(el.innerHTML), true, "Paste ordering");
+		});
+	});
 
 	tf.test('ctrl + p plain to beginning', function() {
 		run({
