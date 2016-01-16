@@ -158,7 +158,7 @@
 		cleanCanvas: function() {
 			var target,
 				inserted = false,
-				buttons = d.getElementsByClassName(this.buttonClass);
+				buttons = this.element.getElementsByClassName(this.buttonClass);
 
 			this.icon.style.opacity = 1;
 

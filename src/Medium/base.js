@@ -479,6 +479,7 @@ Medium.prototype = {
 			initialParagraph = d.createElement(s.tags.paragraph);
 			initialParagraph.innerHTML = '&nbsp;';
 			el.appendChild(initialParagraph);
+			this.cursor.set(this, 0, el.firstChild);
 		}
 
 		return this;
@@ -489,7 +490,7 @@ Medium.prototype = {
 			settings = this.settings,
 			placeholder = this.placeholder || null;
 
-		if (placeholder !== null && placeholder.setup) {
+		if (placeholder !== null && placeholder.setup && placeholder.parentNode !== null) {
 			//remove placeholder
 			placeholder.parentNode.removeChild(placeholder);
 			delete el.placeHolderActive;
@@ -738,6 +739,8 @@ Medium.defaultSettings = {
 	},
 	beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
 	},
+        onBlur: function() {},
+        onFocus: function() {},
 	keyContext: null,
 	drag: false
 };

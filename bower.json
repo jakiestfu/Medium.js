@@ -6,7 +6,6 @@
 			"name": "Robert Plummer <robertleeplummerjr@gmail.com> (http://visop-dev.com)"
 		}
 	],
-	"version": "1.0.0",
 	"homepage": "http://jakiestfu.github.io/Medium.js",
 	"bugs": "https://github.com/jakiestfu/Medium.js/issues",
 	"repository": {
@@ -15,9 +14,11 @@
 	},
 	"dependencies": {
 		"rangy-official": ">=1.3",
-		"undo": "https://github.com/jzaefferer/undo/archive/master.zip",
-		"testify.js": ">=1.0"
+		"undo": "https://github.com/jzaefferer/undo/archive/master.zip"
 	},
+  "devDependencies": {
+    "testify.js": ">=1.0"
+  },
 	"keywords": ["editor", "wysiwyg", "contenteditable", "content", "medium", "medium.com"],
 	"license": "MIT",
 	"files": ["medium.js", "medium.css"]

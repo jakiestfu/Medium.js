@@ -596,6 +596,7 @@ Medium.prototype = {
 			initialParagraph = d.createElement(s.tags.paragraph);
 			initialParagraph.innerHTML = '&nbsp;';
 			el.appendChild(initialParagraph);
+			this.cursor.set(this, 0, el.firstChild);
 		}
 
 		return this;
@@ -606,7 +607,7 @@ Medium.prototype = {
 			settings = this.settings,
 			placeholder = this.placeholder || null;
 
-		if (placeholder !== null && placeholder.setup) {
+		if (placeholder !== null && placeholder.setup && placeholder.parentNode !== null) {
 			//remove placeholder
 			placeholder.parentNode.removeChild(placeholder);
 			delete el.placeHolderActive;
@@ -855,6 +856,8 @@ Medium.defaultSettings = {
 	},
 	beforeAddTag: function (tag, shouldFocus, isEditable, afterElement) {
 	},
+        onBlur: function() {},
+        onFocus: function() {},
 	keyContext: null,
 	drag: false
 };
@@ -916,6 +919,8 @@ Medium.defaultSettings = {
 				}
 
 				Medium.activeElement = el;
+                                medium.cache.originalVal = e.target.textContent;
+                                medium.settings.onFocus(e);
 
 				medium.placeholders();
 			});
@@ -933,7 +938,8 @@ Medium.defaultSettings = {
 				if (Medium.activeElement === el) {
 					Medium.activeElement = null;
 				}
-
+				
+				medium.settings.onBlur(e);
 				medium.placeholders();
 			});
 
@@ -1021,8 +1027,13 @@ Medium.defaultSettings = {
 				}
 
 				switch (e.keyCode) {
-					case key['enter']:
-						if (action.enterKey(e) === false) {
+                                        case key['enter']:
+                                                if (action.enterKey(e) === false) {
+                                                        utils.preventDefaultEvent(e);
+                                                }
+                                                break;
+                                        case key['escape']:
+                                                if (action.escKey(e) === false) {
 							utils.preventDefaultEvent(e);
 						}
 						break;
@@ -1135,6 +1146,23 @@ Medium.defaultSettings = {
 
 			return this;
 		},
+                escKey: function (e) {
+                    var medium = this.medium,
+                        el = medium.element,
+                        settings = medium.settings,
+                        cache = medium.cache;
+
+                    if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
+                        e.target.textContent = cache.originalVal;
+                        
+                        if (settings.element.blur) {
+                            settings.element.blur();
+                        } else if (settings.element.onblur) {
+                            settings.element.onblur();
+                        }   
+                        return false;
+                    }
+                },
 		enterKey: function (e) {
 			var medium = this.medium,
 				el = medium.element,
@@ -1143,7 +1171,12 @@ Medium.defaultSettings = {
 				cursor = medium.cursor;
 
 			if( settings.mode === Medium.inlineMode || settings.mode === Medium.inlineRichMode ){
-				return false;
+                            if (settings.element.blur) {
+                                settings.element.blur();
+                            } else if (settings.element.onblur) {
+                                settings.element.onblur();
+                            }	
+                            return false;
 			}
 
 			if (cache.shift) {
@@ -1199,6 +1232,7 @@ Medium.defaultSettings = {
 		},
 		backspaceOrDeleteKey: function (e) {
 			var medium = this.medium,
+				cursor = medium.cursor,
 				settings = medium.settings,
 				el = medium.element;
 
@@ -1213,7 +1247,8 @@ Medium.defaultSettings = {
 			if (el.lastChild === null) return;
 
 			var lastChild = el.lastChild,
-				beforeLastChild = lastChild.previousSibling;
+				beforeLastChild = lastChild.previousSibling,
+				anchorNode = rangy.getSelection().anchorNode;
 
 			if (
 				lastChild
@@ -1231,11 +1266,23 @@ Medium.defaultSettings = {
 			) {
 				el.removeChild(lastChild);
 				el.removeChild(beforeLastChild);
+			} else if (
+				el.childNodes.length === 1
+				&& lastChild
+				&& !utils.text(lastChild).length
+			) {
+				utils.preventDefaultEvent(e);
+				medium.setupContents();
+			}
+			else if ( anchorNode && anchorNode === el ) {
+				medium.deleteSelection();
+				medium.setupContents();
+				cursor.set(medium, 0, el.firstChild);
 			}
 		},
 		preserveElementFocus: function () {
 			// Fetch node that has focus
-			var anchorNode = w.getSelection ? w.getSelection().anchorNode : d.activeElement;
+			var anchorNode = w.getSelection ? w.getSelection().anchorNode : document.activeElement;
 			if (anchorNode) {
 				var medium = this.medium,
 					cache = medium.cache,
@@ -1276,7 +1323,8 @@ Medium.defaultSettings = {
 	Medium.Cache = function () {
 		this.initialized = false;
 		this.cmd = false;
-		this.focusedElement = null
+		this.focusedElement = null;
+                this.originalVal = null;
 	};
 
 })(Medium);
@@ -1532,7 +1580,7 @@ Medium.defaultSettings = {
 		cleanCanvas: function() {
 			var target,
 				inserted = false,
-				buttons = d.getElementsByClassName(this.buttonClass);
+				buttons = this.element.getElementsByClassName(this.buttonClass);
 
 			this.icon.style.opacity = 1;
 
@@ -1736,7 +1784,7 @@ Medium.defaultSettings = {
 				}
 
 				while (html.length > 0) {
-					parent.insertBefore(html[html.length - 1], wedge);
+            parent.insertBefore(html[0], wedge);
 				}
 			} else {
 				nodes.push(html);
