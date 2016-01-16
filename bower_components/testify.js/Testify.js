@@ -634,7 +634,7 @@ h1:before,\
 	font: normal 0.6em/1.1 sans-serif;\
 	text-align: center;\
 	color: #fff;\
-	content: "✓";\
+	content: "\\02713";\
 	position: relative;\
 	top: -0.2em;\
 	width: 1em;\
@@ -647,7 +647,7 @@ h1:before,\
 h1.fail:before,\
 	h2.fail:before {\
 	background-color: #ee3c4f;\
-	content: "✗";\
+	content: "\\02717";\
 	line-height: 1.05;\
 }\
 h1 {\

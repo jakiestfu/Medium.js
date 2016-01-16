@@ -9,8 +9,8 @@
  *
  * Copyright 2015, Tim Down
  * Licensed under the MIT license.
- * Version: 1.3.0-alpha.20150122
- * Build date: 22 January 2015
+ * Version: 1.3.0
+ * Build date: 10 May 2015
  */
 (function(factory, root) {
     if (typeof define == "function" && define.amd) {
@@ -28,10 +28,12 @@
         var dom = api.dom;
         var DomPosition = dom.DomPosition;
         var contains = dom.arrayContains;
-        var isHtmlNamespace = dom.isHtmlNamespace;
+        var util = api.util;
+        var forEach = util.forEach;
 
 
         var defaultTagName = "span";
+        var createElementNSSupported = util.isHostMethod(document, "createElementNS");
 
         function each(obj, func) {
             for (var i in obj) {
@@ -48,45 +50,66 @@
             return str.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
         }
 
-        var hasClass, addClass, removeClass;
-        if (api.util.isHostObject(document.createElement("div"), "classList")) {
-            hasClass = function(el, className) {
+        function classNameContainsClass(fullClassName, className) {
+            return !!fullClassName && new RegExp("(?:^|\\s)" + className + "(?:\\s|$)").test(fullClassName);
+        }
+
+        // Inefficient, inelegant nonsense for IE's svg element, which has no classList and non-HTML className implementation
+        function hasClass(el, className) {
+            if (typeof el.classList == "object") {
                 return el.classList.contains(className);
-            };
+            } else {
+                var classNameSupported = (typeof el.className == "string");
+                var elClass = classNameSupported ? el.className : el.getAttribute("class");
+                return classNameContainsClass(elClass, className);
+            }
+        }
 
-            addClass = function(el, className) {
-                return el.classList.add(className);
-            };
-
-            removeClass = function(el, className) {
-                return el.classList.remove(className);
-            };
-        } else {
-            hasClass = function(el, className) {
-                return el.className && new RegExp("(?:^|\\s)" + className + "(?:\\s|$)").test(el.className);
-            };
-
-            addClass = function(el, className) {
-                if (el.className) {
-                    if (!hasClass(el, className)) {
-                        el.className += " " + className;
+        function addClass(el, className) {
+            if (typeof el.classList == "object") {
+                el.classList.add(className);
+            } else {
+                var classNameSupported = (typeof el.className == "string");
+                var elClass = classNameSupported ? el.className : el.getAttribute("class");
+                if (elClass) {
+                    if (!classNameContainsClass(elClass, className)) {
+                        elClass += " " + className;
                     }
                 } else {
-                    el.className = className;
+                    elClass = className;
+                }
+                if (classNameSupported) {
+                    el.className = elClass;
+                } else {
+                    el.setAttribute("class", elClass);
+                }
+            }
+        }
+
+        var removeClass = (function() {
+            function replacer(matched, whiteSpaceBefore, whiteSpaceAfter) {
+                return (whiteSpaceBefore && whiteSpaceAfter) ? " " : "";
+            }
+
+            return function(el, className) {
+                if (typeof el.classList == "object") {
+                    el.classList.remove(className);
+                } else {
+                    var classNameSupported = (typeof el.className == "string");
+                    var elClass = classNameSupported ? el.className : el.getAttribute("class");
+                    elClass = elClass.replace(new RegExp("(^|\\s)" + className + "(\\s|$)"), replacer);
+                    if (classNameSupported) {
+                        el.className = elClass;
+                    } else {
+                        el.setAttribute("class", elClass);
+                    }
                 }
             };
+        })();
 
-            removeClass = (function() {
-                function replacer(matched, whiteSpaceBefore, whiteSpaceAfter) {
-                    return (whiteSpaceBefore && whiteSpaceAfter) ? " " : "";
-                }
-
-                return function(el, className) {
-                    if (el.className) {
-                        el.className = el.className.replace(new RegExp("(^|\\s)" + className + "(\\s|$)"), replacer);
-                    }
-                };
-            })();
+        function getClass(el) {
+            var classNameSupported = (typeof el.className == "string");
+            return classNameSupported ? el.className : el.getAttribute("class");
         }
 
         function sortClassName(className) {
@@ -94,11 +117,26 @@
         }
 
         function getSortedClassName(el) {
-            return sortClassName(el.className);
+            return sortClassName( getClass(el) );
         }
 
         function haveSameClasses(el1, el2) {
             return getSortedClassName(el1) == getSortedClassName(el2);
+        }
+
+        function hasAllClasses(el, className) {
+            var classes = className.split(/\s+/);
+            for (var i = 0, len = classes.length; i < len; ++i) {
+                if (!hasClass(el, trim(classes[i]))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function canTextBeStyled(textNode) {
+            var parent = textNode.parentNode;
+            return (parent && parent.nodeType == 1 && !/^(textarea|style|script|select|iframe)$/i.test(parent.nodeName));
         }
 
         function movePosition(position, oldParent, oldIndex, newParent, newIndex) {
@@ -137,9 +175,9 @@
             var oldParent = node.parentNode;
             var oldIndex = dom.getNodeIndex(node);
 
-            for (var i = 0, position; position = positionsToPreserve[i++]; ) {
+            forEach(positionsToPreserve, function(position) {
                 movePosition(position, oldParent, oldIndex, newParent, newIndex);
-            }
+            });
 
             // Now actually move the node.
             if (newParent.childNodes.length == newIndex) {
@@ -154,11 +192,11 @@
             var oldParent = node.parentNode;
             var oldIndex = dom.getNodeIndex(node);
 
-            for (var i = 0, position; position = positionsToPreserve[i++]; ) {
+            forEach(positionsToPreserve, function(position) {
                 movePositionWhenRemovingNode(position, oldParent, oldIndex);
-            }
+            });
 
-            node.parentNode.removeChild(node);
+            dom.removeNode(node);
         }
 
         function moveChildrenPreservingPositions(node, newParent, newIndex, removeNode, positionsToPreserve) {
@@ -428,16 +466,15 @@
                 if (textNodes.length > 1) {
                     var firstTextNodeIndex = dom.getNodeIndex(firstTextNode);
                     var textParts = [], combinedTextLength = 0, textNode, parent;
-                    for (var i = 0, len = textNodes.length, j, position; i < len; ++i) {
-                        textNode = textNodes[i];
+                    forEach(textNodes, function(textNode, i) {
                         parent = textNode.parentNode;
                         if (i > 0) {
                             parent.removeChild(textNode);
                             if (!parent.hasChildNodes()) {
-                                parent.parentNode.removeChild(parent);
+                                dom.removeNode(parent);
                             }
                             if (positionsToPreserve) {
-                                for (j = 0; position = positionsToPreserve[j++]; ) {
+                                forEach(positionsToPreserve, function(position) {
                                     // Handle case where position is inside the text node being merged into a preceding node
                                     if (position.node == textNode) {
                                         position.node = firstTextNode;
@@ -451,12 +488,12 @@
                                             position.offset = combinedTextLength;
                                         }
                                     }
-                                }
+                                });
                             }
                         }
                         textParts[i] = textNode.data;
                         combinedTextLength += textNode.data.length;
-                    }
+                    });
                     firstTextNode.data = textParts.join("");
                 }
                 return firstTextNode.data;
@@ -472,9 +509,9 @@
 
             toString: function() {
                 var textParts = [];
-                for (var i = 0, len = this.textNodes.length; i < len; ++i) {
-                    textParts[i] = "'" + this.textNodes[i].data + "'";
-                }
+                forEach(this.textNodes, function(textNode, i) {
+                    textParts[i] = "'" + textNode.data + "'";
+                });
                 return "[Merge(" + textParts.join(",") + ")]";
             }
         };
@@ -517,8 +554,10 @@
             applier.attrExceptions = [];
             var el = document.createElement(applier.elementTagName);
             applier.elementProperties = applier.copyPropertiesToElement(elementPropertiesFromOptions, el, true);
-            each(elementAttributes, function(attrName) {
+            each(elementAttributes, function(attrName, attrValue) {
                 applier.attrExceptions.push(attrName);
+                // Ensure each attribute value is a string
+                elementAttributes[attrName] = "" + attrValue;
             });
             applier.elementAttributes = elementAttributes;
 
@@ -566,8 +605,8 @@
                         propValue = props[p];
                         elPropValue = el[p];
 
-                        // Special case for class. The copied properties object has the applier's CSS class as well as its
-                        // own to simplify checks when removing styling elements
+                        // Special case for class. The copied properties object has the applier's class as well as its own
+                        // to simplify checks when removing styling elements
                         if (p == "className") {
                             addClass(el, propValue);
                             addClass(el, this.className);
@@ -614,15 +653,26 @@
 
             copyAttributesToElement: function(attrs, el) {
                 for (var attrName in attrs) {
-                    if (attrs.hasOwnProperty(attrName)) {
+                    if (attrs.hasOwnProperty(attrName) && !/^class(?:Name)?$/i.test(attrName)) {
                         el.setAttribute(attrName, attrs[attrName]);
                     }
                 }
             },
 
+            appliesToElement: function(el) {
+                return contains(this.tagNames, el.tagName.toLowerCase());
+            },
+
+            getEmptyElements: function(range) {
+                var applier = this;
+                return range.getNodes([1], function(el) {
+                    return applier.appliesToElement(el) && !el.hasChildNodes();
+                });
+            },
+
             hasClass: function(node) {
                 return node.nodeType == 1 &&
-                    (this.applyToAnyTagName || contains(this.tagNames, node.tagName.toLowerCase())) &&
+                    (this.applyToAnyTagName || this.appliesToElement(node)) &&
                     hasClass(node, this.className);
             },
 
@@ -645,7 +695,7 @@
                 return this.ignoreWhiteSpace && node && node.nodeType == 3 && isUnrenderedWhiteSpaceNode(node);
             },
 
-            // Normalizes nodes after applying a CSS class to a Range.
+            // Normalizes nodes after applying a class to a Range.
             postApply: function(textNodes, range, positionsToPreserve, isUndo) {
                 var firstNode = textNodes[0], lastNode = textNodes[textNodes.length - 1];
 
@@ -657,8 +707,7 @@
                 var textNode, precedingTextNode;
 
                 // Check for every required merge and create a Merge object for each
-                for (var i = 0, len = textNodes.length; i < len; ++i) {
-                    textNode = textNodes[i];
+                forEach(textNodes, function(textNode) {
                     precedingTextNode = getPreviousMergeableTextNode(textNode, !isUndo);
                     if (precedingTextNode) {
                         if (!currentMerge) {
@@ -677,7 +726,7 @@
                     } else {
                         currentMerge = null;
                     }
-                }
+                });
 
                 // Test whether the first node after the range needs merging
                 var nextTextNode = getNextMergeableTextNode(lastNode, !isUndo);
@@ -701,8 +750,13 @@
                 }
             },
 
-            createContainer: function(doc) {
-                var el = doc.createElement(this.elementTagName);
+            createContainer: function(parentNode) {
+                var doc = dom.getDocument(parentNode);
+                var namespace;
+                var el = createElementNSSupported && !dom.isHtmlNamespace(parentNode) && (namespace = parentNode.namespaceURI) ?
+                    doc.createElementNS(parentNode.namespaceURI, this.elementTagName) :
+                    doc.createElement(this.elementTagName);
+
                 this.copyPropertiesToElement(this.elementProperties, el, false);
                 this.copyAttributesToElement(this.elementAttributes, el);
                 addClass(el, this.className);
@@ -716,7 +770,11 @@
                 var applier = this;
                 return each(props, function(p, propValue) {
                     if (p == "className") {
-                        return sortClassName(el.className) == applier.elementSortedClassName;
+                        // For checking whether we should reuse an existing element, we just want to check that the element
+                        // has all the classes specified in the className property. When deciding whether the element is
+                        // removable when unapplying a class, there is separate special handling to check whether the
+                        // element has extra classes so the same simple check will do.
+                        return hasAllClasses(el, propValue);
                     } else if (typeof propValue == "object") {
                         if (!applier.elementHasProperties(el[p], propValue)) {
                             return false;
@@ -727,28 +785,43 @@
                 });
             },
 
-            applyToTextNode: function(textNode, positionsToPreserve) {
-                var parent = textNode.parentNode;
-                if (parent.childNodes.length == 1 &&
-                        this.useExistingElements &&
-                        isHtmlNamespace(parent) &&
-                        contains(this.tagNames, parent.tagName.toLowerCase()) &&
-                        this.elementHasProperties(parent, this.elementProperties)) {
+            elementHasAttributes: function(el, attrs) {
+                return each(attrs, function(name, value) {
+                    if (el.getAttribute(name) !== value) {
+                        return false;
+                    }
+                });
+            },
 
-                    addClass(parent, this.className);
-                } else {
-                    var el = this.createContainer(dom.getDocument(textNode));
-                    textNode.parentNode.insertBefore(el, textNode);
-                    el.appendChild(textNode);
+            applyToTextNode: function(textNode, positionsToPreserve) {
+
+                // Check whether the text node can be styled. Text within a <style> or <script> element, for example,
+                // should not be styled. See issue 283.
+                if (canTextBeStyled(textNode)) {
+                    var parent = textNode.parentNode;
+                    if (parent.childNodes.length == 1 &&
+                        this.useExistingElements &&
+                        this.appliesToElement(parent) &&
+                        this.elementHasProperties(parent, this.elementProperties) &&
+                        this.elementHasAttributes(parent, this.elementAttributes)) {
+
+                        addClass(parent, this.className);
+                    } else {
+                        var textNodeParent = textNode.parentNode;
+                        var el = this.createContainer(textNodeParent);
+                        textNodeParent.insertBefore(el, textNode);
+                        el.appendChild(textNode);
+                    }
                 }
+
             },
 
             isRemovable: function(el) {
-                return isHtmlNamespace(el) &&
-                    el.tagName.toLowerCase() == this.elementTagName &&
+                return el.tagName.toLowerCase() == this.elementTagName &&
                     getSortedClassName(el) == this.elementSortedClassName &&
                     this.elementHasProperties(el, this.elementProperties) &&
                     !elementHasNonClassAttributes(el, this.attrExceptions) &&
+                    this.elementHasAttributes(el, this.elementAttributes) &&
                     this.isModifiable(el);
             },
 
@@ -768,9 +841,9 @@
                 var rangesToPreserve = [range];
                 var positionsToPreserve = getRangeBoundaries(rangesToPreserve);
 
-                for (var i = 0, node; node = nodesToRemove[i++]; ) {
+                forEach(nodesToRemove, function(node) {
                     removePreservingPositions(node, positionsToPreserve);
-                }
+                });
 
                 // Update the range from the preserved boundary positions
                 updateRangesFromBoundaries(rangesToPreserve, positionsToPreserve);
@@ -778,7 +851,7 @@
 
             undoToTextNode: function(textNode, range, ancestorWithClass, positionsToPreserve) {
                 if (!range.containsNode(ancestorWithClass)) {
-                    // Split out the portion of the ancestor from which we can remove the CSS class
+                    // Split out the portion of the ancestor from which we can remove the class
                     //var parent = ancestorWithClass.parentNode, index = dom.getNodeIndex(ancestorWithClass);
                     var ancestorRange = range.cloneRange();
                     ancestorRange.selectNode(ancestorWithClass);
@@ -814,6 +887,7 @@
             },
 
             applyToRange: function(range, rangesToPreserve) {
+                var applier = this;
                 rangesToPreserve = rangesToPreserve || [];
 
                 // Create an array of range boundaries to preserve
@@ -822,28 +896,35 @@
                 range.splitBoundariesPreservingPositions(positionsToPreserve);
 
                 // Tidy up the DOM by removing empty containers
-                if (this.removeEmptyElements) {
-                    this.removeEmptyContainers(range);
+                if (applier.removeEmptyElements) {
+                    applier.removeEmptyContainers(range);
                 }
 
                 var textNodes = getEffectiveTextNodes(range);
 
                 if (textNodes.length) {
-                    for (var i = 0, textNode; textNode = textNodes[i++]; ) {
-                        if (!this.isIgnorableWhiteSpaceNode(textNode) && !this.getSelfOrAncestorWithClass(textNode) &&
-                                this.isModifiable(textNode)) {
-                            this.applyToTextNode(textNode, positionsToPreserve);
+                    forEach(textNodes, function(textNode) {
+                        if (!applier.isIgnorableWhiteSpaceNode(textNode) && !applier.getSelfOrAncestorWithClass(textNode) &&
+                                applier.isModifiable(textNode)) {
+                            applier.applyToTextNode(textNode, positionsToPreserve);
                         }
-                    }
-                    textNode = textNodes[textNodes.length - 1];
-                    range.setStartAndEnd(textNodes[0], 0, textNode, textNode.length);
-                    if (this.normalize) {
-                        this.postApply(textNodes, range, positionsToPreserve, false);
+                    });
+                    var lastTextNode = textNodes[textNodes.length - 1];
+                    range.setStartAndEnd(textNodes[0], 0, lastTextNode, lastTextNode.length);
+                    if (applier.normalize) {
+                        applier.postApply(textNodes, range, positionsToPreserve, false);
                     }
 
                     // Update the ranges from the preserved boundary positions
                     updateRangesFromBoundaries(rangesToPreserve, positionsToPreserve);
                 }
+
+                // Apply classes to any appropriate empty elements
+                var emptyElements = applier.getEmptyElements(range);
+
+                forEach(emptyElements, function(el) {
+                    addClass(el, applier.className);
+                });
             },
 
             applyToRanges: function(ranges) {
@@ -863,6 +944,7 @@
             },
 
             undoToRange: function(range, rangesToPreserve) {
+                var applier = this;
                 // Create an array of range boundaries to preserve
                 rangesToPreserve = rangesToPreserve || [];
                 var positionsToPreserve = getRangeBoundaries(rangesToPreserve);
@@ -871,8 +953,8 @@
                 range.splitBoundariesPreservingPositions(positionsToPreserve);
 
                 // Tidy up the DOM by removing empty containers
-                if (this.removeEmptyElements) {
-                    this.removeEmptyContainers(range, positionsToPreserve);
+                if (applier.removeEmptyElements) {
+                    applier.removeEmptyContainers(range, positionsToPreserve);
                 }
 
                 var textNodes = getEffectiveTextNodes(range);
@@ -880,26 +962,33 @@
                 var lastTextNode = textNodes[textNodes.length - 1];
 
                 if (textNodes.length) {
-                    this.splitAncestorWithClass(range.endContainer, range.endOffset, positionsToPreserve);
-                    this.splitAncestorWithClass(range.startContainer, range.startOffset, positionsToPreserve);
+                    applier.splitAncestorWithClass(range.endContainer, range.endOffset, positionsToPreserve);
+                    applier.splitAncestorWithClass(range.startContainer, range.startOffset, positionsToPreserve);
                     for (var i = 0, len = textNodes.length; i < len; ++i) {
                         textNode = textNodes[i];
-                        ancestorWithClass = this.getSelfOrAncestorWithClass(textNode);
-                        if (ancestorWithClass && this.isModifiable(textNode)) {
-                            this.undoToAncestor(ancestorWithClass, positionsToPreserve);
+                        ancestorWithClass = applier.getSelfOrAncestorWithClass(textNode);
+                        if (ancestorWithClass && applier.isModifiable(textNode)) {
+                            applier.undoToAncestor(ancestorWithClass, positionsToPreserve);
                         }
                     }
                     // Ensure the range is still valid
                     range.setStartAndEnd(textNodes[0], 0, lastTextNode, lastTextNode.length);
 
 
-                    if (this.normalize) {
-                        this.postApply(textNodes, range, positionsToPreserve, true);
+                    if (applier.normalize) {
+                        applier.postApply(textNodes, range, positionsToPreserve, true);
                     }
 
                     // Update the ranges from the preserved boundary positions
                     updateRangesFromBoundaries(rangesToPreserve, positionsToPreserve);
                 }
+
+                // Remove class from any appropriate empty elements
+                var emptyElements = applier.getEmptyElements(range);
+
+                forEach(emptyElements, function(el) {
+                    removeClass(el, applier.className);
+                });
             },
 
             undoToRanges: function(ranges) {
@@ -919,19 +1008,6 @@
                 this.undoToRanges(ranges);
                 sel.setRanges(ranges);
             },
-
-    /*
-            getTextSelectedByRange: function(textNode, range) {
-                var textRange = range.cloneRange();
-                textRange.selectNodeContents(textNode);
-
-                var intersectionRange = textRange.intersection(range);
-                var text = intersectionRange ? intersectionRange.toString() : "";
-                textRange.detach();
-
-                return text;
-            },
-    */
 
             isAppliedToRange: function(range) {
                 if (range.collapsed || range.toString() == "") {
@@ -975,16 +1051,6 @@
                 }
             },
 
-    /*
-            toggleRanges: function(ranges) {
-                if (this.isAppliedToRanges(ranges)) {
-                    this.undoToRanges(ranges);
-                } else {
-                    this.applyToRanges(ranges);
-                }
-            },
-    */
-
             toggleSelection: function(win) {
                 if (this.isAppliedToSelection(win)) {
                     this.undoToSelection(win);
@@ -1005,23 +1071,6 @@
                 return elements;
             },
 
-    /*
-            getElementsWithClassIntersectingSelection: function(win) {
-                var sel = api.getSelection(win);
-                var elements = [];
-                var applier = this;
-                sel.eachRange(function(range) {
-                    var rangeElements = applier.getElementsWithClassIntersectingRange(range);
-                    for (var i = 0, el; el = rangeElements[i++]; ) {
-                        if (!contains(elements, el)) {
-                            elements.push(el);
-                        }
-                    }
-                });
-                return elements;
-            },
-    */
-
             detach: function() {}
         };
 
@@ -1033,7 +1082,9 @@
             hasClass: hasClass,
             addClass: addClass,
             removeClass: removeClass,
+            getClass: getClass,
             hasSameClasses: haveSameClasses,
+            hasAllClasses: hasAllClasses,
             replaceWithOwnChildren: replaceWithOwnChildrenPreservingPositions,
             elementsHaveSameNonClassAttributes: elementsHaveSameNonClassAttributes,
             elementHasNonClassAttributes: elementHasNonClassAttributes,
@@ -1044,7 +1095,9 @@
         };
 
         api.CssClassApplier = api.ClassApplier = ClassApplier;
-        api.createCssClassApplier = api.createClassApplier = createClassApplier;
+        api.createClassApplier = createClassApplier;
+        util.createAliasForDeprecatedMethod(api, "createCssClassApplier", "createClassApplier", module);
     });
     
+    return rangy;
 }, this);

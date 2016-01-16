@@ -1,0 +1,6 @@
+<svg width="34" height="34" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <g>
+  <ellipse fill="#a8d474" stroke-width="0" cx="17" cy="17" rx="15" ry="15"/>
+  <text fill="#ffffff" stroke="#ffffff" stroke-width="0" x="17" y="21" font-size="14" font-family="serif" text-anchor="middle" font-weight="bold" font-style="normal">✔</text>
+ </g>
+</svg>

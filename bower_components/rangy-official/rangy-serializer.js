@@ -10,8 +10,8 @@
  *
  * Copyright 2015, Tim Down
  * Licensed under the MIT license.
- * Version: 1.3.0-alpha.20150122
- * Build date: 22 January 2015
+ * Version: 1.3.0
+ * Build date: 10 May 2015
  */
 (function(factory, root) {
     if (typeof define == "function" && define.amd) {
@@ -178,7 +178,7 @@
         }
 
         var deserializeRegex = /^([^,]+),([^,\{]+)(\{([^}]+)\})?$/;
-        
+
         function deserializeRange(serialized, rootNode, doc) {
             if (rootNode) {
                 doc = doc || dom.getDocument(rootNode);
@@ -310,4 +310,5 @@
         util.crc32 = crc32;
     });
     
+    return rangy;
 }, this);

@@ -26,8 +26,8 @@
  *
  * Copyright 2015, Tim Down
  * Licensed under the MIT license.
- * Version: 1.3.0-alpha.20150122
- * Build date: 22 January 2015
+ * Version: 1.3.0
+ * Build date: 10 May 2015
  */
 
 /**
@@ -102,19 +102,14 @@
         var trailingSpaceBeforeLineBreakInPreLineCollapses = true;
 
         (function() {
-            var el = document.createElement("div");
-            el.contentEditable = "true";
-            el.innerHTML = "<p>1 </p><p></p>";
-            var body = getBody(document);
+            var el = dom.createTestElement(document, "<p>1 </p><p></p>", true);
             var p = el.firstChild;
             var sel = api.getSelection();
-
-            body.appendChild(el);
             sel.collapse(p.lastChild, 2);
             sel.setStart(p.firstChild, 0);
             trailingSpaceInBlockCollapses = ("" + sel).length == 1;
 
-            el.innerHTML = "1 <br>";
+            el.innerHTML = "1 <br />";
             sel.collapse(el, 2);
             sel.setStart(el.firstChild, 0);
             trailingSpaceBeforeBrCollapses = ("" + sel).length == 1;
@@ -124,7 +119,7 @@
             sel.setStart(el.firstChild, 0);
             trailingSpaceBeforeBlockCollapses = ("" + sel).length == 1;
 
-            body.removeChild(el);
+            dom.removeNode(el);
             sel.removeAllRanges();
         })();
 
@@ -132,21 +127,10 @@
 
         // This function must create word and non-word tokens for the whole of the text supplied to it
         function defaultTokenizer(chars, wordOptions) {
-            var word = chars.join(""), result, tokens = [];
+            var word = chars.join(""), result, tokenRanges = [];
 
-            function createTokenFromRange(start, end, isWord) {
-                var tokenChars = chars.slice(start, end);
-                var token = {
-                    isWord: isWord,
-                    chars: tokenChars,
-                    toString: function() {
-                        return tokenChars.join("");
-                    }
-                };
-                for (var i = 0, len = tokenChars.length; i < len; ++i) {
-                    tokenChars[i].token = token;
-                }
-                tokens.push(token);
+            function createTokenRange(start, end, isWord) {
+                tokenRanges.push( { start: start, end: end, isWord: isWord } );
             }
 
             // Match words and mark characters
@@ -157,24 +141,48 @@
 
                 // Create token for non-word characters preceding this word
                 if (wordStart > lastWordEnd) {
-                    createTokenFromRange(lastWordEnd, wordStart, false);
+                    createTokenRange(lastWordEnd, wordStart, false);
                 }
 
                 // Get trailing space characters for word
                 if (wordOptions.includeTrailingSpace) {
-                    while (nonLineBreakWhiteSpaceRegex.test(chars[wordEnd])) {
+                    while ( nonLineBreakWhiteSpaceRegex.test(chars[wordEnd]) ) {
                         ++wordEnd;
                     }
                 }
-                createTokenFromRange(wordStart, wordEnd, true);
+                createTokenRange(wordStart, wordEnd, true);
                 lastWordEnd = wordEnd;
             }
 
             // Create token for trailing non-word characters, if any exist
             if (lastWordEnd < chars.length) {
-                createTokenFromRange(lastWordEnd, chars.length, false);
+                createTokenRange(lastWordEnd, chars.length, false);
             }
 
+            return tokenRanges;
+        }
+
+        function convertCharRangeToToken(chars, tokenRange) {
+            var tokenChars = chars.slice(tokenRange.start, tokenRange.end);
+            var token = {
+                isWord: tokenRange.isWord,
+                chars: tokenChars,
+                toString: function() {
+                    return tokenChars.join("");
+                }
+            };
+            for (var i = 0, len = tokenChars.length; i < len; ++i) {
+                tokenChars[i].token = token;
+            }
+            return token;
+        }
+
+        function tokenize(chars, wordOptions, tokenizer) {
+            var tokenRanges = tokenizer(chars, wordOptions);
+            var tokens = [];
+            for (var i = 0, tokenRange; tokenRange = tokenRanges[i++]; ) {
+                tokens.push( convertCharRangeToToken(chars, tokenRange) );
+            }
             return tokens;
         }
 
@@ -185,7 +193,7 @@
             includePreLineTrailingSpace: true,
             ignoreCharacters: ""
         };
-        
+
         function normalizeIgnoredCharacters(ignoredCharacters) {
             // Check if character is ignored
             var ignoredChars = ignoredCharacters || "";
@@ -196,7 +204,7 @@
                 return char1.charCodeAt(0) - char2.charCodeAt(0);
             });
 
-            /// Convert back to a string and remove duplicates 
+            /// Convert back to a string and remove duplicates
             return ignoredCharsArray.join("").replace(/(.)\1+/g, "$1");
         }
 
@@ -206,7 +214,7 @@
             includeSpaceBeforeBlock: !trailingSpaceBeforeBlockCollapses,
             includePreLineTrailingSpace: true
         };
-        
+
         var defaultWordOptions = {
             "en": {
                 wordRegex: /[a-z0-9]+('[a-z0-9]+)*/gi,
@@ -267,7 +275,7 @@
             }
             return options;
         }
-        
+
         /*----------------------------------------------------------------------------------------------------------------*/
 
         /* DOM utility functions */
@@ -284,8 +292,6 @@
             tableCssDisplayBlock = (getComputedStyleProperty(table, "display") == "block");
             body.removeChild(table);
         })();
-
-        api.features.tableCssDisplayBlock = tableCssDisplayBlock;
 
         var defaultDisplayValueForTag = {
             table: "table",
@@ -488,7 +494,7 @@
         };
 
         var cachedCount = 0, uncachedCount = 0;
-        
+
         function createCachingGetter(methodName, func, objProperty) {
             return function(args) {
                 var cache = this.cache;
@@ -534,7 +540,8 @@
             TRAILING_SPACE_IN_BLOCK = "TRAILING_SPACE_IN_BLOCK",
             TRAILING_SPACE_BEFORE_BR = "TRAILING_SPACE_BEFORE_BR",
             PRE_LINE_TRAILING_SPACE_BEFORE_LINE_BREAK = "PRE_LINE_TRAILING_SPACE_BEFORE_LINE_BREAK",
-            TRAILING_LINE_BREAK_AFTER_BR = "TRAILING_LINE_BREAK_AFTER_BR";
+            TRAILING_LINE_BREAK_AFTER_BR = "TRAILING_LINE_BREAK_AFTER_BR",
+            INCLUDED_TRAILING_LINE_BREAK_AFTER_BR = "INCLUDED_TRAILING_LINE_BREAK_AFTER_BR";
 
         extend(nodeProto, {
             isCharacterDataNode: createCachingGetter("isCharacterDataNode", dom.isCharacterDataNode, "node"),
@@ -621,9 +628,9 @@
 
                 return false;
             }, "node"),
-            
+
             isRenderedBlock: createCachingGetter("isRenderedBlock", function(el) {
-                // Ensure that a block element containing a <br> is considered to have inner text 
+                // Ensure that a block element containing a <br> is considered to have inner text
                 var brs = el.getElementsByTagName("br");
                 for (var i = 0, len = brs.length; i < len; ++i) {
                     if (!isCollapsedNode(brs[i])) {
@@ -681,7 +688,6 @@
 
         /*----------------------------------------------------------------------------------------------------------------*/
 
-    
         function Position(nodeWrapper, offset) {
             this.offset = offset;
             this.nodeWrapper = nodeWrapper;
@@ -803,7 +809,7 @@
                     this.checkForLeadingSpace = false;
                 }
             },
-            
+
             getPrecedingUncollapsedPosition: function(characterOptions) {
                 var pos = this, character;
                 while ( (pos = pos.previousVisible()) ) {
@@ -818,34 +824,34 @@
 
             getCharacter: function(characterOptions) {
                 this.resolveLeadingAndTrailingSpaces();
-                
+
                 var thisChar = this.character, returnChar;
 
                 // Check if character is ignored
                 var ignoredChars = normalizeIgnoredCharacters(characterOptions.ignoreCharacters);
                 var isIgnoredCharacter = (thisChar !== "" && ignoredChars.indexOf(thisChar) > -1);
-                
+
                 // Check if this position's  character is invariant (i.e. not dependent on character options) and return it
                 // if so
                 if (this.isCharInvariant) {
                     returnChar = isIgnoredCharacter ? "" : thisChar;
                     return returnChar;
                 }
-                
+
                 var cacheKey = ["character", characterOptions.includeSpaceBeforeBr, characterOptions.includeBlockContentTrailingSpace, characterOptions.includePreLineTrailingSpace, ignoredChars].join("_");
                 var cachedChar = this.cache.get(cacheKey);
                 if (cachedChar !== null) {
                     return cachedChar;
                 }
-                
-                // We need to actually get the character
+
+                // We need to actually get the character now
                 var character = "";
                 var collapsible = (this.characterType == COLLAPSIBLE_SPACE);
-                
+
                 var nextPos, previousPos;
                 var gotPreviousPos = false;
                 var pos = this;
-                
+
                 function getPreviousPos() {
                     if (!gotPreviousPos) {
                         previousPos = pos.getPrecedingUncollapsedPosition(characterOptions);
@@ -856,9 +862,14 @@
 
                 // Disallow a collapsible space that is followed by a line break or is the last character
                 if (collapsible) {
-                    // Disallow a collapsible space that follows a trailing space or line break, or is the first character
-                    if (thisChar == " " &&
-                            (!getPreviousPos() || previousPos.isTrailingSpace || previousPos.character == "\n")) {
+                    // Allow a trailing space that we've previously determined should be included
+                    if (this.type == INCLUDED_TRAILING_LINE_BREAK_AFTER_BR) {
+                        character = "\n";
+                    }
+                    // Disallow a collapsible space that follows a trailing space or line break, or is the first character,
+                    // or follows a collapsible included space
+                    else if (thisChar == " " &&
+                            (!getPreviousPos() || previousPos.isTrailingSpace || previousPos.character == "\n" || (previousPos.character == " " && previousPos.characterType == COLLAPSIBLE_SPACE))) {
                     }
                     // Allow a leading line break unless it follows a line break
                     else if (thisChar == "\n" && this.isLeadingSpace) {
@@ -876,7 +887,7 @@
                             } else if (nextPos.isLeadingSpace && nextPos.character == "\n") {
                                 this.type = TRAILING_SPACE_BEFORE_BLOCK;
                             }
-                            
+
                             if (nextPos.character == "\n") {
                                 if (this.type == TRAILING_SPACE_BEFORE_BR && !characterOptions.includeSpaceBeforeBr) {
                                 } else if (this.type == TRAILING_SPACE_BEFORE_BLOCK && !characterOptions.includeSpaceBeforeBlock) {
@@ -887,10 +898,11 @@
                                         if (this.isTrailingSpace) {
                                         } else if (this.isBr) {
                                             nextPos.type = TRAILING_LINE_BREAK_AFTER_BR;
-                                            
-                                            if (getPreviousPos() && previousPos.isLeadingSpace && previousPos.character == "\n") {
+
+                                            if (getPreviousPos() && previousPos.isLeadingSpace && !previousPos.isTrailingSpace && previousPos.character == "\n") {
                                                 nextPos.character = "";
                                             } else {
+                                                nextPos.type = INCLUDED_TRAILING_LINE_BREAK_AFTER_BR;
                                             }
                                         }
                                     } else {
@@ -908,16 +920,11 @@
                     }
                 }
 
-                // Collapse a br element that is followed by a trailing space
-                else if (thisChar == "\n" &&
-                        (!(nextPos = this.nextUncollapsed()) || nextPos.isTrailingSpace)) {
-                }
-                
                 if (ignoredChars.indexOf(character) > -1) {
                     character = "";
                 }
-                
-                
+
+
                 this.cache.set(cacheKey, character);
 
                 return character;
@@ -1262,7 +1269,7 @@
 
                 while ( (pos = it.next()) ) {
                     textChar = pos.character;
-                    
+
 
                     if (allWhiteSpaceRegex.test(textChar)) {
                         if (insideWord) {
@@ -1287,7 +1294,7 @@
             // Get initial word surrounding initial position and tokenize it
             var forwardChars = consumeWord(true);
             var backwardChars = consumeWord(false).reverse();
-            var tokens = tokenizer(backwardChars.concat(forwardChars), wordOptions);
+            var tokens = tokenize(backwardChars.concat(forwardChars), wordOptions, tokenizer);
 
             // Create initial token buffers
             var forwardTokensBuffer = forwardChars.length ?
@@ -1316,7 +1323,7 @@
                         (forwardChars = consumeWord(true)).length > 0) {
 
                         // Merge trailing non-word into next word and tokenize
-                        forwardTokensBuffer = tokenizer(lastToken.chars.concat(forwardChars), wordOptions);
+                        forwardTokensBuffer = tokenize(lastToken.chars.concat(forwardChars), wordOptions, tokenizer);
                     }
 
                     return forwardTokensBuffer.shift();
@@ -1332,7 +1339,7 @@
                         (backwardChars = consumeWord(false)).length > 0) {
 
                         // Merge leading non-word into next word and tokenize
-                        backwardTokensBuffer = tokenizer(backwardChars.reverse().concat(lastToken.chars), wordOptions);
+                        backwardTokensBuffer = tokenize(backwardChars.reverse().concat(lastToken.chars), wordOptions, tokenizer);
                     }
 
                     return backwardTokensBuffer.pop();
@@ -1380,7 +1387,7 @@
                 if (backward) {
                     newPos = newPos.previousVisible();
                     unitsMoved = -unitsMoved;
-                } else if (newPos && newPos.isLeadingSpace) {
+                } else if (newPos && newPos.isLeadingSpace && !newPos.isTrailingSpace) {
                     // Tweak the position for the case of a leading space. The problem is that an uncollapsed leading space
                     // before a block element (for example, the line break between "1" and "2" in the following HTML:
                     // "1<p>2</p>") is considered to be attached to the position immediately before the block element, which
@@ -1468,8 +1475,6 @@
                     chars.push(pos);
                     text += currentChar;
                 }
-                
-                //console.log("text " + text)
 
                 if (isRegex) {
                     result = searchTerm.exec(text);
@@ -1681,7 +1686,7 @@
                         startIndex = rangeBetween.text(characterOptions).length;
                     }
                     endIndex = startIndex + this.text(characterOptions).length;
-        
+
                     return {
                         start: startIndex,
                         end: endIndex
@@ -1693,22 +1698,22 @@
                 function(session, searchTermParam, findOptions) {
                     // Set up options
                     findOptions = createNestedOptions(findOptions, defaultFindOptions);
-        
+
                     // Create word options if we're matching whole words only
                     if (findOptions.wholeWordsOnly) {
                         // We don't ever want trailing spaces for search results
                         findOptions.wordOptions.includeTrailingSpace = false;
                     }
-        
+
                     var backward = isDirectionBackward(findOptions.direction);
-        
+
                     // Create a range representing the search scope if none was provided
                     var searchScopeRange = findOptions.withinRange;
                     if (!searchScopeRange) {
                         searchScopeRange = api.createRange();
                         searchScopeRange.selectNodeContents(this.getDocument());
                     }
-        
+
                     // Examine and prepare the search term
                     var searchTerm = searchTermParam, isRegex = false;
                     if (typeof searchTerm == "string") {
@@ -1718,26 +1723,26 @@
                     } else {
                         isRegex = true;
                     }
-        
+
                     var initialPos = session.getRangeBoundaryPosition(this, !backward);
-        
+
                     // Adjust initial position if it lies outside the search scope
                     var comparison = searchScopeRange.comparePoint(initialPos.node, initialPos.offset);
-                    
+
                     if (comparison === -1) {
                         initialPos = session.getRangeBoundaryPosition(searchScopeRange, true);
                     } else if (comparison === 1) {
                         initialPos = session.getRangeBoundaryPosition(searchScopeRange, false);
                     }
-        
+
                     var pos = initialPos;
                     var wrappedAround = false;
-        
+
                     // Try to find a match and ignore invalid ones
                     var findResult;
                     while (true) {
                         findResult = findTextFromPosition(pos, searchTerm, isRegex, searchScopeRange, findOptions);
-        
+
                         if (findResult) {
                             if (findResult.valid) {
                                 this.setStartAndEnd(findResult.startPos.node, findResult.startPos.offset, findResult.endPos.node, findResult.endPos.offset);
@@ -1830,9 +1835,9 @@
                 function(session, containerNode, characterOptions) {
                     var ranges = this.getAllRanges(), rangeCount = ranges.length;
                     var rangeInfos = [];
-        
+
                     var backward = rangeCount == 1 && this.isBackward();
-        
+
                     for (var i = 0, len = ranges.length; i < len; ++i) {
                         rangeInfos[i] = {
                             characterRange: ranges[i].toCharacterRange(containerNode, characterOptions),
@@ -1840,7 +1845,7 @@
                             characterOptions: characterOptions
                         };
                     }
-        
+
                     return rangeInfos;
                 }
             ),
@@ -1900,7 +1905,7 @@
         };
 
         /*----------------------------------------------------------------------------------------------------------------*/
-        
+
         api.noMutation = function(func) {
             var session = getSession();
             func(session);
@@ -1921,4 +1926,5 @@
         };
     });
     
+    return rangy;
 }, this);

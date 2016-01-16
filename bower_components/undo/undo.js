@@ -4,6 +4,7 @@
  * http://jzaefferer.github.com/undo
  *
  * Copyright (c) 2011 Jörn Zaefferer
+ * 
  * MIT licensed.
  */
 (function() {
@@ -40,12 +41,9 @@ function extend(target, ref) {
 	return target;
 };
 
-var Undo;
-if (typeof exports !== 'undefined') {
-	Undo = exports;
-} else {
-	Undo = this.Undo = {};
-}
+var Undo = {
+	version: '0.1.15'
+};
 
 Undo.Stack = function() {
 	this.commands = [];
@@ -117,4 +115,13 @@ Undo.Command.extend = function(protoProps) {
 	return child;
 };
 	
+// AMD support
+if (typeof define === "function" && define.amd) {
+	// Define as an anonymous module
+	define(Undo);
+} else if(typeof module != "undefined" && module.exports){
+	module.exports = Undo 
+}else {
+	this.Undo = Undo;
+}
 }).call(this);

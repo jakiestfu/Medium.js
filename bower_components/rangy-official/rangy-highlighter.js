@@ -6,8 +6,8 @@
  *
  * Copyright 2015, Tim Down
  * Licensed under the MIT license.
- * Version: 1.3.0-alpha.20150122
- * Build date: 22 January 2015
+ * Version: 1.3.0
+ * Build date: 10 May 2015
  */
 (function(factory, root) {
     if (typeof define == "function" && define.amd) {
@@ -26,23 +26,17 @@
         var contains = dom.arrayContains;
         var getBody = dom.getBody;
         var createOptions = api.util.createOptions;
+        var forEach = api.util.forEach;
+        var nextHighlightId = 1;
 
         // Puts highlights in order, last in document first.
         function compareHighlights(h1, h2) {
             return h1.characterRange.start - h2.characterRange.start;
         }
 
-        var forEach = [].forEach ?
-            function(arr, func) {
-                arr.forEach(func);
-            } :
-            function(arr, func) {
-                for (var i = 0, len = arr.length; i < len; ++i) {
-                    func( arr[i] );
-                }
-            };
-
-        var nextHighlightId = 1;
+        function getContainerElement(doc, id) {
+            return id ? doc.getElementById(id) : getBody(doc);
+        }
 
         /*----------------------------------------------------------------------------------------------------------------*/
 
@@ -93,7 +87,7 @@
             union: function(charRange) {
                 return new CharacterRange(Math.min(this.start, charRange.start), Math.max(this.end, charRange.end));
             },
-            
+
             intersection: function(charRange) {
                 return new CharacterRange(Math.max(this.start, charRange.start), Math.min(this.end, charRange.end));
             },
@@ -234,9 +228,9 @@
 
         Highlight.prototype = {
             getContainerElement: function() {
-                return this.containerElementId ? this.doc.getElementById(this.containerElementId) : getBody(this.doc);
+                return getContainerElement(this.doc, this.containerElementId);
             },
-            
+
             getRange: function() {
                 return this.converter.characterRangeToRange(this.doc, this.characterRange, this.getContainerElement());
             },
@@ -244,7 +238,7 @@
             fromRange: function(range) {
                 this.characterRange = this.converter.rangeToCharacterRange(range, this.getContainerElement());
             },
-            
+
             getText: function() {
                 return this.getRange().toString();
             },
@@ -262,7 +256,7 @@
                 this.classApplier.applyToRange(this.getRange());
                 this.applied = true;
             },
-            
+
             getHighlightElements: function() {
                 return this.classApplier.getElementsWithClassIntersectingRange(this.getRange());
             },
@@ -314,7 +308,7 @@
 
             getIntersectingHighlights: function(ranges) {
                 // Test each range against each of the highlighted ranges to see whether they overlap
-                var intersectingHighlights = [], highlights = this.highlights, converter = this.converter;
+                var intersectingHighlights = [], highlights = this.highlights;
                 forEach(ranges, function(range) {
                     //var selCharRange = converter.rangeToCharacterRange(range);
                     forEach(highlights, function(highlight) {
@@ -326,7 +320,7 @@
 
                 return intersectingHighlights;
             },
-            
+
             highlightCharacterRanges: function(className, charRanges, options) {
                 var i, len, j;
                 var highlights = this.highlights;
@@ -339,7 +333,7 @@
                     containerElementId: null,
                     exclusive: true
                 });
-                
+
                 var containerElementId = options.containerElementId;
                 var exclusive = options.exclusive;
 
@@ -408,13 +402,13 @@
                         }
                     }
 
-                    // Add new range (only if cssApplier is not false)
+                    // Add new range
                     if (classApplier) {
                         highlightsToKeep.push(new Highlight(doc, charRange, classApplier, converter, null, containerElementId));
                     }
                     this.highlights = highlights = highlightsToKeep;
                 }
-                
+
                 // Remove the old highlights
                 forEach(highlightsToRemove, function(highlightToRemove) {
                     highlightToRemove.unapply();
@@ -428,7 +422,7 @@
                         newHighlights.push(highlight);
                     }
                 });
-                
+
                 return newHighlights;
             },
 
@@ -447,13 +441,13 @@
                 if (containerElement) {
                     containerElementRange = api.createRange(containerElement);
                     containerElementRange.selectNodeContents(containerElement);
-                } 
+                }
 
                 forEach(ranges, function(range) {
                     var scopedRange = containerElement ? containerElementRange.intersection(range) : range;
                     selCharRanges.push( converter.rangeToCharacterRange(scopedRange, containerElement || getBody(range.getDocument())) );
                 });
-                
+
                 return this.highlightCharacterRanges(className, selCharRanges, {
                     containerElementId: containerElementId,
                     exclusive: options.exclusive
@@ -466,7 +460,7 @@
 
                 options = createOptions(options, {
                     containerElementId: null,
-                    selection: api.getSelection(),
+                    selection: api.getSelection(this.doc),
                     exclusive: true
                 });
 
@@ -474,7 +468,7 @@
                 var exclusive = options.exclusive;
                 var selection = options.selection;
                 var doc = selection.win.document;
-                var containerElement = containerElementId ? doc.getElementById(containerElementId) : getBody(doc);
+                var containerElement = getContainerElement(doc, containerElementId);
 
                 if (!classApplier && className !== false) {
                     throw new Error("No class applier found for class '" + className + "'");
@@ -488,7 +482,7 @@
                 forEach(serializedSelection, function(rangeInfo) {
                     selCharRanges.push( CharacterRange.fromCharacterRange(rangeInfo.characterRange) );
                 });
-                
+
                 var newHighlights = this.highlightCharacterRanges(className, selCharRanges, {
                     containerElementId: containerElementId,
                     exclusive: exclusive
@@ -501,7 +495,7 @@
             },
 
             unhighlightSelection: function(selection) {
-                selection = selection || api.getSelection();
+                selection = selection || api.getSelection(this.doc);
                 var intersectingHighlights = this.getIntersectingHighlights( selection.getAllRanges() );
                 this.removeHighlights(intersectingHighlights);
                 selection.removeAllRanges();
@@ -509,7 +503,7 @@
             },
 
             getHighlightsInSelection: function(selection) {
-                selection = selection || api.getSelection();
+                selection = selection || api.getSelection(this.doc);
                 return this.getIntersectingHighlights(selection.getAllRanges());
             },
 
@@ -518,15 +512,38 @@
             },
 
             serialize: function(options) {
-                var highlights = this.highlights;
+                var highlighter = this;
+                var highlights = highlighter.highlights;
+                var serializedType, serializedHighlights, convertType, serializationConverter;
+
                 highlights.sort(compareHighlights);
-                var serializedHighlights = ["type:" + this.converter.type];
                 options = createOptions(options, {
-                    serializeHighlightText: false
+                    serializeHighlightText: false,
+                    type: highlighter.converter.type
                 });
+
+                serializedType = options.type;
+                convertType = (serializedType != highlighter.converter.type);
+
+                if (convertType) {
+                    serializationConverter = getConverter(serializedType);
+                }
+
+                serializedHighlights = ["type:" + serializedType];
 
                 forEach(highlights, function(highlight) {
                     var characterRange = highlight.characterRange;
+                    var containerElement;
+
+                    // Convert to the current Highlighter's type, if different from the serialization type
+                    if (convertType) {
+                        containerElement = highlight.getContainerElement();
+                        characterRange = serializationConverter.rangeToCharacterRange(
+                            highlighter.converter.characterRangeToRange(highlighter.doc, characterRange, containerElement),
+                            containerElement
+                        );
+                    }
+
                     var parts = [
                         characterRange.start,
                         characterRange.end,
@@ -534,6 +551,7 @@
                         highlight.classApplier.className,
                         highlight.containerElementId
                     ];
+
                     if (options.serializeHighlightText) {
                         parts.push(highlight.getText());
                     }
@@ -560,17 +578,17 @@
                 } else {
                     throw new Error("Serialized highlights are invalid.");
                 }
-                
+
                 var classApplier, highlight, characterRange, containerElementId, containerElement;
 
                 for (var i = serializedHighlights.length, parts; i-- > 0; ) {
                     parts = serializedHighlights[i].split("$");
                     characterRange = new CharacterRange(+parts[0], +parts[1]);
                     containerElementId = parts[4] || null;
-                    containerElement = containerElementId ? this.doc.getElementById(containerElementId) : getBody(this.doc);
 
                     // Convert to the current Highlighter's type, if different from the serialization type
                     if (convertType) {
+                        containerElement = getContainerElement(this.doc, containerElementId);
                         characterRange = this.converter.rangeToCharacterRange(
                             serializationConverter.characterRangeToRange(this.doc, characterRange, containerElement),
                             containerElement
@@ -578,7 +596,7 @@
                     }
 
                     classApplier = this.classAppliers[ parts[3] ];
-                    
+
                     if (!classApplier) {
                         throw new Error("No class applier found for class '" + parts[3] + "'");
                     }
@@ -598,4 +616,5 @@
         };
     });
     
+    return rangy;
 }, this);
