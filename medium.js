@@ -1477,6 +1477,7 @@ Medium.defaultSettings = {
 				.handleMouseover()
 				.handleMouseout()
 				.handleMousemove();
+      return this;
 		},
 		destroy: function() {
 			utils
@@ -1485,9 +1486,11 @@ Medium.defaultSettings = {
 				.removeEvent(this.icon, 'mouseover', this.handledEvents.mouseover)
 				.removeEvent(this.icon, 'mouseout', this.handledEvents.mouseout)
 				.removeEvent(this.medium.element, 'mousemove', this.handledEvents.mousemove);
+      return this;
 		},
 		hide: function() {
 			utils.hide(this.icon);
+      return this;
 		},
 		handleDragstart: function() {
 
@@ -1576,11 +1579,12 @@ Medium.defaultSettings = {
 			style.top = top + 'px';
 
 			utils.show(this.icon);
+      return this;
 		},
 		cleanCanvas: function() {
 			var target,
 				inserted = false,
-				buttons = this.element.getElementsByClassName(this.buttonClass);
+				buttons = d.getElementsByClassName(this.buttonClass);
 
 			this.icon.style.opacity = 1;
 
@@ -1594,6 +1598,7 @@ Medium.defaultSettings = {
 				}
 			}
 			utils.detachNode(this.icon);
+      return this;
 		}
 	};
 })(Medium);
@@ -1784,7 +1789,7 @@ Medium.defaultSettings = {
 				}
 
 				while (html.length > 0) {
-            parent.insertBefore(html[0], wedge);
+          parent.insertBefore(html[0], wedge);
 				}
 			} else {
 				nodes.push(html);
