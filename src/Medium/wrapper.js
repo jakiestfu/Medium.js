@@ -15,6 +15,7 @@
 		undo = w['Undo'] || null,
 		key = w.Key = {
 			'backspace': 8,
+			'space': 32,
 			'tab': 9,
 			'enter': 13,
 			'shift': 16,

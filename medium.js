@@ -15,6 +15,7 @@
 		undo = w['Undo'] || null,
 		key = w.Key = {
 			'backspace': 8,
+			'space': 32,
 			'tab': 9,
 			'enter': 13,
 			'shift': 16,
@@ -2394,7 +2395,7 @@ Medium.defaultSettings = {
     if (el.classList)
       el.classList.remove(className);
     else
-      el.className = el.className.replace(new RegExp('(^|\b)' + className.split(' ').join('|') + '(\b|$)', 'gi'), ' ');
+      el.className = el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
     return Medium.Utilities;
   },
   hasClass: function(el, className) {
