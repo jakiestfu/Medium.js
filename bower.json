@@ -21,5 +21,6 @@
   },
 	"keywords": ["editor", "wysiwyg", "contenteditable", "content", "medium", "medium.com"],
 	"license": "MIT",
-	"files": ["medium.js", "medium.css"]
+	"files": ["medium.js", "medium.css"],
+	"main": ["medium.js", "medium.css"]
 }
