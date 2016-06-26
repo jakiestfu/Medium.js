@@ -59,9 +59,9 @@
 					elementAttributes: this.attributes
 				});
 
-				this.medium.makeUndoable();
-
 				applier.toggleSelection(w);
+
+				this.medium.makeUndoable();
 
 				if (this.clean) {
 					//cleanup
